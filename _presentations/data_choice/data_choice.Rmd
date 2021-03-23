@@ -1,0 +1,58 @@
+---
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: xaringan-themer.css
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+    includes:
+      after_body: logo_placer.html
+    seal: false
+---
+class: left, middle, inverse, hide-logo
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+# Here the slides theme (TUM blue) is set and the fonts 
+# feel free to change them
+library(xaringanthemer)
+style_mono_accent(
+  base_color = "#0073C3",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono")
+)
+```
+
+
+### Data Quest
+<!-- 
+English title page
+-->
+
+#### Emanuel Sommer
+#### `r Sys.Date()`
+
+
+<center>
+<br><br><br>
+<img src="img/maTUM_w.png" width="100">
+<br>
+<br>
+Department of Mathematics
+<br>
+Technical University of Munich
+</center>
+
+---
+
+## First slide
+
+---
+
+## Second slide
