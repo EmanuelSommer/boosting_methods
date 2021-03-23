@@ -1,0 +1,7 @@
+# Theory of boosting {#theory}
+
+Here comes the theory
+
+## XGBoost
+
+We will cite the great book![@xgboost_paper]

@@ -7,10 +7,17 @@ documentclass: book
 bibliography: [book.bib, packages.bib]
 biblio-style: apalike
 link-citations: yes
-description: "Here comes the describtion!!!"
+description: "Boosting methods: Theory and Application (xgboost)"
 github-repo: EmanuelSommer/boosting_methods
 ---
 
 # Prerequisites
 
-Here SOOOOOOOOOOOOOME PREREQUISITES
+Here some Notation/ Prerequisites
+
+TBD
+TBD
+TBD
+TBD
+TBD
+TBD

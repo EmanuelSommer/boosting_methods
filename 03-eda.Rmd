@@ -1,0 +1,9 @@
+# Expore the data {#eda}
+
+We use the following packages.[@tidyverse; @tidymodels]
+
+```{r load_packages, message=FALSE}
+library(tidyverse)
+library(tidymodels)
+```
+

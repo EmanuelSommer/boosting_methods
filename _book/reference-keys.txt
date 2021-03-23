@@ -1,2 +1,8 @@
 prerequisites
 intro
+theory
+xgboost
+eda
+modeling
+conclusion
+references
