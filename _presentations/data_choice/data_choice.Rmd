@@ -51,8 +51,77 @@ Technical University of Munich
 
 ---
 
-## First slide
+
+```{r packages, include=FALSE}
+library(tidyverse)
+my_theme <- theme_classic() +
+  theme(text = element_text(size = 20))
+theme_set(my_theme)
+```
+
+
+## Burnout dataset
+
+```{r, include=FALSE}
+burnout_train <- read_csv(paste0(dirname(dirname(getwd())),"/_data/burn_out_train.csv"))
+```
+
+The training dataset contains `r ncol(burnout_train)` variables and `r nrow(burnout_train)` rows.<sup>*</sup>
+
+```{r, fig.dim=c(8,4), echo=FALSE}
+visdat::vis_dat(burnout_train)
+```
+
+
+
+.footnote[[*] https://www.kaggle.com/blurredmachine/are-your-employees-burning-out?select=train.csv]
+
+---
+## Burnout dataset
+#### Outcome variable
+
+```{r, fig.dim=c(8,4), echo=FALSE}
+ggplot(burnout_train, aes(x = `Burn Rate`)) +
+  geom_histogram(aes(y = stat(count) / sum(count)), bins = 30,
+                 na.rm = TRUE) +
+  labs(x = "Burn rate",y = "")
+```
+
+
 
 ---
 
-## Second slide
+## Obesity levels dataset
+
+```{r, include=FALSE}
+obesity_data <- read_csv(paste0(dirname(dirname(getwd())),"/_data/Obesity_data_uci.csv"))
+```
+
+The training dataset contains `r ncol(obesity_data)` variables and `r nrow(obesity_data)` rows.<sup>*</sup>
+
+```{r, fig.dim=c(10,4), echo=FALSE}
+visdat::vis_dat(obesity_data)
+```
+
+
+.footnote[[*] https://archive.ics.uci.edu/ml/datasets/Estimation+of+obesity+levels+based+on+eating+habits+and+physical+condition+]
+
+---
+
+## Obesity levels dataset
+#### Outcome variable
+
+```{r, fig.dim=c(8,4), echo=FALSE}
+ggplot(obesity_data, aes(x = Weight)) +
+  geom_histogram(aes(y = stat(count) / sum(count)), bins = 30,
+                 na.rm = TRUE) +
+  labs(x = "Weight",y = "")
+```
+
+---
+class: middle, center
+
+
+**Favourite** from these: Burnout dataset
+
+
