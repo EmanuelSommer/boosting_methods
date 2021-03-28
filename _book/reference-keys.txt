@@ -3,6 +3,9 @@ intro
 theory
 xgboost
 eda
+train-test-split
+visualize-the-data
+create-recipe
 modeling
 conclusion
 references

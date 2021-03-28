@@ -7,3 +7,51 @@ library(tidyverse)
 library(tidymodels)
 ```
 
+## Train-test split
+
+```{r traintest}
+set.seed(2)
+# ames_split <- initial_split(ames, prop = 0.80, strata = Sale_Price)
+# ames_train <- training(ames_split)
+# ames_test  <-  testing(ames_split)
+```
+
+## Visualize the data
+
+
+-   pair plots
+
+    -   indiviual main effects
+
+    -   correlations
+
+-   correlation plot
+
+-   individual distributions
+
+-   identify categorical features
+
+-   feature engineering
+
+## Create recipe
+
+
+```{r recipe}
+# ames_rec <- 
+#   recipe(Sale_Price ~ Neighborhood + Gr_Liv_Area + Year_Built + Bldg_Type + 
+#            Latitude + Longitude, data = ames_train) %>%
+#   step_log(Gr_Liv_Area, base = 10) %>% 
+#   step_other(Neighborhood, threshold = 0.01) %>% 
+#   step_dummy(all_nominal()) %>% 
+#   step_interact( ~ Gr_Liv_Area:starts_with("Bldg_Type_") ) %>% 
+#   step_ns(Latitude, Longitude, deg_free = 20)
+```
+
+
+
+
+
+
+
+
+

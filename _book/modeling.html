@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-03-23" />
+<meta name="date" content="2021-03-28" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -140,7 +140,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li class="chapter" data-level="3.1" data-path="theory.html"><a href="theory.html#xgboost"><i class="fa fa-check"></i><b>3.1</b> XGBoost</a></li>
 </ul></li>
-<li class="chapter" data-level="4" data-path="eda.html"><a href="eda.html"><i class="fa fa-check"></i><b>4</b> Expore the data</a></li>
+<li class="chapter" data-level="4" data-path="eda.html"><a href="eda.html"><i class="fa fa-check"></i><b>4</b> Expore the data</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="eda.html"><a href="eda.html#train-test-split"><i class="fa fa-check"></i><b>4.1</b> Train-test split</a></li>
+<li class="chapter" data-level="4.2" data-path="eda.html"><a href="eda.html#visualize-the-data"><i class="fa fa-check"></i><b>4.2</b> Visualize the data</a></li>
+<li class="chapter" data-level="4.3" data-path="eda.html"><a href="eda.html#create-recipe"><i class="fa fa-check"></i><b>4.3</b> Create recipe</a></li>
+</ul></li>
 <li class="chapter" data-level="5" data-path="modeling.html"><a href="modeling.html"><i class="fa fa-check"></i><b>5</b> Let’s boost the models</a></li>
 <li class="chapter" data-level="6" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>6</b> Conclusion</a></li>
 <li class="chapter" data-level="7" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i><b>7</b> References</a></li>
@@ -164,6 +169,46 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="modeling" class="section level1" number="5">
 <h1><span class="header-section-number">Chapter 5</span> Let’s boost the models</h1>
 <p>boooooooooooooooooooooost them (gif here?)</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="modeling.html#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)</span></code></pre></div>
+<pre><code>## Warning: package &#39;xgboost&#39; was built under R version 4.0.3</code></pre>
+<pre><code>## 
+## Attaching package: &#39;xgboost&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:dplyr&#39;:
+## 
+##     slice</code></pre>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="modeling.html#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger)</span></code></pre></div>
+<p>To do</p>
+<ol style="list-style-type: decimal">
+<li><p>register parallel backend</p></li>
+<li><p>create models and workflows</p></li>
+<li><p>create resampling objects</p></li>
+<li><p>choose tuning method (racing/iterative or grid search)</p></li>
+<li><p>tune models and select best ones</p></li>
+<li><p>compare final models to test set</p></li>
+<li><p>save final model</p></li>
+</ol>
+<p>for 2.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="modeling.html#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Models:</span></span>
+<span id="cb9-2"><a href="modeling.html#cb9-2" aria-hidden="true" tabindex="-1"></a>lm_model <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb9-3"><a href="modeling.html#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;lm&quot;</span>)</span>
+<span id="cb9-4"><a href="modeling.html#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="modeling.html#cb9-5" aria-hidden="true" tabindex="-1"></a>rf_model <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">trees =</span> <span class="dv">1000</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-6"><a href="modeling.html#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;ranger&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-7"><a href="modeling.html#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span>
+<span id="cb9-8"><a href="modeling.html#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="modeling.html#cb9-9" aria-hidden="true" tabindex="-1"></a>boost_model <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb9-10"><a href="modeling.html#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;xgboost&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-11"><a href="modeling.html#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="modeling.html#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Workflows:</span></span>
+<span id="cb10-2"><a href="modeling.html#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="modeling.html#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># lm_wflow &lt;- </span></span>
+<span id="cb10-4"><a href="modeling.html#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   workflow() %&gt;% </span></span>
+<span id="cb10-5"><a href="modeling.html#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   add_model(lm_model) %&gt;% </span></span>
+<span id="cb10-6"><a href="modeling.html#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   add_recipe()</span></span></code></pre></div>
+<p>for 3.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="modeling.html#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create Resampling objects</span></span>
+<span id="cb11-2"><a href="modeling.html#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="modeling.html#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ames_folds &lt;- vfold_cv(ames_train, v = 10)</span></span></code></pre></div>
 
 </div>
             </section>

@@ -78,7 +78,9 @@ visdat::vis_dat(burnout_train)
 
 ---
 ## Burnout dataset
-#### Outcome variable
+#### Outcome variable **Burn Rate**
+
+Baseline linear model gives roughly  $R^2$ of 0.92
 
 ```{r, fig.dim=c(8,4), echo=FALSE}
 ggplot(burnout_train, aes(x = `Burn Rate`)) +
@@ -109,7 +111,9 @@ visdat::vis_dat(obesity_data)
 ---
 
 ## Obesity levels dataset
-#### Outcome variable
+#### Outcome variable: **Weigth**
+
+Baseline linear model gives roughly  $R^2$ of 0.96
 
 ```{r, fig.dim=c(8,4), echo=FALSE}
 ggplot(obesity_data, aes(x = Weight)) +

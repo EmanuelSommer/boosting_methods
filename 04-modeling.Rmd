@@ -1,3 +1,65 @@
 # Let's boost the models {#modeling}
 
 boooooooooooooooooooooost them (gif here?)
+
+```{r loadModelPackages}
+library(xgboost)
+library(ranger)
+```
+
+To do
+
+1.  register parallel backend
+
+2.  create models and workflows
+
+3.  create resampling objects
+
+4.  choose tuning method (racing/iterative or grid search)
+
+5.  tune models and select best ones
+
+6.  compare final models to test set
+
+7.  save final model
+
+for 2.
+```{r modelSpec}
+# Models:
+lm_model <- linear_reg() %>% 
+  set_engine("lm")
+
+rf_model <- rand_forest(trees = 1000) %>% 
+  set_engine("ranger") %>% 
+  set_mode("regression")
+
+boost_model <- boost_tree() %>%
+  set_engine("xgboost") %>% 
+  set_mode("regression")
+```
+
+```{r workflowSpec}
+# Workflows:
+
+# lm_wflow <- 
+#   workflow() %>% 
+#   add_model(lm_model) %>% 
+#   add_recipe()
+```
+
+for 3.
+```{r resamplingObjects}
+# Create Resampling objects
+
+# ames_folds <- vfold_cv(ames_train, v = 10)
+```
+
+
+
+
+
+
+
+
+
+
