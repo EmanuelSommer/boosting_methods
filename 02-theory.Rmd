@@ -4,4 +4,4 @@ Here comes the theory
 
 ## XGBoost
 
-We will cite the great book![@xgboost_paper]
+We will cite the great paper![@xgboost_paper]

@@ -35,8 +35,9 @@ set.seed(2)
 
 ## Create recipe
 
+one for lm (dummify categorical features) and one for the tree based approaches
 
-```{r recipe}
+```{r recipes}
 # ames_rec <- 
 #   recipe(Sale_Price ~ Neighborhood + Gr_Liv_Area + Year_Built + Bldg_Type + 
 #            Latitude + Longitude, data = ames_train) %>%

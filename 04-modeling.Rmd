@@ -23,7 +23,22 @@ To do
 
 7.  save final model
 
+```{r registerCLuster, eval=FALSE}
+library(doParallel)
+
+# Create a cluster object and then register: 
+cl <- makePSOCKcluster(2)
+registerDoParallel(cl)
+
+# Put at the end:
+stopCluster(cl)
+```
+
+
+
 for 2.
+set engine specific arguments in the set_engine() function
+use tune() for parameters that should be tuned (optional tune("id_name"))
 ```{r modelSpec}
 # Models:
 lm_model <- linear_reg() %>% 
@@ -50,16 +65,107 @@ boost_model <- boost_tree() %>%
 for 3.
 ```{r resamplingObjects}
 # Create Resampling objects
-
+# set.seed(2)
 # ames_folds <- vfold_cv(ames_train, v = 10)
 ```
 
+for fitting resampling objects without tuning:
+```{r fitResamplingWithoutTuning}
+# set.seed(2)
+# rf_res <- rf_wflow %>% 
+#   fit_resamples(resamples = ames_folds)
+# # collect the metrics during resampling with
+# collect_metrics()
+```
+
+for 4. and following
+
+```{r}
+# show the parameters to be tuned with the range
+# dials::parameters()
+# get and modify the parameters to be tuned with:
+# name()
+# wflow_param %>% pull_dials_object("threshold")
+# parameters(ames_rec) %>% 
+#  update(threshold = threshold(c(0.8, 1.0)))
+
+# finalize for data dependent params
+# updated_param <- 
+#   workflow() %>% 
+#   add_model(rf_spec) %>% 
+#   add_recipe(pca_rec) %>% 
+#   parameters() %>% 
+#   finalize(ames_train)
+```
 
 
+grids:
+grid_regular(levels = c(hidden_units = 3, penalty = 2, epochs = 2))
+space filling: grid_latin_hypercube(size = 15, original = FALSE)
+then tune_grid() function instead of fit_resamples
 
+```{r tuneGrids, eval=FALSE}
+roc_res <- metric_set(roc_auc)
+set.seed(99)
+mlp_reg_tune <-
+  mlp_wflow %>%
+  tune_grid(
+    cell_folds,
+    grid = mlp_param %>% grid_regular(levels = 3),
+    metrics = roc_res
+  )
 
+autoplot(mlp_reg_tune) + theme(legend.position = "top")
 
+show_best(mlp_reg_tune)
 
+# for spacefilling
+mlp_sfd_tune <-
+  mlp_wflow %>%
+  tune_grid(
+    cell_folds,
+    grid = 20,
+    # Pass in the parameter object to use the appropriate range: 
+    param_info = mlp_param,
+    metrics = roc_res
+  )
 
+select_best()
+```
 
+```{r finalizeWorkflow, eval=FALSE}
+logistic_param <- 
+  tibble(
+    num_comp = 0,
+    epochs = 125,
+    hidden_units = 1,
+    penalty = 1
+  )
+
+final_mlp_wflow <- 
+  mlp_wflow %>% 
+  finalize_workflow(logistic_param)
+
+final_mlp_fit <- 
+  final_mlp_wflow %>% 
+  fit(cells)
+```
+
+Racing:
+```{r racingTune, eval=FALSE}
+library(finetune)
+
+set.seed(99)
+mlp_sfd_race <-
+  mlp_wflow %>%
+  tune_race_anova(
+    cell_folds,
+    grid = 20,
+    param_info = mlp_param,
+    metrics = roc_res,
+    control = control_race(verbose_elim = TRUE)
+  )
+```
+
+Here no iterative search as big parameter space, could be done after grid search or for single parameters. (If then Simulated Annealing)
 
