@@ -54,6 +54,7 @@ Technical University of Munich
 
 ```{r packages, include=FALSE}
 library(tidyverse)
+library(viridis)
 my_theme <- theme_classic() +
   theme(text = element_text(size = 20))
 theme_set(my_theme)
@@ -127,15 +128,17 @@ ggplot(obesity_data, aes(x = Weight)) +
 ## Munich rent dataset
 
 ```{r, include=FALSE}
-munich_rent <- read_delim(
-  paste0(dirname(dirname(getwd())),"/_data/mietspiegel_data.txt"), 
-  "\t", escape_double = FALSE, trim_ws = TRUE)
+# munich_rent <- read_delim(
+#   paste0(dirname(dirname(getwd())),"/_data/mietspiegel_data.txt"), 
+#   "\t", escape_double = FALSE, trim_ws = TRUE)
+data("munichrent03", package = "LinRegInteractive")
+
 ```
 
-The dataset contains `r ncol(munich_rent)` variables and `r nrow(munich_rent)` rows.<sup>*</sup>
+The dataset contains `r ncol(munichrent03)` variables and `r nrow(munichrent03)` rows.<sup>*</sup>
 
 ```{r, fig.dim=c(10,4), echo=FALSE}
-visdat::vis_dat(munich_rent)
+visdat::vis_dat(munichrent03)
 ```
 
 -> No missing values.
@@ -149,10 +152,77 @@ visdat::vis_dat(munich_rent)
 
 
 ```{r, fig.dim=c(8,4), echo=FALSE}
-ggplot(munich_rent, aes(x = nm)) +
+ggplot(munichrent03, aes(x = rent)) +
   geom_histogram(aes(y = stat(count) / sum(count)), bins = 30,
                  na.rm = TRUE) +
   labs(x = "net rent",y = "")
+```
+
+---
+
+## Munich rent dataset
+
+```{r, include=FALSE}
+# library(OpenStreetMap)
+# map_munich <- openmap(upperLeft = c(47.95, 11.8),
+#                       lowerRight = c(48.25, 11.4))
+# plot(map_munich)
+
+# request <- "http://ogc.muenchen.de/wfs/opendata_verwaltungseinheiten?service=WFS&version=2.0.0&request=GetCapabilities"
+# library(sf)
+# map_munich_wfs <- read_sf(request)
+load(paste0(dirname(dirname(getwd())),"/_data/map_munich_wfs.Rdata"))
+```
+
+```{r, include=FALSE}
+median_rent_district <- munichrent03 %>%
+  group_by(district) %>%
+  summarise(median = median(rent))
+```
+
+
+```{r, echo=FALSE, fig.dim=c(12,8), warning=FALSE}
+ordered_rent_median <- map_munich_wfs %>%
+  select(district) %>%
+  left_join(median_rent_district, by = "district") %>%
+  select(median)
+
+map_munich_wfs %>%
+  mutate(median = ordered_rent_median$median) %>%
+  ggplot() +
+  geom_sf(aes(fill = median)) +
+  scale_fill_viridis_c() +
+  labs(fill = "Median rent") +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.line = element_blank(),
+        axis.ticks = element_blank())
+```
+
+
+---
+
+## Munich rent dataset
+
+```{r, echo=FALSE, fig.dim=c(12,8), warning=FALSE}
+map_munich_wfs %>%
+  mutate(median = ordered_rent_median$median) %>%
+  ggplot() +
+  geom_sf(aes(fill = median)) +
+  # geom_sf_text(aes(label = NAME, geometry = msGeometry),
+  #              size = 4) +
+  ggrepel::geom_text_repel(
+    aes(label = NAME, geometry = msGeometry),
+    stat = "sf_coordinates",
+    min.segment.length = 1,
+    color = "black"
+    ) +
+  scale_fill_viridis_c() +
+  labs(fill = "Median rent") +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.line = element_blank(),
+        axis.ticks = element_blank())
 ```
 
 ---
