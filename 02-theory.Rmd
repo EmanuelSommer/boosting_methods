@@ -43,3 +43,5 @@ first some stuff from elements (more general)
 use the whole paper
 
 We will cite the great paper![@xgboost_paper]
+
+for details about hyperparameters use [@HandsOnMLwithR]
