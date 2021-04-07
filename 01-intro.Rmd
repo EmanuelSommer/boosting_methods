@@ -1,3 +1,6 @@
 # Introduction {#intro}
 
 Introduction to the whole setting (seminar topic/ intro to topic maybe mention kaggle wins)
+
+> "Boosting is one of the most powerful learning ideas introduced in the last
+> twenty years." [@elements]

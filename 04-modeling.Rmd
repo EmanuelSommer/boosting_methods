@@ -2,6 +2,8 @@
 
 boooooooooooooooooooooost them (gif here?)
 
+Cite additional model packages.[@xgboost_package, @ranger_package]
+
 ```{r loadModelPackages}
 library(xgboost)
 library(ranger)
@@ -23,6 +25,8 @@ To do
 
 7.  save final model
 
+cite [@doParallel_package]
+
 ```{r registerCLuster, eval=FALSE}
 library(doParallel)
 
@@ -34,11 +38,8 @@ registerDoParallel(cl)
 stopCluster(cl)
 ```
 
+for 2. set engine specific arguments in the set_engine() function use tune() for parameters that should be tuned (optional tune("id_name"))
 
-
-for 2.
-set engine specific arguments in the set_engine() function
-use tune() for parameters that should be tuned (optional tune("id_name"))
 ```{r modelSpec}
 # Models:
 lm_model <- linear_reg() %>% 
@@ -63,6 +64,7 @@ boost_model <- boost_tree() %>%
 ```
 
 for 3.
+
 ```{r resamplingObjects}
 # Create Resampling objects
 # set.seed(2)
@@ -70,6 +72,7 @@ for 3.
 ```
 
 for fitting resampling objects without tuning:
+
 ```{r fitResamplingWithoutTuning}
 # set.seed(2)
 # rf_res <- rf_wflow %>% 
@@ -98,11 +101,7 @@ for 4. and following
 #   finalize(ames_train)
 ```
 
-
-grids:
-grid_regular(levels = c(hidden_units = 3, penalty = 2, epochs = 2))
-space filling: grid_latin_hypercube(size = 15, original = FALSE)
-then tune_grid() function instead of fit_resamples
+grids: grid_regular(levels = c(hidden_units = 3, penalty = 2, epochs = 2)) space filling: grid_latin_hypercube(size = 15, original = FALSE) then tune_grid() function instead of fit_resamples
 
 ```{r tuneGrids, eval=FALSE}
 roc_res <- metric_set(roc_auc)
@@ -152,8 +151,9 @@ final_mlp_fit <-
 ```
 
 Racing:
+
 ```{r racingTune, eval=FALSE}
-library(finetune)
+library(finetune) # if used to be cited
 
 set.seed(99)
 mlp_sfd_race <-
@@ -168,4 +168,3 @@ mlp_sfd_race <-
 ```
 
 Here no iterative search as big parameter space, could be done after grid search or for single parameters. (If then Simulated Annealing)
-

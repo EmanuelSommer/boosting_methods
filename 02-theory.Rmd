@@ -1,7 +1,45 @@
-# Theory of boosting {#theory}
+# Theory {#theory}
 
-Here comes the theory
+## The powerful idea of gradient boosting
 
-## XGBoost
+As roughly mentioned in the introduction section \@ref(intro) the main idea of boosting is to sequentially build 'weak' learners that form a powerful ensemble model. It is not totally clear from which field these methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth. [@elements] PAC learning can be considered one field within the field of the broader learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC). [@pacbounds]
+
+### Forward Stagewise Additive Modeling
+
+In the setting of the dataset $\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}$ with $x_i \in \mathbb{R}^m$ and $y_i \in \mathbb{R}$ boosting is fitting the following additive, still quite general, model.
+
+```{=tex}
+\begin{equation}
+  \hat{y_i} = \phi(x_i) = \sum_{k=1}^{K} f_k(x_i), \quad f_k \in \mathcal{F}
+  (\#eq:additiveModel)
+\end{equation}
+```
+Where $\mathcal{F}$ is the space of learning algorithms that will be narrowed down later on. Additive expansions like this are at the core of many other powerful machine learning algorithms like Neural Networks or Wavelets. [@elements]
+
+This leads to the algorithm of Forward Stagewise Additive Modeling. [@elements] tbdtbdtbd
+
+### Robust loss functions for regression
+
+### Off shelf performance
+
+Although arguably one of the most famous algorithms in boosting is the Adaboost algorithm for classification, here the focus will be on a regression task and thus Adaboost will not be covered.
+
+## General gradient tree boosting
+
+first some stuff from elements (more general)
+
+### numerical optimization
+
+### gradient tree boosting algorithm from elements
+
+### problem of right sized trees
+
+### regularisation
+
+![Example of an additive tree ensamble[@xgboost_paper]](_pictures/boosting_easy.png)
+
+## XGBoost a highly efficient implementation
+
+use the whole paper
 
 We will cite the great paper![@xgboost_paper]

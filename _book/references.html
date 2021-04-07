@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-03-28" />
+<meta name="date" content="2021-04-07" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -33,15 +33,15 @@
   
 <link rel="prev" href="conclusion.html"/>
 
-<script src="libs/header-attrs/header-attrs.js"></script>
-<script src="libs/jquery/jquery.min.js"></script>
-<link href="libs/gitbook/css/style.css" rel="stylesheet" />
-<link href="libs/gitbook/css/plugin-table.css" rel="stylesheet" />
-<link href="libs/gitbook/css/plugin-bookdown.css" rel="stylesheet" />
-<link href="libs/gitbook/css/plugin-highlight.css" rel="stylesheet" />
-<link href="libs/gitbook/css/plugin-search.css" rel="stylesheet" />
-<link href="libs/gitbook/css/plugin-fontsettings.css" rel="stylesheet" />
-<link href="libs/gitbook/css/plugin-clipboard.css" rel="stylesheet" />
+<script src="libs/header-attrs-2.6/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
 
 
 
@@ -136,9 +136,22 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="divider"></li>
 <li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Prerequisites</a></li>
 <li class="chapter" data-level="2" data-path="intro.html"><a href="intro.html"><i class="fa fa-check"></i><b>2</b> Introduction</a></li>
-<li class="chapter" data-level="3" data-path="theory.html"><a href="theory.html"><i class="fa fa-check"></i><b>3</b> Theory of boosting</a>
+<li class="chapter" data-level="3" data-path="theory.html"><a href="theory.html"><i class="fa fa-check"></i><b>3</b> Theory</a>
 <ul>
-<li class="chapter" data-level="3.1" data-path="theory.html"><a href="theory.html#xgboost"><i class="fa fa-check"></i><b>3.1</b> XGBoost</a></li>
+<li class="chapter" data-level="3.1" data-path="theory.html"><a href="theory.html#the-powerful-idea-of-gradient-boosting"><i class="fa fa-check"></i><b>3.1</b> The powerful idea of gradient boosting</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="theory.html"><a href="theory.html#forward-stagewise-additive-modeling"><i class="fa fa-check"></i><b>3.1.1</b> Forward Stagewise Additive Modeling</a></li>
+<li class="chapter" data-level="3.1.2" data-path="theory.html"><a href="theory.html#robust-loss-functions-for-regression"><i class="fa fa-check"></i><b>3.1.2</b> Robust loss functions for regression</a></li>
+<li class="chapter" data-level="3.1.3" data-path="theory.html"><a href="theory.html#off-shelf-performance"><i class="fa fa-check"></i><b>3.1.3</b> Off shelf performance</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="theory.html"><a href="theory.html#general-gradient-tree-boosting"><i class="fa fa-check"></i><b>3.2</b> General gradient tree boosting</a>
+<ul>
+<li class="chapter" data-level="3.2.1" data-path="theory.html"><a href="theory.html#numerical-optimization"><i class="fa fa-check"></i><b>3.2.1</b> numerical optimization</a></li>
+<li class="chapter" data-level="3.2.2" data-path="theory.html"><a href="theory.html#gradient-tree-boosting-algorithm-from-elements"><i class="fa fa-check"></i><b>3.2.2</b> gradient tree boosting algorithm from elements</a></li>
+<li class="chapter" data-level="3.2.3" data-path="theory.html"><a href="theory.html#problem-of-right-sized-trees"><i class="fa fa-check"></i><b>3.2.3</b> problem of right sized trees</a></li>
+<li class="chapter" data-level="3.2.4" data-path="theory.html"><a href="theory.html#regularisation"><i class="fa fa-check"></i><b>3.2.4</b> regularisation</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="theory.html"><a href="theory.html#xgboost-a-highly-efficient-implementation"><i class="fa fa-check"></i><b>3.3</b> XGBoost a highly efficient implementation</a></li>
 </ul></li>
 <li class="chapter" data-level="4" data-path="eda.html"><a href="eda.html"><i class="fa fa-check"></i><b>4</b> Expore the data</a>
 <ul>
@@ -168,15 +181,30 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
             <section class="normal" id="section-">
 <div id="references" class="section level1" number="7">
 <h1><span class="header-section-number">Chapter 7</span> References</h1>
-<div id="refs" class="references csl-bib-body hanging-indent">
-<div id="ref-xgboost_paper" class="csl-entry">
-Chen, Tianqi, and Carlos Guestrin. 2016. <span>“XGBoost: <span>A</span> Scalable Tree Boosting System.”</span> <em>CoRR</em> abs/1603.02754. <a href="http://arxiv.org/abs/1603.02754">http://arxiv.org/abs/1603.02754</a>.
+<div id="refs" class="references csl-bib-body">
+<div id="ref-elements" class="csl-entry">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline"><span class="smallcaps">Hastie</span>, T., <span class="smallcaps">Tibshirani</span>, R. and <span class="smallcaps">Friedman</span>, J. (2009). <em>The elements of statistical learning (12th printing)</em>. Springer New York.</div>
 </div>
-<div id="ref-tidymodels" class="csl-entry">
-Kuhn, Max, and Hadley Wickham. 2020. <em>Tidymodels: A Collection of Packages for Modeling and Machine Learning Using Tidyverse Principles.</em> <a href="https://www.tidymodels.org">https://www.tidymodels.org</a>.
+<div id="ref-pacbounds" class="csl-entry">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline"><span class="smallcaps">Wolf</span>, M. M. (2020). Lecture notes in mathematical foundations of supervised learning.</div>
+</div>
+<div id="ref-xgboost_paper" class="csl-entry">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline"><span class="smallcaps">Chen</span>, T. and <span class="smallcaps">Guestrin</span>, C. (2016). XGBoost: <span>A</span> scalable tree boosting system. <em>CoRR</em> <strong>abs/1603.02754</strong>.</div>
 </div>
 <div id="ref-tidyverse" class="csl-entry">
-Wickham, Hadley, Mara Averick, Jennifer Bryan, Winston Chang, Lucy D’Agostino McGowan, Romain François, Garrett Grolemund, et al. 2019. <span>“Welcome to the <span class="nocase">tidyverse</span>.”</span> <em>Journal of Open Source Software</em> 4 (43): 1686. <a href="https://doi.org/10.21105/joss.01686">https://doi.org/10.21105/joss.01686</a>.
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline"><span class="smallcaps">Wickham</span>, H., <span class="smallcaps">Averick</span>, M., <span class="smallcaps">Bryan</span>, J., <span class="smallcaps">Chang</span>, W., <span class="smallcaps">McGowan</span>, L. D., <span class="smallcaps">François</span>, R., <span class="smallcaps">Grolemund</span>, G., <span class="smallcaps">Hayes</span>, A., <span class="smallcaps">Henry</span>, L., <span class="smallcaps">Hester</span>, J., <span class="smallcaps">Kuhn</span>, M., <span class="smallcaps">Pedersen</span>, T. L., <span class="smallcaps">Miller</span>, E., <span class="smallcaps">Bache</span>, S. M., <span class="smallcaps">Müller</span>, K., <span class="smallcaps">Ooms</span>, J., <span class="smallcaps">Robinson</span>, D., <span class="smallcaps">Seidel</span>, D. P., <span class="smallcaps">Spinu</span>, V., <span class="smallcaps">Takahashi</span>, K., <span class="smallcaps">Vaughan</span>, D., <span class="smallcaps">Wilke</span>, C., <span class="smallcaps">Woo</span>, K. and <span class="smallcaps">Yutani</span>, H. (2019). Welcome to the <span class="nocase">tidyverse</span>. <em>Journal of Open Source Software</em> <strong>4</strong> 1686.</div>
+</div>
+<div id="ref-tidymodels" class="csl-entry">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline"><span class="smallcaps">Kuhn</span>, M. and <span class="smallcaps">Wickham</span>, H. (2020). <em>Tidymodels: A collection of packages for modeling and machine learning using tidyverse principles.</em></div>
+</div>
+<div id="ref-xgboost_package" class="csl-entry">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline"><span class="smallcaps">Chen</span>, T., <span class="smallcaps">He</span>, T., <span class="smallcaps">Benesty</span>, M., <span class="smallcaps">Khotilovich</span>, V., <span class="smallcaps">Tang</span>, Y., <span class="smallcaps">Cho</span>, H., <span class="smallcaps">Chen</span>, K., <span class="smallcaps">Mitchell</span>, R., <span class="smallcaps">Cano</span>, I., <span class="smallcaps">Zhou</span>, T., <span class="smallcaps">Li</span>, M., <span class="smallcaps">Xie</span>, J., <span class="smallcaps">Lin</span>, M., <span class="smallcaps">Geng</span>, Y. and <span class="smallcaps">Li</span>, Y. (2021). <em>Xgboost: Extreme gradient boosting</em>.</div>
+</div>
+<div id="ref-ranger_package" class="csl-entry">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline"><span class="smallcaps">Wright</span>, M. N. and <span class="smallcaps">Ziegler</span>, A. (2017). <span class="nocase">ranger</span>: A fast implementation of random forests for high dimensional data in <span>C++</span> and <span>R</span>. <em>Journal of Statistical Software</em> <strong>77</strong> 1–7.</div>
+</div>
+<div id="ref-doParallel_package" class="csl-entry">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline"><span class="smallcaps">Corporation</span>, M. and <span class="smallcaps">Weston</span>, S. (2019). <em>doParallel: Foreach parallel adaptor for the ’parallel’ package</em>.</div>
 </div>
 </div>
 
@@ -190,15 +218,15 @@ Wickham, Hadley, Mara Averick, Jennifer Bryan, Winston Chang, Lucy D’Agostino 
 
     </div>
   </div>
-<script src="libs/gitbook/js/app.min.js"></script>
-<script src="libs/gitbook/js/lunr.js"></script>
-<script src="libs/gitbook/js/clipboard.min.js"></script>
-<script src="libs/gitbook/js/plugin-search.js"></script>
-<script src="libs/gitbook/js/plugin-sharing.js"></script>
-<script src="libs/gitbook/js/plugin-fontsettings.js"></script>
-<script src="libs/gitbook/js/plugin-bookdown.js"></script>
-<script src="libs/gitbook/js/jquery.highlight.js"></script>
-<script src="libs/gitbook/js/plugin-clipboard.js"></script>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
 <script>
 gitbook.require(["gitbook"], function(gitbook) {
 gitbook.start({
@@ -229,7 +257,7 @@ gitbook.start({
 "link": null,
 "text": null
 },
-"download": ["boosting_methods.pdf", "boosting_methods.epub"],
+"download": ["boosting_methods.pdf"],
 "toc": {
 "collapse": "subsection"
 }
@@ -237,6 +265,20 @@ gitbook.start({
 });
 </script>
 
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
 </body>
 
 </html>
