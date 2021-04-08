@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-04-07" />
+<meta name="date" content="2021-04-08" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -142,7 +142,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li class="chapter" data-level="3.1.1" data-path="theory.html"><a href="theory.html#forward-stagewise-additive-modeling"><i class="fa fa-check"></i><b>3.1.1</b> Forward Stagewise Additive Modeling</a></li>
 <li class="chapter" data-level="3.1.2" data-path="theory.html"><a href="theory.html#robust-loss-functions-for-regression"><i class="fa fa-check"></i><b>3.1.2</b> Robust loss functions for regression</a></li>
-<li class="chapter" data-level="3.1.3" data-path="theory.html"><a href="theory.html#off-shelf-performance"><i class="fa fa-check"></i><b>3.1.3</b> Off shelf performance</a></li>
 </ul></li>
 <li class="chapter" data-level="3.2" data-path="theory.html"><a href="theory.html#general-gradient-tree-boosting"><i class="fa fa-check"></i><b>3.2</b> General gradient tree boosting</a>
 <ul>
@@ -150,6 +149,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="3.2.2" data-path="theory.html"><a href="theory.html#gradient-tree-boosting-algorithm-from-elements"><i class="fa fa-check"></i><b>3.2.2</b> gradient tree boosting algorithm from elements</a></li>
 <li class="chapter" data-level="3.2.3" data-path="theory.html"><a href="theory.html#problem-of-right-sized-trees"><i class="fa fa-check"></i><b>3.2.3</b> problem of right sized trees</a></li>
 <li class="chapter" data-level="3.2.4" data-path="theory.html"><a href="theory.html#regularisation"><i class="fa fa-check"></i><b>3.2.4</b> regularisation</a></li>
+<li class="chapter" data-level="3.2.5" data-path="theory.html"><a href="theory.html#off-shelf-performance"><i class="fa fa-check"></i><b>3.2.5</b> Off shelf performance</a></li>
 </ul></li>
 <li class="chapter" data-level="3.3" data-path="theory.html"><a href="theory.html#xgboost-a-highly-efficient-implementation"><i class="fa fa-check"></i><b>3.3</b> XGBoost a highly efficient implementation</a></li>
 </ul></li>
@@ -183,7 +183,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h1><span class="header-section-number">Chapter 3</span> Theory</h1>
 <div id="the-powerful-idea-of-gradient-boosting" class="section level2" number="3.1">
 <h2><span class="header-section-number">3.1</span> The powerful idea of gradient boosting</h2>
-<p>As roughly mentioned in the introduction section <a href="intro.html#intro">2</a> the main idea of boosting is to sequentially build ‘weak’ learners that form a powerful ensemble model. It is not totally clear from which field these methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth. <span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> PAC learning can be considered one field within the field of the broader learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC). <span class="citation">[<a href="references.html#ref-pacbounds" role="doc-biblioref">2</a>]</span></p>
+<p>As roughly mentioned in the introduction section <a href="intro.html#intro">2</a> the main idea of boosting is to sequentially build ‘weak’ learners that form a powerful ensemble model. It is not totally clear from which field these methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> PAC learning can be considered one field within the broader field of learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC). <span class="citation">[<a href="references.html#ref-pacbounds" role="doc-biblioref">2</a>]</span> This section will firstly cover the general setup of gradient boosting as the most prominent method to train forward stagewise additive models. Secondly tree based gradient boosting and finally a very efficient and robust tree based gradient boosting algorithm namely XGBoost will be discussed in detail.</p>
 <div id="forward-stagewise-additive-modeling" class="section level3" number="3.1.1">
 <h3><span class="header-section-number">3.1.1</span> Forward Stagewise Additive Modeling</h3>
 <p>In the setting of the dataset <span class="math inline">\(\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}\)</span> with <span class="math inline">\(x_i \in \mathbb{R}^m\)</span> and <span class="math inline">\(y_i \in \mathbb{R}\)</span> boosting is fitting the following additive, still quite general, model.</p>
@@ -192,14 +192,44 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   \tag{3.1}
 \end{equation}\]</span>
 <p>Where <span class="math inline">\(\mathcal{F}\)</span> is the space of learning algorithms that will be narrowed down later on. Additive expansions like this are at the core of many other powerful machine learning algorithms like Neural Networks or Wavelets. <span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
-<p>This leads to the algorithm of Forward Stagewise Additive Modeling. <span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> tbdtbdtbd</p>
+<p>The formulation <span class="citation">[<a href="#ref-ref" role="doc-biblioref"><strong>ref?</strong></a>]</span>(eq:additiveModel) leads to so called forward stagewise additive modeling which basically means that one sequentially adds <span class="math inline">\(f \in \mathcal{F}\)</span> to the current model <span class="math inline">\(\phi_k\)</span> without changing anything about the previous models. <span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> The algorithm is shown below.</p>
+<hr />
+<p><strong>Algorithm 1</strong>: Forward Stagewise Additive Modeling</p>
+<hr />
+<ol style="list-style-type: decimal">
+<li><p>Initialize <span class="math inline">\(\phi_0(x) = 0\)</span></p></li>
+<li><p>For <span class="math inline">\(k = 1\)</span> to <span class="math inline">\(K\)</span> do:</p>
+<ul>
+<li><span class="math inline">\((\beta_k,\gamma_k) = argmin_{\beta,\gamma}\sum_{i=1}^N L(y_i,\phi_{k-1}(x_i) + \beta f(x_i,\gamma))\)</span></li>
+<li><span class="math inline">\(\phi_k(x) = \phi_{k-1}(x) + \beta_k f(x, \gamma_k)\)</span></li>
+</ul></li>
+</ol>
+<p>Where <span class="math inline">\(\gamma\)</span> parameterizes the learner <span class="math inline">\(f \in \mathcal{F}\)</span> and the <span class="math inline">\(\beta_k\)</span> are the expansion coefficients. <span class="math inline">\(L\)</span> should be a differentiable loss function.</p>
+<hr />
+<p>For example for the basic <span class="math inline">\(L_2\)</span> loss the expression to be minimized simplifies to the following:</p>
+<p><span class="math display">\[
+L_2(y_i,\phi_{k-1}(x_i) + \beta f(x_i,\gamma)) = (y_i - \phi_{k-1}(x_i) - \beta f(x_i,\gamma))^2
+\]</span></p>
+<p>As <span class="math inline">\(y_i - \phi_{k-1}(x_i)\)</span> is just the residual of the previous model, so the next model that is added corresponds to the model that best approximates the residuals of the current model. Although the <span class="math inline">\(L_2\)</span> loss has many very nice properties like the above it lacks robustness against outliers. Therefore two alternative losses for boosting in the regression setting are worth considering.</p>
 </div>
 <div id="robust-loss-functions-for-regression" class="section level3" number="3.1.2">
 <h3><span class="header-section-number">3.1.2</span> Robust loss functions for regression</h3>
+<p>As the <span class="math inline">\(L_2\)</span> loss squares the residuals, observations with large absolute residuals are overly important in the minimization step. This effect can be reduced intuitively by just using the <span class="math inline">\(L_1\)</span> loss i.e. minimize over the sum over just the absolute residuals. To do this is indeed a valid approach and can reduce the influence of outliers greatly and thus make the final model more robust. Another good choice could be the <strong>Huber</strong> loss which tries to get the best of <span class="math inline">\(L_1\)</span> and <span class="math inline">\(L_2\)</span> loss. <span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
+<span class="math display" id="eq:huberLoss">\[\begin{equation}
+  L_{Huber}(y,f(x)) = \bigg\{\begin{array}{11}
+  L_2(y,f(x)) &amp; |y-f(x)| \leq \delta \\
+  2\delta |y-f(x)| - \delta^2 &amp; otherwise. \\
+  \end{array}
+  \tag{3.2}
+\end{equation}\]</span>
+<p>In Figure <a href="theory.html#fig:lossComp">3.1</a> is a comparison of the three different losses discussed so far.</p>
+<div class="figure" style="text-align: center"><span id="fig:lossComp"></span>
+<img src="_pictures/huber_loss.png" alt="Comparison of different regression loss functions[@elements]" width="70%" />
+<p class="caption">
+Figure 3.1: Comparison of different regression loss functions<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span>
+</p>
 </div>
-<div id="off-shelf-performance" class="section level3" number="3.1.3">
-<h3><span class="header-section-number">3.1.3</span> Off shelf performance</h3>
-<p>Although arguably one of the most famous algorithms in boosting is the Adaboost algorithm for classification, here the focus will be on a regression task and thus Adaboost will not be covered.</p>
+<p>These alternative loss criteria are more robust but make the fitting i.e. the minimization much more complex as they do not yield such simplifications like the <span class="math inline">\(L_2\)</span> loss. The next step in the journey of exploring boosting is to narrow down the argument spaces of Algorithm 1 (Forward Stagewise Additive Modeling) and to specify a subset of the general space of learning algorithms. This subset will be the space of Classification and Regression Tree (CART) models and in this case as the focus is on a regression task the space of regression trees. This choice is by no means arbitrary as in practice tree based boosting algorithms have proven countless of times that they provide very robust and accurate models but still other learners might be chosen. The next section will explore how one can actually fit such an Forward Stagewise Additive Model when using regression trees as the learner class.</p>
 </div>
 </div>
 <div id="general-gradient-tree-boosting" class="section level2" number="3.2">
@@ -216,16 +246,23 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="regularisation" class="section level3" number="3.2.4">
 <h3><span class="header-section-number">3.2.4</span> regularisation</h3>
-<div class="figure">
-<img src="_pictures/boosting_easy.png" alt="" />
-<p class="caption">Example of an additive tree ensamble<span class="citation">[<a href="references.html#ref-xgboost_paper" role="doc-biblioref">3</a>]</span></p>
 </div>
+<div id="off-shelf-performance" class="section level3" number="3.2.5">
+<h3><span class="header-section-number">3.2.5</span> Off shelf performance</h3>
+<div class="figure" style="text-align: center"><span id="fig:exampleAdditiveTree"></span>
+<img src="_pictures/boosting_easy.png" alt="Example of an additive tree ensamble[@xgboost_paper]" width="70%" />
+<p class="caption">
+Figure 3.2: Example of an additive tree ensamble<span class="citation">[<a href="references.html#ref-xgboost_paper" role="doc-biblioref">3</a>]</span>
+</p>
+</div>
+<p>reference the figure: <a href="theory.html#fig:exampleAdditiveTree">3.2</a></p>
 </div>
 </div>
 <div id="xgboost-a-highly-efficient-implementation" class="section level2" number="3.3">
 <h2><span class="header-section-number">3.3</span> XGBoost a highly efficient implementation</h2>
 <p>use the whole paper</p>
 <p>We will cite the great paper!<span class="citation">[<a href="references.html#ref-xgboost_paper" role="doc-biblioref">3</a>]</span></p>
+<p>for details about hyperparameters use <span class="citation">[<a href="references.html#ref-HandsOnMLwithR" role="doc-biblioref">4</a>]</span></p>
 
 </div>
 </div>

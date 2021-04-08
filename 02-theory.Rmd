@@ -2,7 +2,7 @@
 
 ## The powerful idea of gradient boosting
 
-As roughly mentioned in the introduction section \@ref(intro) the main idea of boosting is to sequentially build 'weak' learners that form a powerful ensemble model. It is not totally clear from which field these methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth. [@elements] PAC learning can be considered one field within the field of the broader learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC). [@pacbounds]
+As roughly mentioned in the introduction section \@ref(intro) the main idea of boosting is to sequentially build 'weak' learners that form a powerful ensemble model. It is not totally clear from which field these methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth.[@elements] PAC learning can be considered one field within the broader field of learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC). [@pacbounds] This section will firstly cover the general setup of gradient boosting as the most prominent method to train forward stagewise additive models. Secondly tree based gradient boosting and finally a very efficient and robust tree based gradient boosting algorithm namely XGBoost will be discussed in detail.
 
 ### Forward Stagewise Additive Modeling
 
@@ -16,13 +16,56 @@ In the setting of the dataset $\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}$ with $x
 ```
 Where $\mathcal{F}$ is the space of learning algorithms that will be narrowed down later on. Additive expansions like this are at the core of many other powerful machine learning algorithms like Neural Networks or Wavelets. [@elements]
 
-This leads to the algorithm of Forward Stagewise Additive Modeling. [@elements] tbdtbdtbd
+The formulation @ref(eq:additiveModel) leads to so called forward stagewise additive modeling which basically means that one sequentially adds $f \in \mathcal{F}$ to the current model $\phi_k$ without changing anything about the previous models. [@elements] The algorithm is shown below.
+
+------------------------------------------------------------------------
+
+**Algorithm 1**: Forward Stagewise Additive Modeling
+
+------------------------------------------------------------------------
+
+1.  Initialize $\phi_0(x) = 0$
+
+2.  For $k = 1$ to $K$ do:
+
+    -   $(\beta_k,\gamma_k) = argmin_{\beta,\gamma}\sum_{i=1}^N L(y_i,\phi_{k-1}(x_i) + \beta f(x_i,\gamma))$
+    -   $\phi_k(x) = \phi_{k-1}(x) + \beta_k f(x, \gamma_k)$
+
+Where $\gamma$ parameterizes the learner $f \in \mathcal{F}$ and the $\beta_k$ are the expansion coefficients. $L$ should be a differentiable loss function.
+
+------------------------------------------------------------------------
+
+For example for the basic $L_2$ loss the expression to be minimized simplifies to the following:
+
+$$
+L_2(y_i,\phi_{k-1}(x_i) + \beta f(x_i,\gamma)) = (y_i - \phi_{k-1}(x_i) - \beta f(x_i,\gamma))^2
+$$
+
+As $y_i - \phi_{k-1}(x_i)$ is just the residual of the previous model, so the next model that is added corresponds to the model that best approximates the residuals of the current model. Although the $L_2$ loss has many very nice properties like the above it lacks robustness against outliers. Therefore two alternative losses for boosting in the regression setting are worth considering.
 
 ### Robust loss functions for regression
 
-### Off shelf performance
+As the $L_2$ loss squares the residuals, observations with large absolute residuals are overly important in the minimization step. This effect can be reduced intuitively by just using the $L_1$ loss i.e. minimize over the sum over just the absolute residuals. To do this is indeed a valid approach and can reduce the influence of outliers greatly and thus make the final model more robust. Another good choice could be the **Huber** loss which tries to get the best of $L_1$ and $L_2$ loss. [@elements] 
 
-Although arguably one of the most famous algorithms in boosting is the Adaboost algorithm for classification, here the focus will be on a regression task and thus Adaboost will not be covered.
+```{=tex}
+\begin{equation}
+  L_{Huber}(y,f(x)) = \bigg\{\begin{array}{11}
+  L_2(y,f(x)) & |y-f(x)| \leq \delta \\
+  2\delta |y-f(x)| - \delta^2 & otherwise. \\
+  \end{array}
+  (\#eq:huberLoss)
+\end{equation}
+```
+
+In Figure \@ref(fig:lossComp) is a comparison of the three different losses discussed so far.
+
+
+
+```{r lossComp,echo=FALSE,fig.dim=c(6,4), out.width='70%', fig.align='center', fig.cap="Comparison of different regression loss functions[@elements]"}
+knitr::include_graphics("_pictures/huber_loss.png")
+```
+
+These alternative loss criteria are more robust but make the fitting i.e. the minimization much more complex as they do not yield such simplifications like the $L_2$ loss. The next step in the journey of exploring boosting is to narrow down the argument spaces of Algorithm 1 (Forward Stagewise Additive Modeling) and to specify a subset of the general space of learning algorithms. This subset will be the space of Classification and Regression Tree (CART) models and in this case as the focus is on a regression task the space of regression trees. This choice is by no means arbitrary as in practice tree based boosting algorithms have proven countless of times that they provide very robust and accurate models but still other learners might be chosen. The next section will explore how one can actually fit such an Forward Stagewise Additive Model when using regression trees as the learner class.
 
 ## General gradient tree boosting
 
@@ -36,7 +79,12 @@ first some stuff from elements (more general)
 
 ### regularisation
 
-![Example of an additive tree ensamble[@xgboost_paper]](_pictures/boosting_easy.png)
+### Off shelf performance
+
+```{r exampleAdditiveTree, echo=FALSE,fig.dim=c(6,4), out.width='70%', fig.align='center', fig.cap="Example of an additive tree ensamble[@xgboost_paper]"}
+knitr::include_graphics("_pictures/boosting_easy.png")
+```
+reference the figure: \@ref(fig:exampleAdditiveTree)
 
 ## XGBoost a highly efficient implementation
 
