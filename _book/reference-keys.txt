@@ -1,7 +1,12 @@
 eq:additiveModel
 eq:huberLoss
 fig:lossComp
+eq:treeDef
 fig:exampleAdditiveTree
+eq:oneStepTreeBoost
+eq:numOptSol
+eq:oneStepTreeBoostnew
+eq:gammaLineSearch
 prerequisites
 intro
 theory
@@ -9,7 +14,7 @@ the-powerful-idea-of-gradient-boosting
 forward-stagewise-additive-modeling
 robust-loss-functions-for-regression
 general-gradient-tree-boosting
-numerical-optimization
+gradient-boosting
 gradient-tree-boosting-algorithm-from-elements
 problem-of-right-sized-trees
 regularisation
