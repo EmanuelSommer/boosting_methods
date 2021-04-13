@@ -33,7 +33,7 @@
   
 <link rel="prev" href="intro.html"/>
 <link rel="next" href="eda.html"/>
-<script src="libs/header-attrs-2.6/header-attrs.js"></script>
+<script src="libs/header-attrs-2.7/header-attrs.js"></script>
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
@@ -219,11 +219,11 @@ L_2(y_i,\phi_{k-1}(x_i) + \beta f(x_i,\gamma)) = (y_i - \phi_{k-1}(x_i) - \beta 
   \end{cases}
   \tag{3.2}
 \end{equation}\]</span>
-<p>In Figure <a href="theory.html#fig:lossComp">3.1</a> is a comparison of the three different losses discussed so far.</p>
+<p>In Figure <a href="theory.html#fig:lossComp">3.1</a> is a comparison of the three different losses discussed so far.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
 <div class="figure" style="text-align: center"><span id="fig:lossComp"></span>
-<img src="_pictures/huber_loss.png" alt="Comparison of different regression loss functions[@elements]" width="70%" />
+<img src="_pictures/huber_loss.png" alt="Comparison of different regression loss functions." width="70%" />
 <p class="caption">
-Figure 3.1: Comparison of different regression loss functions<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span>
+Figure 3.1: Comparison of different regression loss functions.
 </p>
 </div>
 <p>These alternative loss criteria are more robust but make the fitting i.e. the minimization much more complex as they do not yield such simplifications like the <span class="math inline">\(L_2\)</span> loss.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> The next step in the journey of exploring boosting is to narrow down the argument spaces of <strong>Algorithm 1</strong> (Forward Stagewise Additive Modeling) and to specify a subset of the general space of learning algorithms. This subset will be the space of Classification and Regression Tree (CART) models and in this case as the focus is on a regression task the space of regression trees. This choice is by no means arbitrary as in practice tree-based boosting algorithms have proven countless of times that they provide very robust and accurate models but still other learners might be chosen.<span class="citation">[<a href="references.html#ref-HandsOnMLwithR" role="doc-biblioref">2</a>]</span> The next subsection will explore how one can actually fit such a forward stagewise additive model when using regression trees as the learner class.</p>
@@ -237,11 +237,11 @@ Figure 3.1: Comparison of different regression loss functions<span class="citati
   \tag{3.3}
 \end{equation}\]</span>
 <p>With <span class="math inline">\(R_j\)</span> being <span class="math inline">\(J\)</span> distinct regions of the predictor space usually attained by recursive binary splitting. Moreover these regions correspond to the leafs of the tree and the number of leafs <span class="math inline">\(J\)</span> or the depth of the trees are most often hyperparameters (not trained). The <span class="math inline">\(\gamma_j \in \mathbb{R}\)</span> are the predictions for a given x if x is contained in the region <span class="math inline">\(R_j\)</span>. While it is quite easy to get the <span class="math inline">\(\gamma_j\)</span> for the regions given, most often by computing <span class="math inline">\(\gamma_j = \frac{1}{|\{x \in R_j\}|} \sum_{\{x \in R_j\}} x\)</span> , it is a much harder problem to get good distinct regions. The above mentioned recursive binary splitting is an approximation to do this and works in a top down greedy fashion.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> From now on we assume that we have an efficient way of fitting such trees to a metric outcome variable e.g. by recursive binary splitting.</p>
-<p>A nice graphical example of an additive model based on trees is displayed in Figure <a href="theory.html#fig:exampleAdditiveTree">3.2</a> below.</p>
+<p>A nice graphical example of an additive model based on trees is displayed in the figure <a href="theory.html#fig:exampleAdditiveTree">3.2</a> below.<span class="citation">[<a href="references.html#ref-xgboostPaper" role="doc-biblioref">4</a>]</span></p>
 <div class="figure" style="text-align: center"><span id="fig:exampleAdditiveTree"></span>
-<img src="_pictures/boosting_easy.png" alt="Example of an additive tree ensamble[@xgboost_paper]" width="70%" />
+<img src="_pictures/boosting_easy.png" alt="Example of an additive tree ensamble." width="70%" />
 <p class="caption">
-Figure 3.2: Example of an additive tree ensamble<span class="citation">[<a href="references.html#ref-xgboost_paper" role="doc-biblioref">4</a>]</span>
+Figure 3.2: Example of an additive tree ensamble.
 </p>
 </div>
 <p>Having now the new space <span class="math inline">\(\mathcal{T}\)</span> for the general boosting model <a href="theory.html#eq:additiveModel">(3.1)</a> one can write down the optimization problem that has to be solved in each step of the forward stagewise process of fitting the model.</p>
@@ -294,31 +294,6 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 </ol>
 <hr />
 <p>The only unknowns in this algorithm are now the differentiable loss function and the hyperparameters like the <span class="math inline">\(J^{(k)}\)</span> and the <span class="math inline">\(K\)</span>. While choices for the hyperparameters are discussed further below, the following table <a href="theory.html#tab:lossGradients">3.1</a> displays the gradients for the losses discussed so far.</p>
-<!--
-<table>
-<caption>(\#tab:lossGradients)Gradients of the discussed losses [@elements]</caption>
- <thead>
-  <tr>
-   <th style="text-align:left;"> Loss </th>
-   <th style="text-align:left;"> Gradient </th>
-  </tr>
- </thead>
-<tbody>
-  <tr>
-   <td style="text-align:left;"> $L_2$: $(y_i - \phi(x_i))^2$ </td>
-   <td style="text-align:left;"> $2(y_i - \phi(x_i))$ </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> $L_1$: $|y_i - \phi(x_i)|$ </td>
-   <td style="text-align:left;"> $sign(y_i - \phi(x_i))$ </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> Huber loss </td>
-   <td style="text-align:left;"> $y_i - \phi(x_i)$ for $|y_i - \phi(x_i)| \leq \delta$ and $\delta sign(y_i - \phi(x_i))$ otherwise, with $\delta$ quantile of $|y_i - \phi(x_i)|$ </td>
-  </tr>
-</tbody>
-</table>
--->
 <table>
 <caption><span id="tab:lossGradients">Table 3.1: </span> Gradients of the discussed losses <span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></caption>
 <colgroup>
@@ -366,7 +341,7 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 <div id="subsampling" class="section level4" number="3.2.3.2">
 <h4><span class="header-section-number">3.2.3.2</span> Subsampling</h4>
 <p>The other method to regularize the trees will be subsampling. There are two different kinds of subsampling. The first one is row-subsampling which basically means just using a random fraction of the training data in each iteration when fitting the new tree. Common values are <span class="math inline">\(\frac{1}{2}\)</span> but for a larger training set the value can be chosen to be smaller. This does not only help to prevent overfitting and thus achieving a better predictive performance but reduces also the computational effort in each iteration.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> The approach is very similar to the dropout technique in the setting of deep neural networks.</p>
-<p>Moreover one can apply column-subsampling or feature-subsampling. Here only a fraction of the features or an explicit number of the features are used in each iteration. This is the exact same method and intention as the one applied in random forest models. Again the technique not only boosts performance on unseen data but also reduces the computational time.<span class="citation">[<a href="references.html#ref-xgboost_paper" role="doc-biblioref">4</a>]</span> Still it must be noted that by using one or both subsampling methods one introduces one or two additional hyperparameters to the model that have to be tuned.</p>
+<p>Moreover one can apply column-subsampling or feature-subsampling. Here only a fraction of the features or an explicit number of the features are used in each iteration. This is the exact same method and intention as the one applied in random forest models. Again the technique not only boosts performance on unseen data but also reduces the computational time.<span class="citation">[<a href="references.html#ref-xgboostPaper" role="doc-biblioref">4</a>]</span> Still it must be noted that by using one or both subsampling methods one introduces one or two additional hyperparameters to the model that have to be tuned.</p>
 <p>Having the <strong>Algorithm 2</strong> for tree-based gradient boosting alongside some regularization techniques it is time to look at a very popular, efficient and powerful open source implementation.</p>
 </div>
 </div>
@@ -374,7 +349,7 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 <div id="xgboost-a-highly-efficient-implementation" class="section level2" number="3.3">
 <h2><span class="header-section-number">3.3</span> XGBoost a highly efficient implementation</h2>
 <p>use the whole paper</p>
-<p>We will cite the great paper!<span class="citation">[<a href="references.html#ref-xgboost_paper" role="doc-biblioref">4</a>]</span></p>
+<p>We will cite the great paper!<span class="citation">[<a href="references.html#ref-xgboostPaper" role="doc-biblioref">4</a>]</span></p>
 <p>for details about hyperparameters use <span class="citation">[<a href="references.html#ref-HandsOnMLwithR" role="doc-biblioref">2</a>]</span></p>
 
 </div>

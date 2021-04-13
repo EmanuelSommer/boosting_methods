@@ -55,9 +55,9 @@ As the $L_2$ loss squares the residuals, observations with large absolute residu
   (\#eq:huberLoss)
 \end{equation}
 ```
-In Figure \@ref(fig:lossComp) is a comparison of the three different losses discussed so far.
+In Figure \@ref(fig:lossComp) is a comparison of the three different losses discussed so far.[@elements]
 
-```{r lossComp,echo=FALSE,fig.dim=c(6,4), out.width='70%', fig.align='center', fig.cap="Comparison of different regression loss functions[@elements]"}
+```{r lossComp,echo=FALSE,fig.dim=c(6,4), out.width='70%', fig.align='center', fig.cap="Comparison of different regression loss functions."}
 knitr::include_graphics("_pictures/huber_loss.png")
 ```
 
@@ -75,9 +75,9 @@ From now on there is the switch from the space of learning algorithms $\mathcal{
 ```
 With $R_j$ being $J$ distinct regions of the predictor space usually attained by recursive binary splitting. Moreover these regions correspond to the leafs of the tree and the number of leafs $J$ or the depth of the trees are most often hyperparameters (not trained). The $\gamma_j \in \mathbb{R}$ are the predictions for a given x if x is contained in the region $R_j$. While it is quite easy to get the $\gamma_j$ for the regions given, most often by computing $\gamma_j = \frac{1}{|\{x \in R_j\}|} \sum_{\{x \in R_j\}} x$ , it is a much harder problem to get good distinct regions. The above mentioned recursive binary splitting is an approximation to do this and works in a top down greedy fashion.[@elements] From now on we assume that we have an efficient way of fitting such trees to a metric outcome variable e.g. by recursive binary splitting.
 
-A nice graphical example of an additive model based on trees is displayed in Figure \@ref(fig:exampleAdditiveTree) below.
+A nice graphical example of an additive model based on trees is displayed in the figure \@ref(fig:exampleAdditiveTree) below.[@xgboostPaper]
 
-```{r exampleAdditiveTree, echo=FALSE,fig.dim=c(6,4), out.width='70%', fig.align='center', fig.cap="Example of an additive tree ensamble[@xgboost_paper]"}
+```{r exampleAdditiveTree,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Example of an additive tree ensamble."}
 knitr::include_graphics("_pictures/boosting_easy.png")
 ```
 
@@ -159,28 +159,8 @@ Putting all of this back together with **Algorithm 1** results in **Algorithm 2*
 
 The only unknowns in this algorithm are now the differentiable loss function and the hyperparameters like the $J^{(k)}$ and the $K$. While choices for the hyperparameters are discussed further below, the following table \@ref(tab:lossGradients) displays the gradients for the losses discussed so far.
 
-```{=html}
-<!--
-```{r lossGradients, echo=FALSE}
-library(kableExtra)
-tableLosses <- data.frame(
-  Loss = c(
-    "$L_2$: $(y_i - \\phi(x_i))^2$",
-    "$L_1$: $|y_i - \\phi(x_i)|$",
-    "Huber loss"
-  ),
-  Gradient = c(
-    "$2(y_i - \\phi(x_i))$",
-    "$sign(y_i - \\phi(x_i))$",
-    "$y_i - \\phi(x_i)$ for $|y_i - \\phi(x_i)| \\leq \\delta$ and $\\delta sign(y_i - \\phi(x_i))$ otherwise, with $\\delta$ quantile of $|y_i - \\phi(x_i)|$"
-  )
-)
 
-kable(tableLosses, booktabs = TRUE,
-      caption = "Gradients of the discussed losses [@elements]")
-```
--->
-```
+
 +--------------------------------+-----------------------------------------------------------------------------------------+
 | Loss                           | Gradient                                                                                |
 +================================+=========================================================================================+
@@ -217,7 +197,7 @@ Shrinkage basically refers to just introducing a learning rate $\nu$. This learn
 
 The other method to regularize the trees will be subsampling. There are two different kinds of subsampling. The first one is row-subsampling which basically means just using a random fraction of the training data in each iteration when fitting the new tree. Common values are $\frac{1}{2}$ but for a larger training set the value can be chosen to be smaller. This does not only help to prevent overfitting and thus achieving a better predictive performance but reduces also the computational effort in each iteration.[@elements] The approach is very similar to the dropout technique in the setting of deep neural networks.
 
-Moreover one can apply column-subsampling or feature-subsampling. Here only a fraction of the features or an explicit number of the features are used in each iteration. This is the exact same method and intention as the one applied in random forest models. Again the technique not only boosts performance on unseen data but also reduces the computational time.[@xgboost_paper] Still it must be noted that by using one or both subsampling methods one introduces one or two additional hyperparameters to the model that have to be tuned.
+Moreover one can apply column-subsampling or feature-subsampling. Here only a fraction of the features or an explicit number of the features are used in each iteration. This is the exact same method and intention as the one applied in random forest models. Again the technique not only boosts performance on unseen data but also reduces the computational time.[@xgboostPaper] Still it must be noted that by using one or both subsampling methods one introduces one or two additional hyperparameters to the model that have to be tuned.
 
 Having the **Algorithm 2** for tree-based gradient boosting alongside some regularization techniques it is time to look at a very popular, efficient and powerful open source implementation.
 
@@ -225,6 +205,6 @@ Having the **Algorithm 2** for tree-based gradient boosting alongside some regul
 
 use the whole paper
 
-We will cite the great paper![@xgboost_paper]
+We will cite the great paper![@xgboostPaper]
 
 for details about hyperparameters use [@HandsOnMLwithR]

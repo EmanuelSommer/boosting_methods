@@ -254,7 +254,7 @@ As the \(L_2\) loss squares the residuals, observations with large absolute resi
   \label{eq:huberLoss}
 \end{equation}
 
-In Figure \ref{fig:lossComp} is a comparison of the three different losses discussed so far.
+In Figure \ref{fig:lossComp} is a comparison of the three different losses discussed so far.\citep{elements}
 
 \begin{figure}
 
@@ -262,7 +262,7 @@ In Figure \ref{fig:lossComp} is a comparison of the three different losses discu
 
 }
 
-\caption{Comparison of different regression loss functions[@elements]}\label{fig:lossComp}
+\caption{Comparison of different regression loss functions.}\label{fig:lossComp}
 \end{figure}
 
 These alternative loss criteria are more robust but make the fitting i.e.~the minimization much more complex as they do not yield such simplifications like the \(L_2\) loss.\citep{elements} The next step in the journey of exploring boosting is to narrow down the argument spaces of \textbf{Algorithm 1} (Forward Stagewise Additive Modeling) and to specify a subset of the general space of learning algorithms. This subset will be the space of Classification and Regression Tree (CART) models and in this case as the focus is on a regression task the space of regression trees. This choice is by no means arbitrary as in practice tree-based boosting algorithms have proven countless of times that they provide very robust and accurate models but still other learners might be chosen.\citep[\citet{HandsOnMLwithR}]{elements} The next subsection will explore how one can actually fit such a forward stagewise additive model when using regression trees as the learner class.
@@ -279,16 +279,16 @@ From now on there is the switch from the space of learning algorithms \(\mathcal
 
 With \(R_j\) being \(J\) distinct regions of the predictor space usually attained by recursive binary splitting. Moreover these regions correspond to the leafs of the tree and the number of leafs \(J\) or the depth of the trees are most often hyperparameters (not trained). The \(\gamma_j \in \mathbb{R}\) are the predictions for a given x if x is contained in the region \(R_j\). While it is quite easy to get the \(\gamma_j\) for the regions given, most often by computing \(\gamma_j = \frac{1}{|\{x \in R_j\}|} \sum_{\{x \in R_j\}} x\) , it is a much harder problem to get good distinct regions. The above mentioned recursive binary splitting is an approximation to do this and works in a top down greedy fashion.\citep{elements} From now on we assume that we have an efficient way of fitting such trees to a metric outcome variable e.g.~by recursive binary splitting.
 
-A nice graphical example of an additive model based on trees is displayed in Figure \ref{fig:exampleAdditiveTree} below.
+A nice graphical example of an additive model based on trees is displayed in the figure \ref{fig:exampleAdditiveTree} below.\citep{xgboostPaper}
 
-\textbackslash begin\{figure\}
+\begin{figure}
 
-\{\centering \includegraphics[width=0.7\linewidth]{_pictures/boosting_easy}
+{\centering \includegraphics[width=0.7\linewidth]{_pictures/boosting_easy} 
 
-\}
+}
 
-\textbackslash caption\{Example of an additive tree ensamble\citep{xgboost_paper}\}\label{fig:exampleAdditiveTree}
-\textbackslash end\{figure\}
+\caption{Example of an additive tree ensamble.}\label{fig:exampleAdditiveTree}
+\end{figure}
 
 Having now the new space \(\mathcal{T}\) for the general boosting model \eqref{eq:additiveModel} one can write down the optimization problem that has to be solved in each step of the forward stagewise process of fitting the model.
 
@@ -417,7 +417,7 @@ Shrinkage basically refers to just introducing a learning rate \(\nu\). This lea
 
 The other method to regularize the trees will be subsampling. There are two different kinds of subsampling. The first one is row-subsampling which basically means just using a random fraction of the training data in each iteration when fitting the new tree. Common values are \(\frac{1}{2}\) but for a larger training set the value can be chosen to be smaller. This does not only help to prevent overfitting and thus achieving a better predictive performance but reduces also the computational effort in each iteration.\citep{elements} The approach is very similar to the dropout technique in the setting of deep neural networks.
 
-Moreover one can apply column-subsampling or feature-subsampling. Here only a fraction of the features or an explicit number of the features are used in each iteration. This is the exact same method and intention as the one applied in random forest models. Again the technique not only boosts performance on unseen data but also reduces the computational time.\citep{xgboost_paper} Still it must be noted that by using one or both subsampling methods one introduces one or two additional hyperparameters to the model that have to be tuned.
+Moreover one can apply column-subsampling or feature-subsampling. Here only a fraction of the features or an explicit number of the features are used in each iteration. This is the exact same method and intention as the one applied in random forest models. Again the technique not only boosts performance on unseen data but also reduces the computational time.\citep{xgboostPaper} Still it must be noted that by using one or both subsampling methods one introduces one or two additional hyperparameters to the model that have to be tuned.
 
 Having the \textbf{Algorithm 2} for tree-based gradient boosting alongside some regularization techniques it is time to look at a very popular, efficient and powerful open source implementation.
 
@@ -426,7 +426,7 @@ Having the \textbf{Algorithm 2} for tree-based gradient boosting alongside some 
 
 use the whole paper
 
-We will cite the great paper!\citep{xgboost_paper}
+We will cite the great paper!\citep{xgboostPaper}
 
 for details about hyperparameters use \citep{HandsOnMLwithR}
 
