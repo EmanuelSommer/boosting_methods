@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-04-09" />
+<meta name="date" content="2021-04-13" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -145,11 +145,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 <li class="chapter" data-level="3.2" data-path="theory.html"><a href="theory.html#general-gradient-tree-boosting"><i class="fa fa-check"></i><b>3.2</b> General gradient tree boosting</a>
 <ul>
-<li class="chapter" data-level="3.2.1" data-path="theory.html"><a href="theory.html#gradient-boosting"><i class="fa fa-check"></i><b>3.2.1</b> Gradient boosting</a></li>
-<li class="chapter" data-level="3.2.2" data-path="theory.html"><a href="theory.html#gradient-tree-boosting-algorithm-from-elements"><i class="fa fa-check"></i><b>3.2.2</b> gradient tree boosting algorithm from elements</a></li>
-<li class="chapter" data-level="3.2.3" data-path="theory.html"><a href="theory.html#problem-of-right-sized-trees"><i class="fa fa-check"></i><b>3.2.3</b> problem of right sized trees</a></li>
-<li class="chapter" data-level="3.2.4" data-path="theory.html"><a href="theory.html#regularisation"><i class="fa fa-check"></i><b>3.2.4</b> regularisation</a></li>
-<li class="chapter" data-level="3.2.5" data-path="theory.html"><a href="theory.html#off-shelf-performance"><i class="fa fa-check"></i><b>3.2.5</b> Off shelf performance</a></li>
+<li class="chapter" data-level="3.2.1" data-path="theory.html"><a href="theory.html#numerical-optimization"><i class="fa fa-check"></i><b>3.2.1</b> Numerical optimization</a></li>
+<li class="chapter" data-level="3.2.2" data-path="theory.html"><a href="theory.html#single-tree-depth"><i class="fa fa-check"></i><b>3.2.2</b> Single tree depth</a></li>
+<li class="chapter" data-level="3.2.3" data-path="theory.html"><a href="theory.html#combat-overfitting"><i class="fa fa-check"></i><b>3.2.3</b> Combat overfitting</a></li>
 </ul></li>
 <li class="chapter" data-level="3.3" data-path="theory.html"><a href="theory.html#xgboost-a-highly-efficient-implementation"><i class="fa fa-check"></i><b>3.3</b> XGBoost a highly efficient implementation</a></li>
 </ul></li>
@@ -185,14 +183,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="ref-elements" class="csl-entry">
 <div class="csl-left-margin">[1] </div><div class="csl-right-inline"><span class="smallcaps">Hastie</span>, T., <span class="smallcaps">Tibshirani</span>, R. and <span class="smallcaps">Friedman</span>, J. (2009). <em>The elements of statistical learning (12th printing)</em>. Springer New York.</div>
 </div>
+<div id="ref-HandsOnMLwithR" class="csl-entry">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline"><span class="smallcaps">Boehmke</span>, B. and <span class="smallcaps">Greenwell</span>, B. (2019). <em>Hands-on machine learning with r</em>.</div>
+</div>
 <div id="ref-pacbounds" class="csl-entry">
-<div class="csl-left-margin">[2] </div><div class="csl-right-inline"><span class="smallcaps">Wolf</span>, M. M. (2020). Lecture notes in mathematical foundations of supervised learning.</div>
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline"><span class="smallcaps">Wolf</span>, M. M. (2020). Lecture notes in mathematical foundations of supervised learning.</div>
 </div>
 <div id="ref-xgboost_paper" class="csl-entry">
-<div class="csl-left-margin">[3] </div><div class="csl-right-inline"><span class="smallcaps">Chen</span>, T. and <span class="smallcaps">Guestrin</span>, C. (2016). XGBoost: <span>A</span> scalable tree boosting system. <em>CoRR</em> <strong>abs/1603.02754</strong>.</div>
-</div>
-<div id="ref-HandsOnMLwithR" class="csl-entry">
-<div class="csl-left-margin">[4] </div><div class="csl-right-inline"><span class="smallcaps">Boehmke</span>, B. and <span class="smallcaps">Greenwell</span>, B. (2019). <em>Hands-on machine learning with r</em>.</div>
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline"><span class="smallcaps">Chen</span>, T. and <span class="smallcaps">Guestrin</span>, C. (2016). XGBoost: <span>A</span> scalable tree boosting system. <em>CoRR</em> <strong>abs/1603.02754</strong>.</div>
 </div>
 <div id="ref-tidyverse" class="csl-entry">
 <div class="csl-left-margin">[5] </div><div class="csl-right-inline"><span class="smallcaps">Wickham</span>, H., <span class="smallcaps">Averick</span>, M., <span class="smallcaps">Bryan</span>, J., <span class="smallcaps">Chang</span>, W., <span class="smallcaps">McGowan</span>, L. D., <span class="smallcaps">François</span>, R., <span class="smallcaps">Grolemund</span>, G., <span class="smallcaps">Hayes</span>, A., <span class="smallcaps">Henry</span>, L., <span class="smallcaps">Hester</span>, J., <span class="smallcaps">Kuhn</span>, M., <span class="smallcaps">Pedersen</span>, T. L., <span class="smallcaps">Miller</span>, E., <span class="smallcaps">Bache</span>, S. M., <span class="smallcaps">Müller</span>, K., <span class="smallcaps">Ooms</span>, J., <span class="smallcaps">Robinson</span>, D., <span class="smallcaps">Seidel</span>, D. P., <span class="smallcaps">Spinu</span>, V., <span class="smallcaps">Takahashi</span>, K., <span class="smallcaps">Vaughan</span>, D., <span class="smallcaps">Wilke</span>, C., <span class="smallcaps">Woo</span>, K. and <span class="smallcaps">Yutani</span>, H. (2019). Welcome to the <span class="nocase">tidyverse</span>. <em>Journal of Open Source Software</em> <strong>4</strong> 1686.</div>
@@ -208,6 +206,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="ref-doParallel_package" class="csl-entry">
 <div class="csl-left-margin">[9] </div><div class="csl-right-inline"><span class="smallcaps">Corporation</span>, M. and <span class="smallcaps">Weston</span>, S. (2019). <em>doParallel: Foreach parallel adaptor for the ’parallel’ package</em>.</div>
+</div>
+<div id="ref-kableextra_package" class="csl-entry">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline"><span class="smallcaps">Zhu</span>, H. (2021). <em>kableExtra: Construct complex table with ’kable’ and pipe syntax</em>.</div>
 </div>
 </div>
 

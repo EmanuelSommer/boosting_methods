@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-04-09" />
+<meta name="date" content="2021-04-13" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -145,11 +145,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 <li class="chapter" data-level="3.2" data-path="theory.html"><a href="theory.html#general-gradient-tree-boosting"><i class="fa fa-check"></i><b>3.2</b> General gradient tree boosting</a>
 <ul>
-<li class="chapter" data-level="3.2.1" data-path="theory.html"><a href="theory.html#gradient-boosting"><i class="fa fa-check"></i><b>3.2.1</b> Gradient boosting</a></li>
-<li class="chapter" data-level="3.2.2" data-path="theory.html"><a href="theory.html#gradient-tree-boosting-algorithm-from-elements"><i class="fa fa-check"></i><b>3.2.2</b> gradient tree boosting algorithm from elements</a></li>
-<li class="chapter" data-level="3.2.3" data-path="theory.html"><a href="theory.html#problem-of-right-sized-trees"><i class="fa fa-check"></i><b>3.2.3</b> problem of right sized trees</a></li>
-<li class="chapter" data-level="3.2.4" data-path="theory.html"><a href="theory.html#regularisation"><i class="fa fa-check"></i><b>3.2.4</b> regularisation</a></li>
-<li class="chapter" data-level="3.2.5" data-path="theory.html"><a href="theory.html#off-shelf-performance"><i class="fa fa-check"></i><b>3.2.5</b> Off shelf performance</a></li>
+<li class="chapter" data-level="3.2.1" data-path="theory.html"><a href="theory.html#numerical-optimization"><i class="fa fa-check"></i><b>3.2.1</b> Numerical optimization</a></li>
+<li class="chapter" data-level="3.2.2" data-path="theory.html"><a href="theory.html#single-tree-depth"><i class="fa fa-check"></i><b>3.2.2</b> Single tree depth</a></li>
+<li class="chapter" data-level="3.2.3" data-path="theory.html"><a href="theory.html#combat-overfitting"><i class="fa fa-check"></i><b>3.2.3</b> Combat overfitting</a></li>
 </ul></li>
 <li class="chapter" data-level="3.3" data-path="theory.html"><a href="theory.html#xgboost-a-highly-efficient-implementation"><i class="fa fa-check"></i><b>3.3</b> XGBoost a highly efficient implementation</a></li>
 </ul></li>
@@ -182,14 +180,24 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="header">
 <h1 class="title">Boosting methods</h1>
 <p class="author"><em>Emanuel Sommer</em></p>
-<p class="date"><em>2021-04-09</em></p>
+<p class="date"><em>2021-04-13</em></p>
 </div>
 <div id="prerequisites" class="section level1" number="1">
 <h1><span class="header-section-number">Chapter 1</span> Prerequisites</h1>
-<p>Here some Notation/ Prerequisites</p>
-<p>List:
-- CART
-- General Machine learining set up (test train split/CV)</p>
+<p>The reader should have some basic knowledge of the following topics:</p>
+<ul>
+<li><p>Statistical learning</p>
+<ul>
+<li><p>Train/ test split</p></li>
+<li><p>Cross-validation</p></li>
+<li><p>Overfitting</p></li>
+<li><p>Gradient descent</p></li>
+<li><p>Bias variance trade-off</p></li>
+<li><p>Hyperparameters</p></li>
+</ul></li>
+<li><p>Regression trees and random forest models</p></li>
+<li><p>Basic R knowledge (only for the applied part)</p></li>
+</ul>
 
 </div>
             </section>

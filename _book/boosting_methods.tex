@@ -109,6 +109,7 @@
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{5}
 \usepackage{booktabs}
+\usepackage{array}
 \ifluatex
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
@@ -137,7 +138,7 @@
 
 \title{Boosting methods}
 \author{Emanuel Sommer}
-\date{2021-04-07}
+\date{2021-04-13}
 
 \begin{document}
 \maketitle
@@ -149,11 +150,31 @@
 \hypertarget{prerequisites}{%
 \chapter{Prerequisites}\label{prerequisites}}
 
-Here some Notation/ Prerequisites
+The reader should have some basic knowledge of the following topics:
 
-List:
-- CART
-- General Machine learining set up (test train split/CV)
+\begin{itemize}
+\item
+  Statistical learning
+
+  \begin{itemize}
+  \item
+    Train/ test split
+  \item
+    Cross-validation
+  \item
+    Overfitting
+  \item
+    Gradient descent
+  \item
+    Bias variance trade-off
+  \item
+    Hyperparameters
+  \end{itemize}
+\item
+  Regression trees and random forest models
+\item
+  Basic R knowledge (only for the applied part)
+\end{itemize}
 
 \hypertarget{intro}{%
 \chapter{Introduction}\label{intro}}
@@ -171,7 +192,7 @@ twenty years.'' \citep{elements}
 \hypertarget{the-powerful-idea-of-gradient-boosting}{%
 \section{The powerful idea of gradient boosting}\label{the-powerful-idea-of-gradient-boosting}}
 
-As roughly mentioned in the introduction section \ref{intro} the main idea of boosting is to sequentially build `weak' learners that form a powerful ensemble model. It is not totally clear from which field these methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth. \citep{elements} PAC learning can be considered one field within the field of the broader learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC). \citep{pacbounds}
+As roughly mentioned in the introduction section \ref{intro} the main idea of boosting is to sequentially build weak learners that form a powerful ensemble model. With weak learners models with high bias and low variance are meant that perform at least a little better than guessing. This already shows that the sequential approach of gradient boosting with `weak' learners stands in strong contrast to bagged ensembles like random forest. There many models with low bias and high variance are fitted in a parallel fashion and the variance is then reduced by averaging over the models.\citep{HandsOnMLwithR} It is not totally clear from which field boosting methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth.\citep{elements} PAC learning can be considered one field within the broader field of learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC).\citep{pacbounds} This section will first cover the general setup of gradient boosting as the most prominent method to train forward stagewise additive models. Secondly tree-based gradient boosting and finally a very efficient and robust tree-based gradient boosting algorithm namely XGBoost will be discussed in detail.
 
 \hypertarget{forward-stagewise-additive-modeling}{%
 \subsection{Forward Stagewise Additive Modeling}\label{forward-stagewise-additive-modeling}}
@@ -183,40 +204,222 @@ In the setting of the dataset \(\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}\) with 
   \label{eq:additiveModel}
 \end{equation}
 
-Where \(\mathcal{F}\) is the space of learning algorithms that will be narrowed down later on. Additive expansions like this are at the core of many other powerful machine learning algorithms like Neural Networks or Wavelets. \citep{elements}
+Where \(\mathcal{F}\) is the space of learning algorithms that will be narrowed down later on. Additive expansions like this are at the core of many other powerful machine learning algorithms like Neural Networks or Wavelets.\citep{elements}
 
-This leads to the algorithm of Forward Stagewise Additive Modeling. \citep{elements} tbdtbdtbd
+The formulation \eqref{eq:additiveModel} leads to so called forward stagewise additive modeling which basically means that one sequentially adds \(f \in \mathcal{F}\) to the current model \(\phi_k\) without changing anything about the previous models.\citep{elements} The algorithm is shown below.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\textbf{Algorithm 1}: Forward Stagewise Additive Modeling \citep{elements}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Initialize \(\phi_0(x) = 0\)
+\item
+  For \(k = 1\) to \(K\) do:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    \((\beta_k,\gamma_k) = argmin_{\beta,\gamma}\sum_{i=1}^N L(y_i,\phi_{k-1}(x_i) + \beta f(x_i,\gamma))\)
+  \item
+    \(\phi_k(x) = \phi_{k-1}(x) + \beta_k f(x, \gamma_k)\)
+  \end{itemize}
+\end{enumerate}
+
+Where \(\gamma\) parameterizes the learner \(f \in \mathcal{F}\) and the \(\beta_k\) are the expansion coefficients. \(L\) should be a differentiable loss function.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+For example for the basic \(L_2\) loss the expression to be minimized simplifies to the following:
+
+\[
+L_2(y_i,\phi_{k-1}(x_i) + \beta f(x_i,\gamma)) = (y_i - \phi_{k-1}(x_i) - \beta f(x_i,\gamma))^2
+\]
+
+As \(y_i - \phi_{k-1}(x_i)\) is just the residual of the previous model, the next model that is added corresponds to the model that best approximates the residuals of the current model. Although the \(L_2\) loss has many very nice properties like the above, it lacks robustness against outliers. Therefore two alternative losses for boosting in the regression setting are worth considering.
 
 \hypertarget{robust-loss-functions-for-regression}{%
 \subsection{Robust loss functions for regression}\label{robust-loss-functions-for-regression}}
 
-\hypertarget{off-shelf-performance}{%
-\subsection{Off shelf performance}\label{off-shelf-performance}}
+As the \(L_2\) loss squares the residuals, observations with large absolute residuals are overly important in the minimization step. This effect can be reduced intuitively by just using the \(L_1\) loss i.e.~minimize over the sum over just the absolute residuals. To do this is indeed a valid approach and can reduce the influence of outliers greatly and thus make the final model more robust. Another good choice could be the \textbf{Huber} loss which tries to get the best of \(L_1\) and \(L_2\) loss.\citep{elements}
 
-Although arguably one of the most famous algorithms in boosting is the Adaboost algorithm for classification, here the focus will be on a regression task and thus Adaboost will not be covered.
+\begin{equation}
+  L_{Huber}(y,f(x)) = \begin{cases}L_2(y,f(x)) & |y-f(x)| \leq \delta \\
+  2\delta |y-f(x)| - \delta^2 & otherwise.
+  \end{cases}
+  \label{eq:huberLoss}
+\end{equation}
+
+In Figure \ref{fig:lossComp} is a comparison of the three different losses discussed so far.
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.7\linewidth]{_pictures/huber_loss} 
+
+}
+
+\caption{Comparison of different regression loss functions[@elements]}\label{fig:lossComp}
+\end{figure}
+
+These alternative loss criteria are more robust but make the fitting i.e.~the minimization much more complex as they do not yield such simplifications like the \(L_2\) loss.\citep{elements} The next step in the journey of exploring boosting is to narrow down the argument spaces of \textbf{Algorithm 1} (Forward Stagewise Additive Modeling) and to specify a subset of the general space of learning algorithms. This subset will be the space of Classification and Regression Tree (CART) models and in this case as the focus is on a regression task the space of regression trees. This choice is by no means arbitrary as in practice tree-based boosting algorithms have proven countless of times that they provide very robust and accurate models but still other learners might be chosen.\citep[\citet{HandsOnMLwithR}]{elements} The next subsection will explore how one can actually fit such a forward stagewise additive model when using regression trees as the learner class.
 
 \hypertarget{general-gradient-tree-boosting}{%
 \section{General gradient tree boosting}\label{general-gradient-tree-boosting}}
 
-first some stuff from elements (more general)
+From now on there is the switch from the space of learning algorithms \(\mathcal{F}\) to the space of regression trees \(\mathcal{T}\). Such a regression tree can be formally expressed by:
+
+\begin{equation}
+  t(x, \gamma, R) = \sum_{j=1}^J \gamma_j I(x \in R_j) \quad \text{for  } t \in \mathcal{T}
+  \label{eq:treeDef}
+\end{equation}
+
+With \(R_j\) being \(J\) distinct regions of the predictor space usually attained by recursive binary splitting. Moreover these regions correspond to the leafs of the tree and the number of leafs \(J\) or the depth of the trees are most often hyperparameters (not trained). The \(\gamma_j \in \mathbb{R}\) are the predictions for a given x if x is contained in the region \(R_j\). While it is quite easy to get the \(\gamma_j\) for the regions given, most often by computing \(\gamma_j = \frac{1}{|\{x \in R_j\}|} \sum_{\{x \in R_j\}} x\) , it is a much harder problem to get good distinct regions. The above mentioned recursive binary splitting is an approximation to do this and works in a top down greedy fashion.\citep{elements} From now on we assume that we have an efficient way of fitting such trees to a metric outcome variable e.g.~by recursive binary splitting.
+
+A nice graphical example of an additive model based on trees is displayed in Figure \ref{fig:exampleAdditiveTree} below.
+
+\textbackslash begin\{figure\}
+
+\{\centering \includegraphics[width=0.7\linewidth]{_pictures/boosting_easy}
+
+\}
+
+\textbackslash caption\{Example of an additive tree ensamble\citep{xgboost_paper}\}\label{fig:exampleAdditiveTree}
+\textbackslash end\{figure\}
+
+Having now the new space \(\mathcal{T}\) for the general boosting model \eqref{eq:additiveModel} one can write down the optimization problem that has to be solved in each step of the forward stagewise process of fitting the model.
+
+\begin{equation}
+  (\gamma^{(k)},R^{(k)}) = argmin_{\gamma,R} \sum_{i=1}^N L(y_i, \phi_{k-1}(x_i) + t(x_i,\gamma,R))
+  \label{eq:oneStepTreeBoost}
+\end{equation}
+
+This can be estimated fast and quite straight forward if there is a simplification like the one seen for the \(L_2\) loss. But in the more general case of an arbitrary differentiable convex loss function like the Huber loss techniques from numerical optimization are needed to derive fast algorithms.\citep{elements}
 
 \hypertarget{numerical-optimization}{%
-\subsection{numerical optimization}\label{numerical-optimization}}
+\subsection{Numerical optimization}\label{numerical-optimization}}
 
-\hypertarget{gradient-tree-boosting-algorithm-from-elements}{%
-\subsection{gradient tree boosting algorithm from elements}\label{gradient-tree-boosting-algorithm-from-elements}}
+According to \textbf{Algorithm 1} the goal in order to fit the boosting model is to minimize over the full loss of the training data \(\mathcal{D}\) which is the sum over all observation losses.
 
-\hypertarget{problem-of-right-sized-trees}{%
-\subsection{problem of right sized trees}\label{problem-of-right-sized-trees}}
+\[
+L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
+\]
 
-\hypertarget{regularisation}{%
-\subsection{regularisation}\label{regularisation}}
+And thus the \(\hat{\phi}\) additive boosting model we try to get is the following.
 
-\begin{figure}
-\centering
-\includegraphics{_pictures/boosting_easy.png}
-\caption{Example of an additive tree ensamble\citep{xgboost_paper}}
-\end{figure}
+\[
+\hat{\phi} = argmin_{\phi} L(\phi)
+\]
+
+Now we basically follow the spirit of the general gradient descent algorithm for differentiable functions. In the general case we minimize a function \(f(x)\) by stepping iteratively along the direction of the steepest descent i.e.~the negative gradient. The step length can then either be a constant small scalar or be determined by a line search.
+
+In the setting of the additive boosting model \(\phi\) can be viewed as a vector of dimension \(N\) that contains the prediction according to \(\phi\) of the corresponding observation i.e.~\(\phi = (\phi(x_1),...,\phi(x_N))\). So the loss function \(L(\phi)\) corresponds to the \(f(x)\) in the general gradient descent algorithm. Numerical optimization, here gradient descent, then solves for \(\hat{\phi}\) by a sum of vectors of the same dimension as the \(\phi\).\citep{elements} The result of the sum \(\phi_K\) (\eqref{eq:numOptSol}) can be viewed as the current proposal for the optimal \(\hat{\phi}\) after \(K\) optimization steps and each \(h^{(k)}\) is the proposed improvement step.
+
+\begin{equation}
+  \phi_K = \sum_{k=0}^K h^{(k)} \quad h^{(k)} \in \mathbb{R}^N 
+  \label{eq:numOptSol}
+\end{equation}
+
+While \(h^{(0)}\) is just an initial guess the subsequent \(h^{(k)}\) are again the prediction vectors of the corresponding model out of \(\mathcal{T}\) i.e.~\(h^{(k)}_{i} = t_k(x_i)\) with \(t \in \mathcal{T}\). This means that each \(\phi_k = \phi_{k-1} + h^{(k)}\). The \(h^{(k)}\) are calculated via the gradient which finally comes into play. As mentioned above one minimizes the loss the most by going towards the direction of the steepest descent. For \eqref{eq:numOptSol} follows from its additive formulation and defining \(g^{(k)}\) as the gradient of \(L(\phi_k)\) evaluated for \(\phi_{k-1}\) the update \(h^{(k)} = -\lambda_k g^{(k)}\). As we assumed the loss to be differentiable we see that \(g^{(k)}\) is well defined. Here \(\lambda_k\) is the usual step length for gradient descent methods. It is the solution of the line search \(\lambda_k = argmin_{\lambda} L(\phi_{k-1} - \lambda g^{(k)})\). This \(\lambda_k\) almost exactly corresponds to the \(\beta_k\) in \textbf{Algorithm 1} although here the optimization is performed for every region of the tree separately.\citep{elements}
+
+With these insights it is clear that the tree predictions correspond to the negative gradient \(-g^{(k)}\). Of course the predictions are not independent as the prediction is constant for each leaf of the tree. So the new optimization proposed by numerical optimization via gradient boosting is given in \eqref{eq:oneStepTreeBoostnew} below.
+
+\begin{equation}
+  (\tilde{\gamma}^{(k)},\tilde{R}^{(k)}) = argmin_{\gamma,R} \sum_{i=1}^N [-g^{(k)}_{i} -  t(x_i,\gamma,R)] ^2
+  \label{eq:oneStepTreeBoostnew}
+\end{equation}
+
+In words this just means fitting a regression tree by least squares to the negative gradients that were evaluated with the current predictions. The solution regions will not exactly match the ones from \eqref{eq:oneStepTreeBoost} but should be very similar.\citep{elements} After having estimated the regions one estimates the parameters \(\gamma\) by solving the line search \eqref{eq:gammaLineSearch}.
+
+\begin{equation}
+  \tilde{\gamma}^{(k)}_{j} = argmin_{\gamma^{(k)}_{j}} \sum_{x \in R^{(k)}_{j}} L(y_i,\phi_{k-1}(x_i) + \gamma^{(k)}_{j})
+  \label{eq:gammaLineSearch}
+\end{equation}
+
+Putting all of this back together with \textbf{Algorithm 1} results in \textbf{Algorithm 2} that covers a general algorithm for tree-based gradient boosting.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\textbf{Algorithm 2}: Tree-based gradient boosting \citep{elements}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Initialize \(\phi_0(x)\) as a singular node tree.
+\item
+  For \(k = 1\) to \(K\) do:
+
+  \begin{itemize}
+  \item
+    For \(i = 1\) to \(N\) compute:
+
+    \(g^{(k)}_{i} = \bigg[\frac{\partial L(y_i, \phi(x_i))}{\partial \phi(x_i)}\bigg]_{\phi = \phi_{k-1}}\)
+  \item
+    Fit a regression tree by least squares to the outcome vector \(-g^{(k)}\) in order to get the \(J^{(k)}\) distinct regions \(\tilde{R}^{(k)}_j\).
+  \item
+    For each of these \(J^{(k)}\) regions perform a line search in order to compute the leaf predictions \(\tilde{\gamma}^{(k)}_{j}\) exactly like in \eqref{eq:gammaLineSearch}.
+  \item
+    Set \(\phi_k(x) = \phi_{k-1}(x) + t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)\) with \(t \in \mathcal{T}\)
+  \end{itemize}
+\end{enumerate}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+The only unknowns in this algorithm are now the differentiable loss function and the hyperparameters like the \(J^{(k)}\) and the \(K\). While choices for the hyperparameters are discussed further below, the following table \ref{tab:lossGradients} displays the gradients for the losses discussed so far.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.27}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.73}}@{}}
+\caption{\label{tab:lossGradients} Gradients of the discussed losses \citep{elements}}\tabularnewline
+\toprule
+Loss & Gradient \\
+\midrule
+\endfirsthead
+\toprule
+Loss & Gradient \\
+\midrule
+\endhead
+\(L_2\): \((y_i - \phi(x_i))^2\) & \(2(y_i - \phi(x_i))\) \\
+\(L_1\): \(|y_i - \phi(x_i)|\) & \(sign(y_i - \phi(x_i))\) \\
+Huber loss \eqref{eq:huberLoss} & \(y_i - \phi(x_i)\) for \(|y_i - \phi(x_i)| \leq \delta\)
+
+\(\delta sign(y_i - \phi(x_i))\) otherwise, with \(\delta\) quantile of \(|y_i - \phi(x_i)|\) \\
+\bottomrule
+\end{longtable}
+
+\hypertarget{single-tree-depth}{%
+\subsection{Single tree depth}\label{single-tree-depth}}
+
+The question which \(J^{(k)}\) should be used at each iteration is now shortly discussed. Basically using the tree depth two means allowing only the main effects and no interactions. A value of 3 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values \(J^{(k)}\) to a constant \(J \approx 6\).\citep{elements} Also decision stumps (\(J = 2\)) could be used but may require a lot more iterations.
+
+\hypertarget{combat-overfitting}{%
+\subsection{Combat overfitting}\label{combat-overfitting}}
+
+No learning algorithm could be fully covered without treating the good old problem of overfitting. In the setting of boosting the experienced eye could have spotted the problem of overfitting already in the definition of the additive model \eqref{eq:additiveModel}. There the number \(K\) of models that form the ensemble was introduced but was not discussed further till now. Of course one can arbitrarily fit or better say remember some given training data in order to minimize the loss with such an additive model by letting \(K\) be arbitrarily large. This comes from the fact that the loss reduces usually after each iteration over \(K\).\citep{elements} The easiest way to prevent overfitting is to have a validation set at hand which is disjoint from the training data. Having such a validation set at hand can be used to monitor the loss on the unseen data. In the case the loss would rise again on the validation data one can consider to stop the algorithm and to use the current iteration number for the final parameter \(K\). This approach is often called early stopping. Besides that there are methods that regularize the individual trees that are fitted in each iteration. Two of those will be discussed now.
+
+\hypertarget{shrinkage}{%
+\subsubsection{Shrinkage}\label{shrinkage}}
+
+Shrinkage basically refers to just introducing a learning rate \(\nu\). This learning rate \(\nu\) scales the contribution of the new model. In general the learning rate should be in \((0,1]\) but in practice it has been shown that rather small values like \(\nu < 0.1\) work very good.\citep{elements} As almost everything in life this does not come for free. A smaller learning rate usually comes with a computational cost as with lower \(\nu\) a larger \(K\) is required. Those two hyperparameters represent a trade-off in a way. In practice it is advisable to use a small learning rate \(\nu\) and adjust the \(K\) accordingly which in this case would mean to make the \(K\) large enough until one reaches an early stopping point. Still it is good to keep in mind that a \(\nu\) that is too small can lead to an immense and unnecessary computational effort. All in all using shrinkage the update step in \textbf{Algorithm 2} changes to the following.
+
+\begin{equation}
+  \phi_k(x) = \phi_{k-1}(x) + \nu * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)
+  \label{eq:shrinkage}
+\end{equation}
+
+\hypertarget{subsampling}{%
+\subsubsection{Subsampling}\label{subsampling}}
+
+The other method to regularize the trees will be subsampling. There are two different kinds of subsampling. The first one is row-subsampling which basically means just using a random fraction of the training data in each iteration when fitting the new tree. Common values are \(\frac{1}{2}\) but for a larger training set the value can be chosen to be smaller. This does not only help to prevent overfitting and thus achieving a better predictive performance but reduces also the computational effort in each iteration.\citep{elements} The approach is very similar to the dropout technique in the setting of deep neural networks.
+
+Moreover one can apply column-subsampling or feature-subsampling. Here only a fraction of the features or an explicit number of the features are used in each iteration. This is the exact same method and intention as the one applied in random forest models. Again the technique not only boosts performance on unseen data but also reduces the computational time.\citep{xgboost_paper} Still it must be noted that by using one or both subsampling methods one introduces one or two additional hyperparameters to the model that have to be tuned.
+
+Having the \textbf{Algorithm 2} for tree-based gradient boosting alongside some regularization techniques it is time to look at a very popular, efficient and powerful open source implementation.
 
 \hypertarget{xgboost-a-highly-efficient-implementation}{%
 \section{XGBoost a highly efficient implementation}\label{xgboost-a-highly-efficient-implementation}}
@@ -224,6 +427,8 @@ first some stuff from elements (more general)
 use the whole paper
 
 We will cite the great paper!\citep{xgboost_paper}
+
+for details about hyperparameters use \citep{HandsOnMLwithR}
 
 \hypertarget{eda}{%
 \chapter{Expore the data}\label{eda}}

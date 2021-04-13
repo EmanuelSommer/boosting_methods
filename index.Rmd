@@ -8,14 +8,30 @@ bibliography: [book.bib, packages.bib]
 biblio-style: apalike
 csl: the-annals-of-statistics.csl
 link-citations: yes
+nocite: '@*'
 description: "Boosting methods: Theory and Application (xgboost)"
 github-repo: EmanuelSommer/boosting_methods
 ---
 
 # Prerequisites
 
-Here some Notation/ Prerequisites
+The reader should have some basic knowledge of the following topics:
 
-List:
- - CART 
- - General Machine learining set up (test train split/CV)
+
+-   Statistical learning
+
+    -   Train/ test split
+
+    -   Cross-validation
+
+    -   Overfitting
+    
+    -   Gradient descent
+    
+    -   Bias variance trade-off
+    
+    -   Hyperparameters
+
+-   Regression trees and random forest models
+
+-   Basic R knowledge (only for the applied part)

@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-04-09" />
+<meta name="date" content="2021-04-13" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -145,11 +145,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 <li class="chapter" data-level="3.2" data-path="theory.html"><a href="theory.html#general-gradient-tree-boosting"><i class="fa fa-check"></i><b>3.2</b> General gradient tree boosting</a>
 <ul>
-<li class="chapter" data-level="3.2.1" data-path="theory.html"><a href="theory.html#gradient-boosting"><i class="fa fa-check"></i><b>3.2.1</b> Gradient boosting</a></li>
-<li class="chapter" data-level="3.2.2" data-path="theory.html"><a href="theory.html#gradient-tree-boosting-algorithm-from-elements"><i class="fa fa-check"></i><b>3.2.2</b> gradient tree boosting algorithm from elements</a></li>
-<li class="chapter" data-level="3.2.3" data-path="theory.html"><a href="theory.html#problem-of-right-sized-trees"><i class="fa fa-check"></i><b>3.2.3</b> problem of right sized trees</a></li>
-<li class="chapter" data-level="3.2.4" data-path="theory.html"><a href="theory.html#regularisation"><i class="fa fa-check"></i><b>3.2.4</b> regularisation</a></li>
-<li class="chapter" data-level="3.2.5" data-path="theory.html"><a href="theory.html#off-shelf-performance"><i class="fa fa-check"></i><b>3.2.5</b> Off shelf performance</a></li>
+<li class="chapter" data-level="3.2.1" data-path="theory.html"><a href="theory.html#numerical-optimization"><i class="fa fa-check"></i><b>3.2.1</b> Numerical optimization</a></li>
+<li class="chapter" data-level="3.2.2" data-path="theory.html"><a href="theory.html#single-tree-depth"><i class="fa fa-check"></i><b>3.2.2</b> Single tree depth</a></li>
+<li class="chapter" data-level="3.2.3" data-path="theory.html"><a href="theory.html#combat-overfitting"><i class="fa fa-check"></i><b>3.2.3</b> Combat overfitting</a></li>
 </ul></li>
 <li class="chapter" data-level="3.3" data-path="theory.html"><a href="theory.html#xgboost-a-highly-efficient-implementation"><i class="fa fa-check"></i><b>3.3</b> XGBoost a highly efficient implementation</a></li>
 </ul></li>
@@ -183,7 +181,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h1><span class="header-section-number">Chapter 3</span> Theory</h1>
 <div id="the-powerful-idea-of-gradient-boosting" class="section level2" number="3.1">
 <h2><span class="header-section-number">3.1</span> The powerful idea of gradient boosting</h2>
-<p>As roughly mentioned in the introduction section <a href="intro.html#intro">2</a> the main idea of boosting is to sequentially build ‘weak’ learners that form a powerful ensemble model. It is not totally clear from which field these methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> PAC learning can be considered one field within the broader field of learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC).<span class="citation">[<a href="references.html#ref-pacbounds" role="doc-biblioref">2</a>]</span> This section will first cover the general setup of gradient boosting as the most prominent method to train forward stagewise additive models. Secondly tree based gradient boosting and finally a very efficient and robust tree based gradient boosting algorithm namely XGBoost will be discussed in detail.</p>
+<p>As roughly mentioned in the introduction section <a href="intro.html#intro">2</a> the main idea of boosting is to sequentially build weak learners that form a powerful ensemble model. With weak learners models with high bias and low variance are meant that perform at least a little better than guessing. This already shows that the sequential approach of gradient boosting with ‘weak’ learners stands in strong contrast to bagged ensembles like random forest. There many models with low bias and high variance are fitted in a parallel fashion and the variance is then reduced by averaging over the models.<span class="citation">[<a href="references.html#ref-HandsOnMLwithR" role="doc-biblioref">2</a>]</span> It is not totally clear from which field boosting methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> PAC learning can be considered one field within the broader field of learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC).<span class="citation">[<a href="references.html#ref-pacbounds" role="doc-biblioref">3</a>]</span> This section will first cover the general setup of gradient boosting as the most prominent method to train forward stagewise additive models. Secondly tree-based gradient boosting and finally a very efficient and robust tree-based gradient boosting algorithm namely XGBoost will be discussed in detail.</p>
 <div id="forward-stagewise-additive-modeling" class="section level3" number="3.1.1">
 <h3><span class="header-section-number">3.1.1</span> Forward Stagewise Additive Modeling</h3>
 <p>In the setting of the dataset <span class="math inline">\(\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}\)</span> with <span class="math inline">\(x_i \in \mathbb{R}^m\)</span> and <span class="math inline">\(y_i \in \mathbb{R}\)</span> boosting is fitting the following additive, still quite general, model.</p>
@@ -216,10 +214,9 @@ L_2(y_i,\phi_{k-1}(x_i) + \beta f(x_i,\gamma)) = (y_i - \phi_{k-1}(x_i) - \beta 
 <h3><span class="header-section-number">3.1.2</span> Robust loss functions for regression</h3>
 <p>As the <span class="math inline">\(L_2\)</span> loss squares the residuals, observations with large absolute residuals are overly important in the minimization step. This effect can be reduced intuitively by just using the <span class="math inline">\(L_1\)</span> loss i.e. minimize over the sum over just the absolute residuals. To do this is indeed a valid approach and can reduce the influence of outliers greatly and thus make the final model more robust. Another good choice could be the <strong>Huber</strong> loss which tries to get the best of <span class="math inline">\(L_1\)</span> and <span class="math inline">\(L_2\)</span> loss.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
 <span class="math display" id="eq:huberLoss">\[\begin{equation}
-  L_{Huber}(y,f(x)) = \bigg\{\begin{array}{11}
-  L_2(y,f(x)) &amp; |y-f(x)| \leq \delta \\
-  2\delta |y-f(x)| - \delta^2 &amp; otherwise. \\
-  \end{array}
+  L_{Huber}(y,f(x)) = \begin{cases}L_2(y,f(x)) &amp; |y-f(x)| \leq \delta \\
+  2\delta |y-f(x)| - \delta^2 &amp; otherwise.
+  \end{cases}
   \tag{3.2}
 \end{equation}\]</span>
 <p>In Figure <a href="theory.html#fig:lossComp">3.1</a> is a comparison of the three different losses discussed so far.</p>
@@ -229,7 +226,7 @@ L_2(y_i,\phi_{k-1}(x_i) + \beta f(x_i,\gamma)) = (y_i - \phi_{k-1}(x_i) - \beta 
 Figure 3.1: Comparison of different regression loss functions<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span>
 </p>
 </div>
-<p>These alternative loss criteria are more robust but make the fitting i.e. the minimization much more complex as they do not yield such simplifications like the <span class="math inline">\(L_2\)</span> loss.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> The next step in the journey of exploring boosting is to narrow down the argument spaces of Algorithm 1 (Forward Stagewise Additive Modeling) and to specify a subset of the general space of learning algorithms. This subset will be the space of Classification and Regression Tree (CART) models and in this case as the focus is on a regression task the space of regression trees. This choice is by no means arbitrary as in practice tree based boosting algorithms have proven countless of times that they provide very robust and accurate models but still other learners might be chosen.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> The next subsection will explore how one can actually fit such a Forward Stagewise Additive Model when using regression trees as the learner class.</p>
+<p>These alternative loss criteria are more robust but make the fitting i.e. the minimization much more complex as they do not yield such simplifications like the <span class="math inline">\(L_2\)</span> loss.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> The next step in the journey of exploring boosting is to narrow down the argument spaces of <strong>Algorithm 1</strong> (Forward Stagewise Additive Modeling) and to specify a subset of the general space of learning algorithms. This subset will be the space of Classification and Regression Tree (CART) models and in this case as the focus is on a regression task the space of regression trees. This choice is by no means arbitrary as in practice tree-based boosting algorithms have proven countless of times that they provide very robust and accurate models but still other learners might be chosen.<span class="citation">[<a href="references.html#ref-HandsOnMLwithR" role="doc-biblioref">2</a>]</span> The next subsection will explore how one can actually fit such a forward stagewise additive model when using regression trees as the learner class.</p>
 </div>
 </div>
 <div id="general-gradient-tree-boosting" class="section level2" number="3.2">
@@ -239,22 +236,23 @@ Figure 3.1: Comparison of different regression loss functions<span class="citati
   t(x, \gamma, R) = \sum_{j=1}^J \gamma_j I(x \in R_j) \quad \text{for  } t \in \mathcal{T}
   \tag{3.3}
 \end{equation}\]</span>
-<p>A nice graphical example can be found in <a href="theory.html#fig:exampleAdditiveTree">3.2</a>.</p>
+<p>With <span class="math inline">\(R_j\)</span> being <span class="math inline">\(J\)</span> distinct regions of the predictor space usually attained by recursive binary splitting. Moreover these regions correspond to the leafs of the tree and the number of leafs <span class="math inline">\(J\)</span> or the depth of the trees are most often hyperparameters (not trained). The <span class="math inline">\(\gamma_j \in \mathbb{R}\)</span> are the predictions for a given x if x is contained in the region <span class="math inline">\(R_j\)</span>. While it is quite easy to get the <span class="math inline">\(\gamma_j\)</span> for the regions given, most often by computing <span class="math inline">\(\gamma_j = \frac{1}{|\{x \in R_j\}|} \sum_{\{x \in R_j\}} x\)</span> , it is a much harder problem to get good distinct regions. The above mentioned recursive binary splitting is an approximation to do this and works in a top down greedy fashion.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> From now on we assume that we have an efficient way of fitting such trees to a metric outcome variable e.g. by recursive binary splitting.</p>
+<p>A nice graphical example of an additive model based on trees is displayed in Figure <a href="theory.html#fig:exampleAdditiveTree">3.2</a> below.</p>
 <div class="figure" style="text-align: center"><span id="fig:exampleAdditiveTree"></span>
 <img src="_pictures/boosting_easy.png" alt="Example of an additive tree ensamble[@xgboost_paper]" width="70%" />
 <p class="caption">
-Figure 3.2: Example of an additive tree ensamble<span class="citation">[<a href="references.html#ref-xgboost_paper" role="doc-biblioref">3</a>]</span>
+Figure 3.2: Example of an additive tree ensamble<span class="citation">[<a href="references.html#ref-xgboost_paper" role="doc-biblioref">4</a>]</span>
 </p>
 </div>
-<p>With <span class="math inline">\(R_j\)</span> being <span class="math inline">\(J\)</span> distinct regions usually attained by recursive binary splitting. Moreover these regions correspond to the leafs of the tree and the number of leafs <span class="math inline">\(J\)</span> or the depth of the trees are most often hyperparameters (not trained). The <span class="math inline">\(\gamma_j \in \mathbb{R}\)</span> are the predictions for a given x if x is contained in the region <span class="math inline">\(R_j\)</span>. While it is quite easy to get the <span class="math inline">\(\gamma_j\)</span> for the regions given, most often <span class="math inline">\(\gamma_j = \frac{1}{|\{x \in R_j\}|} \sum_{\{x \in R_j\}} x\)</span> , it is a much harder problem to get good distinct regions. The above mentioned recursive binary splitting is an approximation and works in a top down greedy fashion.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> Having now the new space <span class="math inline">\(\mathcal{T}\)</span> for the general boosting model <a href="theory.html#eq:additiveModel">(3.1)</a> one can write down the optimization problem that has to be solved in each step of the forward stagewise process of fitting the model.</p>
+<p>Having now the new space <span class="math inline">\(\mathcal{T}\)</span> for the general boosting model <a href="theory.html#eq:additiveModel">(3.1)</a> one can write down the optimization problem that has to be solved in each step of the forward stagewise process of fitting the model.</p>
 <span class="math display" id="eq:oneStepTreeBoost">\[\begin{equation}
   (\gamma^{(k)},R^{(k)}) = argmin_{\gamma,R} \sum_{i=1}^N L(y_i, \phi_{k-1}(x_i) + t(x_i,\gamma,R))
   \tag{3.4}
 \end{equation}\]</span>
 <p>This can be estimated fast and quite straight forward if there is a simplification like the one seen for the <span class="math inline">\(L_2\)</span> loss. But in the more general case of an arbitrary differentiable convex loss function like the Huber loss techniques from numerical optimization are needed to derive fast algorithms.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
-<div id="gradient-boosting" class="section level3" number="3.2.1">
-<h3><span class="header-section-number">3.2.1</span> Gradient boosting</h3>
-<p>So according to Algorithm 1 the goal is to minimize over the full loss of the training data <span class="math inline">\(\mathcal{D}\)</span> which is the sum over all observation losses.</p>
+<div id="numerical-optimization" class="section level3" number="3.2.1">
+<h3><span class="header-section-number">3.2.1</span> Numerical optimization</h3>
+<p>According to <strong>Algorithm 1</strong> the goal in order to fit the boosting model is to minimize over the full loss of the training data <span class="math inline">\(\mathcal{D}\)</span> which is the sum over all observation losses.</p>
 <p><span class="math display">\[
 L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 \]</span></p>
@@ -262,42 +260,122 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 <p><span class="math display">\[
 \hat{\phi} = argmin_{\phi} L(\phi)
 \]</span></p>
-<p>Here <span class="math inline">\(\phi\)</span> can be viewed as a vector of dimension <span class="math inline">\(N\)</span> that contains the prediction according to <span class="math inline">\(\phi\)</span> of the corresponding observation. Numerical optimization then solves for <span class="math inline">\(\hat{\phi}\)</span> by a sum of vectors of the same dimension as the <span class="math inline">\(\phi\)</span>.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
+<p>Now we basically follow the spirit of the general gradient descent algorithm for differentiable functions. In the general case we minimize a function <span class="math inline">\(f(x)\)</span> by stepping iteratively along the direction of the steepest descent i.e. the negative gradient. The step length can then either be a constant small scalar or be determined by a line search.</p>
+<p>In the setting of the additive boosting model <span class="math inline">\(\phi\)</span> can be viewed as a vector of dimension <span class="math inline">\(N\)</span> that contains the prediction according to <span class="math inline">\(\phi\)</span> of the corresponding observation i.e. <span class="math inline">\(\phi = (\phi(x_1),...,\phi(x_N))\)</span>. So the loss function <span class="math inline">\(L(\phi)\)</span> corresponds to the <span class="math inline">\(f(x)\)</span> in the general gradient descent algorithm. Numerical optimization, here gradient descent, then solves for <span class="math inline">\(\hat{\phi}\)</span> by a sum of vectors of the same dimension as the <span class="math inline">\(\phi\)</span>.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> The result of the sum <span class="math inline">\(\phi_K\)</span> (<a href="theory.html#eq:numOptSol">(3.5)</a>) can be viewed as the current proposal for the optimal <span class="math inline">\(\hat{\phi}\)</span> after <span class="math inline">\(K\)</span> optimization steps and each <span class="math inline">\(h^{(k)}\)</span> is the proposed improvement step.</p>
 <span class="math display" id="eq:numOptSol">\[\begin{equation}
-  \phi_K = \sum_{k=0}^K h_k \quad h_k \in \mathbb{R}^N 
+  \phi_K = \sum_{k=0}^K h^{(k)} \quad h^{(k)} \in \mathbb{R}^N 
   \tag{3.5}
 \end{equation}\]</span>
-<p>While <span class="math inline">\(h_0\)</span> is just an initial guess the subsequent <span class="math inline">\(h_k\)</span> are again the prediction vectors of the corresponding model out of <span class="math inline">\(\mathcal{T}\)</span> i.e. <span class="math inline">\(h_{k,i} = t_k(x_i)\)</span> with <span class="math inline">\(t \in \mathcal{T}\)</span>. This means that each <span class="math inline">\(\phi_k = \phi_{k-1} + h_k\)</span>. The <span class="math inline">\(h_k\)</span> are calculated via the gradient which finally comes into play. As in every kind of gradient descent based optimization one minimizes the loss the most by going towards the direction of the steepest descent. For <a href="theory.html#eq:numOptSol">(3.5)</a> follows from its additive formulation and <span class="math inline">\(g_k\)</span> being the gradient of <span class="math inline">\(L(\phi_k)\)</span> evaluated for <span class="math inline">\(\phi_{k-1}\)</span> the update <span class="math inline">\(h_k = -\lambda_k g_k\)</span>. Here <span class="math inline">\(\lambda_k\)</span> is the usual step length for gradient descent methods. It is the solution of the line search <span class="math inline">\(\lambda_k = argmin_{\lambda} L(\phi_{k-1} - \lambda g_k)\)</span>. This <span class="math inline">\(\lambda_k\)</span> almost exactly corresponds to the <span class="math inline">\(\beta_k\)</span> in Algorithm 1 although here the optimization is for every region of the tree separately.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
-<p>With these insights it is clear that the tree predictions correspond to the negative gradient <span class="math inline">\(-g_k\)</span>. Of course the predictions are not independent as the prediction is constant for each leaf of the tree. So the new optimization proposed by numerical optimization via gradient boosting is given in <a href="theory.html#eq:oneStepTreeBoostnew">(3.6)</a> below.</p>
+<p>While <span class="math inline">\(h^{(0)}\)</span> is just an initial guess the subsequent <span class="math inline">\(h^{(k)}\)</span> are again the prediction vectors of the corresponding model out of <span class="math inline">\(\mathcal{T}\)</span> i.e. <span class="math inline">\(h^{(k)}_{i} = t_k(x_i)\)</span> with <span class="math inline">\(t \in \mathcal{T}\)</span>. This means that each <span class="math inline">\(\phi_k = \phi_{k-1} + h^{(k)}\)</span>. The <span class="math inline">\(h^{(k)}\)</span> are calculated via the gradient which finally comes into play. As mentioned above one minimizes the loss the most by going towards the direction of the steepest descent. For <a href="theory.html#eq:numOptSol">(3.5)</a> follows from its additive formulation and defining <span class="math inline">\(g^{(k)}\)</span> as the gradient of <span class="math inline">\(L(\phi_k)\)</span> evaluated for <span class="math inline">\(\phi_{k-1}\)</span> the update <span class="math inline">\(h^{(k)} = -\lambda_k g^{(k)}\)</span>. As we assumed the loss to be differentiable we see that <span class="math inline">\(g^{(k)}\)</span> is well defined. Here <span class="math inline">\(\lambda_k\)</span> is the usual step length for gradient descent methods. It is the solution of the line search <span class="math inline">\(\lambda_k = argmin_{\lambda} L(\phi_{k-1} - \lambda g^{(k)})\)</span>. This <span class="math inline">\(\lambda_k\)</span> almost exactly corresponds to the <span class="math inline">\(\beta_k\)</span> in <strong>Algorithm 1</strong> although here the optimization is performed for every region of the tree separately.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
+<p>With these insights it is clear that the tree predictions correspond to the negative gradient <span class="math inline">\(-g^{(k)}\)</span>. Of course the predictions are not independent as the prediction is constant for each leaf of the tree. So the new optimization proposed by numerical optimization via gradient boosting is given in <a href="theory.html#eq:oneStepTreeBoostnew">(3.6)</a> below.</p>
 <span class="math display" id="eq:oneStepTreeBoostnew">\[\begin{equation}
-  (\tilde{\gamma}^{(k)},\tilde{R}^{(k)}) = argmin_{\gamma,R} \sum_{i=1}^N [-g_{k,i} -  t(x_i,\gamma,R)] ^2
+  (\tilde{\gamma}^{(k)},\tilde{R}^{(k)}) = argmin_{\gamma,R} \sum_{i=1}^N [-g^{(k)}_{i} -  t(x_i,\gamma,R)] ^2
   \tag{3.6}
 \end{equation}\]</span>
-<p>In words this just means fitting a regression tree to the negative gradients that were evaluated with the current predictions. The solution regions will not exactly match the ones from <a href="theory.html#eq:oneStepTreeBoost">(3.4)</a> but should be very similar.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> After estimating the regions one estimates the parameters <span class="math inline">\(\gamma\)</span> by solving the line search <a href="theory.html#eq:gammaLineSearch">(3.7)</a>.</p>
+<p>In words this just means fitting a regression tree by least squares to the negative gradients that were evaluated with the current predictions. The solution regions will not exactly match the ones from <a href="theory.html#eq:oneStepTreeBoost">(3.4)</a> but should be very similar.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> After having estimated the regions one estimates the parameters <span class="math inline">\(\gamma\)</span> by solving the line search <a href="theory.html#eq:gammaLineSearch">(3.7)</a>.</p>
 <span class="math display" id="eq:gammaLineSearch">\[\begin{equation}
-  \tilde{\gamma}_{k,j} = argmin_{\gamma_{k,j}} \sum_{x \in R_{k,j}} L(y_i,\phi_{k-1}(x_i) + \gamma_{k,j})
+  \tilde{\gamma}^{(k)}_{j} = argmin_{\gamma^{(k)}_{j}} \sum_{x \in R^{(k)}_{j}} L(y_i,\phi_{k-1}(x_i) + \gamma^{(k)}_{j})
   \tag{3.7}
 \end{equation}\]</span>
+<p>Putting all of this back together with <strong>Algorithm 1</strong> results in <strong>Algorithm 2</strong> that covers a general algorithm for tree-based gradient boosting.</p>
+<hr />
+<p><strong>Algorithm 2</strong>: Tree-based gradient boosting <span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
+<hr />
+<ol style="list-style-type: decimal">
+<li><p>Initialize <span class="math inline">\(\phi_0(x)\)</span> as a singular node tree.</p></li>
+<li><p>For <span class="math inline">\(k = 1\)</span> to <span class="math inline">\(K\)</span> do:</p>
+<ul>
+<li><p>For <span class="math inline">\(i = 1\)</span> to <span class="math inline">\(N\)</span> compute:</p>
+<p><span class="math inline">\(g^{(k)}_{i} = \bigg[\frac{\partial L(y_i, \phi(x_i))}{\partial \phi(x_i)}\bigg]_{\phi = \phi_{k-1}}\)</span></p></li>
+<li><p>Fit a regression tree by least squares to the outcome vector <span class="math inline">\(-g^{(k)}\)</span> in order to get the <span class="math inline">\(J^{(k)}\)</span> distinct regions <span class="math inline">\(\tilde{R}^{(k)}_j\)</span>.</p></li>
+<li><p>For each of these <span class="math inline">\(J^{(k)}\)</span> regions perform a line search in order to compute the leaf predictions <span class="math inline">\(\tilde{\gamma}^{(k)}_{j}\)</span> exactly like in <a href="theory.html#eq:gammaLineSearch">(3.7)</a>.</p></li>
+<li><p>Set <span class="math inline">\(\phi_k(x) = \phi_{k-1}(x) + t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)\)</span> with <span class="math inline">\(t \in \mathcal{T}\)</span></p></li>
+</ul></li>
+</ol>
+<hr />
+<p>The only unknowns in this algorithm are now the differentiable loss function and the hyperparameters like the <span class="math inline">\(J^{(k)}\)</span> and the <span class="math inline">\(K\)</span>. While choices for the hyperparameters are discussed further below, the following table <a href="theory.html#tab:lossGradients">3.1</a> displays the gradients for the losses discussed so far.</p>
+<!--
+<table>
+<caption>(\#tab:lossGradients)Gradients of the discussed losses [@elements]</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Loss </th>
+   <th style="text-align:left;"> Gradient </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> $L_2$: $(y_i - \phi(x_i))^2$ </td>
+   <td style="text-align:left;"> $2(y_i - \phi(x_i))$ </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> $L_1$: $|y_i - \phi(x_i)|$ </td>
+   <td style="text-align:left;"> $sign(y_i - \phi(x_i))$ </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Huber loss </td>
+   <td style="text-align:left;"> $y_i - \phi(x_i)$ for $|y_i - \phi(x_i)| \leq \delta$ and $\delta sign(y_i - \phi(x_i))$ otherwise, with $\delta$ quantile of $|y_i - \phi(x_i)|$ </td>
+  </tr>
+</tbody>
+</table>
+-->
+<table>
+<caption><span id="tab:lossGradients">Table 3.1: </span> Gradients of the discussed losses <span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></caption>
+<colgroup>
+<col width="26%" />
+<col width="73%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Loss</th>
+<th>Gradient</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(L_2\)</span>: <span class="math inline">\((y_i - \phi(x_i))^2\)</span></td>
+<td><span class="math inline">\(2(y_i - \phi(x_i))\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(L_1\)</span>: <span class="math inline">\(|y_i - \phi(x_i)|\)</span></td>
+<td><span class="math inline">\(sign(y_i - \phi(x_i))\)</span></td>
+</tr>
+<tr class="odd">
+<td>Huber loss <a href="theory.html#eq:huberLoss">(3.2)</a></td>
+<td><p><span class="math inline">\(y_i - \phi(x_i)\)</span> for <span class="math inline">\(|y_i - \phi(x_i)| \leq \delta\)</span></p>
+<p><span class="math inline">\(\delta sign(y_i - \phi(x_i))\)</span> otherwise, with <span class="math inline">\(\delta\)</span> quantile of <span class="math inline">\(|y_i - \phi(x_i)|\)</span></p></td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="gradient-tree-boosting-algorithm-from-elements" class="section level3" number="3.2.2">
-<h3><span class="header-section-number">3.2.2</span> gradient tree boosting algorithm from elements</h3>
+<div id="single-tree-depth" class="section level3" number="3.2.2">
+<h3><span class="header-section-number">3.2.2</span> Single tree depth</h3>
+<p>The question which <span class="math inline">\(J^{(k)}\)</span> should be used at each iteration is now shortly discussed. Basically using the tree depth two means allowing only the main effects and no interactions. A value of 3 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values <span class="math inline">\(J^{(k)}\)</span> to a constant <span class="math inline">\(J \approx 6\)</span>.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> Also decision stumps (<span class="math inline">\(J = 2\)</span>) could be used but may require a lot more iterations.</p>
 </div>
-<div id="problem-of-right-sized-trees" class="section level3" number="3.2.3">
-<h3><span class="header-section-number">3.2.3</span> problem of right sized trees</h3>
+<div id="combat-overfitting" class="section level3" number="3.2.3">
+<h3><span class="header-section-number">3.2.3</span> Combat overfitting</h3>
+<p>No learning algorithm could be fully covered without treating the good old problem of overfitting. In the setting of boosting the experienced eye could have spotted the problem of overfitting already in the definition of the additive model <a href="theory.html#eq:additiveModel">(3.1)</a>. There the number <span class="math inline">\(K\)</span> of models that form the ensemble was introduced but was not discussed further till now. Of course one can arbitrarily fit or better say remember some given training data in order to minimize the loss with such an additive model by letting <span class="math inline">\(K\)</span> be arbitrarily large. This comes from the fact that the loss reduces usually after each iteration over <span class="math inline">\(K\)</span>.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> The easiest way to prevent overfitting is to have a validation set at hand which is disjoint from the training data. Having such a validation set at hand can be used to monitor the loss on the unseen data. In the case the loss would rise again on the validation data one can consider to stop the algorithm and to use the current iteration number for the final parameter <span class="math inline">\(K\)</span>. This approach is often called early stopping. Besides that there are methods that regularize the individual trees that are fitted in each iteration. Two of those will be discussed now.</p>
+<div id="shrinkage" class="section level4" number="3.2.3.1">
+<h4><span class="header-section-number">3.2.3.1</span> Shrinkage</h4>
+<p>Shrinkage basically refers to just introducing a learning rate <span class="math inline">\(\nu\)</span>. This learning rate <span class="math inline">\(\nu\)</span> scales the contribution of the new model. In general the learning rate should be in <span class="math inline">\((0,1]\)</span> but in practice it has been shown that rather small values like <span class="math inline">\(\nu &lt; 0.1\)</span> work very good.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> As almost everything in life this does not come for free. A smaller learning rate usually comes with a computational cost as with lower <span class="math inline">\(\nu\)</span> a larger <span class="math inline">\(K\)</span> is required. Those two hyperparameters represent a trade-off in a way. In practice it is advisable to use a small learning rate <span class="math inline">\(\nu\)</span> and adjust the <span class="math inline">\(K\)</span> accordingly which in this case would mean to make the <span class="math inline">\(K\)</span> large enough until one reaches an early stopping point. Still it is good to keep in mind that a <span class="math inline">\(\nu\)</span> that is too small can lead to an immense and unnecessary computational effort. All in all using shrinkage the update step in <strong>Algorithm 2</strong> changes to the following.</p>
+<span class="math display" id="eq:shrinkage">\[\begin{equation}
+  \phi_k(x) = \phi_{k-1}(x) + \nu * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)
+  \tag{3.8}
+\end{equation}\]</span>
 </div>
-<div id="regularisation" class="section level3" number="3.2.4">
-<h3><span class="header-section-number">3.2.4</span> regularisation</h3>
+<div id="subsampling" class="section level4" number="3.2.3.2">
+<h4><span class="header-section-number">3.2.3.2</span> Subsampling</h4>
+<p>The other method to regularize the trees will be subsampling. There are two different kinds of subsampling. The first one is row-subsampling which basically means just using a random fraction of the training data in each iteration when fitting the new tree. Common values are <span class="math inline">\(\frac{1}{2}\)</span> but for a larger training set the value can be chosen to be smaller. This does not only help to prevent overfitting and thus achieving a better predictive performance but reduces also the computational effort in each iteration.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> The approach is very similar to the dropout technique in the setting of deep neural networks.</p>
+<p>Moreover one can apply column-subsampling or feature-subsampling. Here only a fraction of the features or an explicit number of the features are used in each iteration. This is the exact same method and intention as the one applied in random forest models. Again the technique not only boosts performance on unseen data but also reduces the computational time.<span class="citation">[<a href="references.html#ref-xgboost_paper" role="doc-biblioref">4</a>]</span> Still it must be noted that by using one or both subsampling methods one introduces one or two additional hyperparameters to the model that have to be tuned.</p>
+<p>Having the <strong>Algorithm 2</strong> for tree-based gradient boosting alongside some regularization techniques it is time to look at a very popular, efficient and powerful open source implementation.</p>
 </div>
-<div id="off-shelf-performance" class="section level3" number="3.2.5">
-<h3><span class="header-section-number">3.2.5</span> Off shelf performance</h3>
-<p>reference the figure: <a href="theory.html#fig:exampleAdditiveTree">3.2</a></p>
 </div>
 </div>
 <div id="xgboost-a-highly-efficient-implementation" class="section level2" number="3.3">
 <h2><span class="header-section-number">3.3</span> XGBoost a highly efficient implementation</h2>
 <p>use the whole paper</p>
-<p>We will cite the great paper!<span class="citation">[<a href="references.html#ref-xgboost_paper" role="doc-biblioref">3</a>]</span></p>
-<p>for details about hyperparameters use <span class="citation">[<a href="references.html#ref-HandsOnMLwithR" role="doc-biblioref">4</a>]</span></p>
+<p>We will cite the great paper!<span class="citation">[<a href="references.html#ref-xgboost_paper" role="doc-biblioref">4</a>]</span></p>
+<p>for details about hyperparameters use <span class="citation">[<a href="references.html#ref-HandsOnMLwithR" role="doc-biblioref">2</a>]</span></p>
 
 </div>
 </div>
