@@ -1,6 +1,6 @@
 # Expore the data {#eda}
 
-We use the following packages.[@tidyverse; @tidymodels]
+We use the following packages.[@tidyverse; @tidymodels] and use the mantra of tidyverse as well as tidy modeling with R
 
 ```{r load_packages, message=FALSE}
 library(tidyverse)

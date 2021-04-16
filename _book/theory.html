@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-04-13" />
+<meta name="date" content="2021-04-16" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -145,11 +145,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul></li>
 <li class="chapter" data-level="3.2" data-path="theory.html"><a href="theory.html#general-gradient-tree-boosting"><i class="fa fa-check"></i><b>3.2</b> General gradient tree boosting</a>
 <ul>
-<li class="chapter" data-level="3.2.1" data-path="theory.html"><a href="theory.html#numerical-optimization"><i class="fa fa-check"></i><b>3.2.1</b> Numerical optimization</a></li>
+<li class="chapter" data-level="3.2.1" data-path="theory.html"><a href="theory.html#numOpt"><i class="fa fa-check"></i><b>3.2.1</b> Numerical optimization</a></li>
 <li class="chapter" data-level="3.2.2" data-path="theory.html"><a href="theory.html#single-tree-depth"><i class="fa fa-check"></i><b>3.2.2</b> Single tree depth</a></li>
-<li class="chapter" data-level="3.2.3" data-path="theory.html"><a href="theory.html#combat-overfitting"><i class="fa fa-check"></i><b>3.2.3</b> Combat overfitting</a></li>
+<li class="chapter" data-level="3.2.3" data-path="theory.html"><a href="theory.html#combOver"><i class="fa fa-check"></i><b>3.2.3</b> Combat overfitting</a></li>
 </ul></li>
-<li class="chapter" data-level="3.3" data-path="theory.html"><a href="theory.html#xgboost-a-highly-efficient-implementation"><i class="fa fa-check"></i><b>3.3</b> XGBoost a highly efficient implementation</a></li>
+<li class="chapter" data-level="3.3" data-path="theory.html"><a href="theory.html#xgboost-a-highly-efficient-implementation"><i class="fa fa-check"></i><b>3.3</b> XGBoost a highly efficient implementation</a>
+<ul>
+<li class="chapter" data-level="3.3.1" data-path="theory.html"><a href="theory.html#regularized-loss"><i class="fa fa-check"></i><b>3.3.1</b> Regularized loss</a></li>
+<li class="chapter" data-level="3.3.2" data-path="theory.html"><a href="theory.html#shrinkage-and-subsampling"><i class="fa fa-check"></i><b>3.3.2</b> Shrinkage and subsampling</a></li>
+<li class="chapter" data-level="3.3.3" data-path="theory.html"><a href="theory.html#even-more-tweaks"><i class="fa fa-check"></i><b>3.3.3</b> Even more tweaks</a></li>
+<li class="chapter" data-level="3.3.4" data-path="theory.html"><a href="theory.html#hyperparameters-overview"><i class="fa fa-check"></i><b>3.3.4</b> Hyperparameters overview</a></li>
+</ul></li>
 </ul></li>
 <li class="chapter" data-level="4" data-path="eda.html"><a href="eda.html"><i class="fa fa-check"></i><b>4</b> Expore the data</a>
 <ul>
@@ -184,7 +190,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>As roughly mentioned in the introduction section <a href="intro.html#intro">2</a> the main idea of boosting is to sequentially build weak learners that form a powerful ensemble model. With weak learners models with high bias and low variance are meant that perform at least a little better than guessing. This already shows that the sequential approach of gradient boosting with ‘weak’ learners stands in strong contrast to bagged ensembles like random forest. There many models with low bias and high variance are fitted in a parallel fashion and the variance is then reduced by averaging over the models.<span class="citation">[<a href="references.html#ref-HandsOnMLwithR" role="doc-biblioref">2</a>]</span> It is not totally clear from which field boosting methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> PAC learning can be considered one field within the broader field of learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC).<span class="citation">[<a href="references.html#ref-pacbounds" role="doc-biblioref">3</a>]</span> This section will first cover the general setup of gradient boosting as the most prominent method to train forward stagewise additive models. Secondly tree-based gradient boosting and finally a very efficient and robust tree-based gradient boosting algorithm namely XGBoost will be discussed in detail.</p>
 <div id="forward-stagewise-additive-modeling" class="section level3" number="3.1.1">
 <h3><span class="header-section-number">3.1.1</span> Forward Stagewise Additive Modeling</h3>
-<p>In the setting of the dataset <span class="math inline">\(\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}\)</span> with <span class="math inline">\(x_i \in \mathbb{R}^m\)</span> and <span class="math inline">\(y_i \in \mathbb{R}\)</span> boosting is fitting the following additive, still quite general, model.</p>
+<p>In the setting of the dataset <span class="math inline">\(\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}\)</span> with predictors <span class="math inline">\(x_i \in \mathbb{R}^m\)</span> and target <span class="math inline">\(y_i \in \mathbb{R}\)</span> boosting is fitting the following additive, still quite general, model.</p>
 <span class="math display" id="eq:additiveModel">\[\begin{equation}
   \hat{y_i} = \phi(x_i) = \sum_{k=1}^{K} f_k(x_i), \quad f_k \in \mathcal{F}
   \tag{3.1}
@@ -250,7 +256,7 @@ Figure 3.2: Example of an additive tree ensamble.
   \tag{3.4}
 \end{equation}\]</span>
 <p>This can be estimated fast and quite straight forward if there is a simplification like the one seen for the <span class="math inline">\(L_2\)</span> loss. But in the more general case of an arbitrary differentiable convex loss function like the Huber loss techniques from numerical optimization are needed to derive fast algorithms.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
-<div id="numerical-optimization" class="section level3" number="3.2.1">
+<div id="numOpt" class="section level3" number="3.2.1">
 <h3><span class="header-section-number">3.2.1</span> Numerical optimization</h3>
 <p>According to <strong>Algorithm 1</strong> the goal in order to fit the boosting model is to minimize over the full loss of the training data <span class="math inline">\(\mathcal{D}\)</span> which is the sum over all observation losses.</p>
 <p><span class="math display">\[
@@ -327,14 +333,14 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 <h3><span class="header-section-number">3.2.2</span> Single tree depth</h3>
 <p>The question which <span class="math inline">\(J^{(k)}\)</span> should be used at each iteration is now shortly discussed. Basically using the tree depth two means allowing only the main effects and no interactions. A value of 3 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values <span class="math inline">\(J^{(k)}\)</span> to a constant <span class="math inline">\(J \approx 6\)</span>.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> Also decision stumps (<span class="math inline">\(J = 2\)</span>) could be used but may require a lot more iterations.</p>
 </div>
-<div id="combat-overfitting" class="section level3" number="3.2.3">
+<div id="combOver" class="section level3" number="3.2.3">
 <h3><span class="header-section-number">3.2.3</span> Combat overfitting</h3>
 <p>No learning algorithm could be fully covered without treating the good old problem of overfitting. In the setting of boosting the experienced eye could have spotted the problem of overfitting already in the definition of the additive model <a href="theory.html#eq:additiveModel">(3.1)</a>. There the number <span class="math inline">\(K\)</span> of models that form the ensemble was introduced but was not discussed further till now. Of course one can arbitrarily fit or better say remember some given training data in order to minimize the loss with such an additive model by letting <span class="math inline">\(K\)</span> be arbitrarily large. This comes from the fact that the loss reduces usually after each iteration over <span class="math inline">\(K\)</span>.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> The easiest way to prevent overfitting is to have a validation set at hand which is disjoint from the training data. Having such a validation set at hand can be used to monitor the loss on the unseen data. In the case the loss would rise again on the validation data one can consider to stop the algorithm and to use the current iteration number for the final parameter <span class="math inline">\(K\)</span>. This approach is often called early stopping. Besides that there are methods that regularize the individual trees that are fitted in each iteration. Two of those will be discussed now.</p>
 <div id="shrinkage" class="section level4" number="3.2.3.1">
 <h4><span class="header-section-number">3.2.3.1</span> Shrinkage</h4>
-<p>Shrinkage basically refers to just introducing a learning rate <span class="math inline">\(\nu\)</span>. This learning rate <span class="math inline">\(\nu\)</span> scales the contribution of the new model. In general the learning rate should be in <span class="math inline">\((0,1]\)</span> but in practice it has been shown that rather small values like <span class="math inline">\(\nu &lt; 0.1\)</span> work very good.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> As almost everything in life this does not come for free. A smaller learning rate usually comes with a computational cost as with lower <span class="math inline">\(\nu\)</span> a larger <span class="math inline">\(K\)</span> is required. Those two hyperparameters represent a trade-off in a way. In practice it is advisable to use a small learning rate <span class="math inline">\(\nu\)</span> and adjust the <span class="math inline">\(K\)</span> accordingly which in this case would mean to make the <span class="math inline">\(K\)</span> large enough until one reaches an early stopping point. Still it is good to keep in mind that a <span class="math inline">\(\nu\)</span> that is too small can lead to an immense and unnecessary computational effort. All in all using shrinkage the update step in <strong>Algorithm 2</strong> changes to the following.</p>
+<p>Shrinkage basically refers to just introducing a learning rate <span class="math inline">\(\eta\)</span>. This learning rate <span class="math inline">\(\eta\)</span> scales the contribution of the new model. In general the learning rate should be in <span class="math inline">\((0,1]\)</span> but in practice it has been shown that rather small values like <span class="math inline">\(\eta &lt; 0.1\)</span> work very good.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> As almost everything in life this does not come for free. A smaller learning rate usually comes with a computational cost as with lower <span class="math inline">\(\eta\)</span> a larger <span class="math inline">\(K\)</span> is required. Those two hyperparameters represent a trade-off in a way. In practice it is advisable to use a small learning rate <span class="math inline">\(\eta\)</span> and adjust the <span class="math inline">\(K\)</span> accordingly which in this case would mean to make the <span class="math inline">\(K\)</span> large enough until one reaches an early stopping point. Still it is good to keep in mind that a <span class="math inline">\(\eta\)</span> that is too small can lead to an immense and unnecessary computational effort. All in all using shrinkage the update step in <strong>Algorithm 2</strong> changes to the following.</p>
 <span class="math display" id="eq:shrinkage">\[\begin{equation}
-  \phi_k(x) = \phi_{k-1}(x) + \nu * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)
+  \phi_k(x) = \phi_{k-1}(x) + \eta * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)
   \tag{3.8}
 \end{equation}\]</span>
 </div>
@@ -348,10 +354,114 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 </div>
 <div id="xgboost-a-highly-efficient-implementation" class="section level2" number="3.3">
 <h2><span class="header-section-number">3.3</span> XGBoost a highly efficient implementation</h2>
-<p>use the whole paper</p>
-<p>We will cite the great paper!<span class="citation">[<a href="references.html#ref-xgboostPaper" role="doc-biblioref">4</a>]</span></p>
-<p>for details about hyperparameters use <span class="citation">[<a href="references.html#ref-HandsOnMLwithR" role="doc-biblioref">2</a>]</span></p>
+<p>The XGBoost algorithm is a highly scalable, efficient and successful implementation and optimization of <strong>Algorithm 2</strong> introduced by Chen and Guestrin in 2016.<span class="citation">[<a href="references.html#ref-HandsOnMLwithR" role="doc-biblioref">2</a>]</span> It has gained a lot of spotlight when it was integral for many winning submissions at kaggle machine learning challenges. In the following the most important tweaks that are proposed to <strong>Algorithm 2</strong> are covered.</p>
+<div id="regularized-loss" class="section level3" number="3.3.1">
+<h3><span class="header-section-number">3.3.1</span> Regularized loss</h3>
+<p>Instead of just minimizing a convex and differentiable loss <span class="math inline">\(L\)</span> XGBoost minimizes the following regularized loss.<span class="citation">[<a href="references.html#ref-xgboostPaper" role="doc-biblioref">4</a>]</span></p>
+<span class="math display" id="eq:regLoss">\[\begin{equation}
+  \begin{split}
+  \mathcal{L}(\phi) = L(\phi) + \sum_{k=1}^K \Omega(t_k) \\
+  \text{where } \Omega(t) = \nu J + \frac{1}{2} \lambda ||\gamma||^2 \quad t \in \mathcal{T}
+  \end{split}
+  \tag{3.9}
+\end{equation}\]</span>
+<p>Here <span class="math inline">\(J\)</span> and <span class="math inline">\(\gamma\)</span> again parameterize the regression trees <span class="math inline">\(t \in \mathcal{T}\)</span> as defined in <a href="theory.html#eq:treeDef">(3.3)</a>. As evident from the formula both hyperparameters <span class="math inline">\(\nu\)</span> and <span class="math inline">\(\lambda\)</span> favor when increased less complex models at each iteration. This is again a measure against overfitting.</p>
+<p>This regularized objective leads to a slightly modified version of the minimization problem <a href="theory.html#eq:oneStepTreeBoost">(3.4)</a> that has to be solved in each iteration.</p>
+<span class="math display" id="eq:oneStepXGBoost">\[\begin{equation}
+  (\gamma^{(k)},R^{(k)}) = argmin_{\gamma,R} \sum_{i=1}^N L(y_i, \phi_{k-1}(x_i) + t(x_i,\gamma,R)) + \Omega(t(x_i,\gamma,R))
+  \tag{3.10}
+\end{equation}\]</span>
+<p>Instead of the first order approach, that has been introduced in <a href="theory.html#numOpt">3.2.1</a>, XGBoost uses a second order approximation to further simplify the objective. This means that besides the first order gradient <span class="math inline">\(g^{(k)}\)</span> of the loss function evaluated at <span class="math inline">\(\phi_{k-1}\)</span> also the second order gradient <span class="math inline">\(z^{(k)}_i = \bigg[\frac{\partial^2 L(y_i, \phi(x_i))}{\partial^2 \phi(x_i)}\bigg]_{\phi = \phi_{k-1}}\)</span> is used. By neglecting constants one reaches the approximate new objective below.<span class="citation">[<a href="references.html#ref-xgboostPaper" role="doc-biblioref">4</a>]</span></p>
+<span class="math display" id="eq:oneappStepXGBoost">\[\begin{equation}
+\begin{split}
+  \tilde{\mathcal{L}}^{(k)} &amp; = \sum_{i=1}^N [g^{(k)}_i t^{(k)}(x_i) + \frac{1}{2} t^{(k)}(x_i)^2] + \Omega(t^{(k)}) \\
+  &amp; = \sum_{j=1}^J [(\sum_{\{i|x_i \in R^{(k)}_j\}} g^{(k)}_i) \gamma^{(k)}_j + \frac{1}{2} (\sum_{\{i|x_i \in R^{(k)}_j\}} z^{(k)}_i + \lambda) (\gamma^{(k)}_j)^2 ] + \nu J
+\end{split}
+\tag{3.11}
+\end{equation}\]</span>
+<p>This representation is used as it can be decomposed by the <span class="math inline">\(J\)</span> leafs of the tree. One can then define an scoring function for split finding that only depends on <span class="math inline">\(g^{(k)}\)</span> and <span class="math inline">\(z^{(k)}\)</span>.</p>
+</div>
+<div id="shrinkage-and-subsampling" class="section level3" number="3.3.2">
+<h3><span class="header-section-number">3.3.2</span> Shrinkage and subsampling</h3>
+<p>As discussed above in <a href="theory.html#combOver">3.2.3</a> shrinkage and subsampling are great ways to regularize the model and prevent overfitting. XGBoost implements both shrinkage and subsampling. XGBoost enables the user to use column as well as row subsampling. The authors claim that in practice column subsampling has prevented overfitting more than row subsampling.<span class="citation">[<a href="references.html#ref-xgboostPaper" role="doc-biblioref">4</a>]</span></p>
+</div>
+<div id="even-more-tweaks" class="section level3" number="3.3.3">
+<h3><span class="header-section-number">3.3.3</span> Even more tweaks</h3>
+<p>Besides the changes above the authors also implemented an effective approximate algorithm for split finding for the tree building step. A very nice attribute of this approximate procedure is that the algorithm is sparsity aware i.e. the processing of missing values or 0 values is very efficient. This is done via a learned default direction in each split. Moreover they used very efficient data structures to allow a lot of parallel processing.<span class="citation">[<a href="references.html#ref-xgboostPaper" role="doc-biblioref">4</a>]</span> It is written in C++ but has APIs in various languages like in R via the <code>xgboost</code> package.<span class="citation">[<a href="references.html#ref-xgboost_package" role="doc-biblioref">5</a>]</span></p>
+</div>
+<div id="hyperparameters-overview" class="section level3" number="3.3.4">
+<h3><span class="header-section-number">3.3.4</span> Hyperparameters overview</h3>
+<p>As the <strong>tidymodels</strong> framework will be used in the practical part, the according names from the parsnip interface for tree-based boosting i.e. <code>boost_tree</code> are discussed below.<span class="citation">[<a href="references.html#ref-tidymodels" role="doc-biblioref">6</a>]</span></p>
+<table>
+<caption><span id="tab:xgboostHyper">Table 3.2: </span> XGBoost hyperparameters overview.</caption>
+<colgroup>
+<col width="14%" />
+<col width="13%" />
+<col width="72%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Hyperparameter</th>
+<th>Notation above</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>trees</code></td>
+<td><span class="math inline">\(K\)</span></td>
+<td>Number of trees in the ensemble.</td>
+</tr>
+<tr class="even">
+<td><code>tree_depth</code></td>
+<td><span class="math inline">\(max(J^{(k)})\)</span></td>
+<td>Maximum depth of the trees.</td>
+</tr>
+<tr class="odd">
+<td><code>learn_rate</code></td>
+<td><span class="math inline">\(\eta\)</span></td>
+<td>Learning rate (shrinkage).</td>
+</tr>
+<tr class="even">
+<td><code>min_n</code></td>
+<td></td>
+<td>Minimum number of observations in terminal region <span class="math inline">\(R^{(k)}_j\)</span>.</td>
+</tr>
+<tr class="odd">
+<td><code>lambda</code></td>
+<td><span class="math inline">\(\lambda\)</span></td>
+<td><span class="math inline">\(L_2\)</span> regularization parameter on <span class="math inline">\(\gamma\)</span> as in <a href="theory.html#eq:oneappStepXGBoost">(3.11)</a> (default = 0).</td>
+</tr>
+<tr class="even">
+<td><code>alpha</code></td>
+<td></td>
+<td><span class="math inline">\(L_1\)</span> regularization parameter on <span class="math inline">\(\gamma\)</span> (default = 0).</td>
+</tr>
+<tr class="odd">
+<td><code>loss_reduction</code></td>
+<td><span class="math inline">\(\nu\)</span></td>
+<td>Minimal loss reduction for each partition.</td>
+</tr>
+<tr class="even">
+<td><code>mtry</code></td>
+<td></td>
+<td>Proportion or number of columns for column subsampling.</td>
+</tr>
+<tr class="odd">
+<td><code>sample_size</code></td>
+<td></td>
+<td>Proportion of observations for row subsampling.</td>
+</tr>
+<tr class="even">
+<td><code>stop_iter</code></td>
+<td></td>
+<td>Allowed number of rounds without improvement before early stopping.</td>
+</tr>
+</tbody>
+</table>
+<p>This closes the chapter on the theory of boosting methods with a focus on tree-based gradient boosting. The discussed tools will be put to the test in the subsequent sections where real world data will be analyzed with them.</p>
 
+</div>
 </div>
 </div>
             </section>

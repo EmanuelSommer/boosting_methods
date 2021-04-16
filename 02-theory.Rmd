@@ -6,7 +6,7 @@ As roughly mentioned in the introduction section \@ref(intro) the main idea of b
 
 ### Forward Stagewise Additive Modeling
 
-In the setting of the dataset $\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}$ with $x_i \in \mathbb{R}^m$ and $y_i \in \mathbb{R}$ boosting is fitting the following additive, still quite general, model.
+In the setting of the dataset $\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}$ with predictors $x_i \in \mathbb{R}^m$ and target $y_i \in \mathbb{R}$ boosting is fitting the following additive, still quite general, model.
 
 ```{=tex}
 \begin{equation}
@@ -91,7 +91,7 @@ Having now the new space $\mathcal{T}$ for the general boosting model \@ref(eq:a
 ```
 This can be estimated fast and quite straight forward if there is a simplification like the one seen for the $L_2$ loss. But in the more general case of an arbitrary differentiable convex loss function like the Huber loss techniques from numerical optimization are needed to derive fast algorithms.[@elements]
 
-### Numerical optimization
+### Numerical optimization {#numOpt}
 
 According to **Algorithm 1** the goal in order to fit the boosting model is to minimize over the full loss of the training data $\mathcal{D}$ which is the sum over all observation losses.
 
@@ -159,8 +159,6 @@ Putting all of this back together with **Algorithm 1** results in **Algorithm 2*
 
 The only unknowns in this algorithm are now the differentiable loss function and the hyperparameters like the $J^{(k)}$ and the $K$. While choices for the hyperparameters are discussed further below, the following table \@ref(tab:lossGradients) displays the gradients for the losses discussed so far.
 
-
-
 +--------------------------------+-----------------------------------------------------------------------------------------+
 | Loss                           | Gradient                                                                                |
 +================================+=========================================================================================+
@@ -179,17 +177,17 @@ The only unknowns in this algorithm are now the differentiable loss function and
 
 The question which $J^{(k)}$ should be used at each iteration is now shortly discussed. Basically using the tree depth two means allowing only the main effects and no interactions. A value of 3 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values $J^{(k)}$ to a constant $J \approx 6$.[@elements] Also decision stumps ($J = 2$) could be used but may require a lot more iterations.
 
-### Combat overfitting
+### Combat overfitting {#combOver}
 
 No learning algorithm could be fully covered without treating the good old problem of overfitting. In the setting of boosting the experienced eye could have spotted the problem of overfitting already in the definition of the additive model \@ref(eq:additiveModel). There the number $K$ of models that form the ensemble was introduced but was not discussed further till now. Of course one can arbitrarily fit or better say remember some given training data in order to minimize the loss with such an additive model by letting $K$ be arbitrarily large. This comes from the fact that the loss reduces usually after each iteration over $K$.[@elements] The easiest way to prevent overfitting is to have a validation set at hand which is disjoint from the training data. Having such a validation set at hand can be used to monitor the loss on the unseen data. In the case the loss would rise again on the validation data one can consider to stop the algorithm and to use the current iteration number for the final parameter $K$. This approach is often called early stopping. Besides that there are methods that regularize the individual trees that are fitted in each iteration. Two of those will be discussed now.
 
 #### Shrinkage
 
-Shrinkage basically refers to just introducing a learning rate $\nu$. This learning rate $\nu$ scales the contribution of the new model. In general the learning rate should be in $(0,1]$ but in practice it has been shown that rather small values like $\nu < 0.1$ work very good.[@elements] As almost everything in life this does not come for free. A smaller learning rate usually comes with a computational cost as with lower $\nu$ a larger $K$ is required. Those two hyperparameters represent a trade-off in a way. In practice it is advisable to use a small learning rate $\nu$ and adjust the $K$ accordingly which in this case would mean to make the $K$ large enough until one reaches an early stopping point. Still it is good to keep in mind that a $\nu$ that is too small can lead to an immense and unnecessary computational effort. All in all using shrinkage the update step in **Algorithm 2** changes to the following.
+Shrinkage basically refers to just introducing a learning rate $\eta$. This learning rate $\eta$ scales the contribution of the new model. In general the learning rate should be in $(0,1]$ but in practice it has been shown that rather small values like $\eta < 0.1$ work very good.[@elements] As almost everything in life this does not come for free. A smaller learning rate usually comes with a computational cost as with lower $\eta$ a larger $K$ is required. Those two hyperparameters represent a trade-off in a way. In practice it is advisable to use a small learning rate $\eta$ and adjust the $K$ accordingly which in this case would mean to make the $K$ large enough until one reaches an early stopping point. Still it is good to keep in mind that a $\eta$ that is too small can lead to an immense and unnecessary computational effort. All in all using shrinkage the update step in **Algorithm 2** changes to the following.
 
 ```{=tex}
 \begin{equation}
-  \phi_k(x) = \phi_{k-1}(x) + \nu * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)
+  \phi_k(x) = \phi_{k-1}(x) + \eta * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)
   (\#eq:shrinkage)
 \end{equation}
 ```
@@ -203,8 +201,82 @@ Having the **Algorithm 2** for tree-based gradient boosting alongside some regul
 
 ## XGBoost a highly efficient implementation
 
-use the whole paper
+The XGBoost algorithm is a highly scalable, efficient and successful implementation and optimization of **Algorithm 2** introduced by Chen and Guestrin in 2016.[@xgboostPaper, @HandsOnMLwithR] It has gained a lot of spotlight when it was integral for many winning submissions at kaggle machine learning challenges. In the following the most important tweaks that are proposed to **Algorithm 2** are covered.
 
-We will cite the great paper![@xgboostPaper]
+### Regularized loss
 
-for details about hyperparameters use [@HandsOnMLwithR]
+Instead of just minimizing a convex and differentiable loss $L$ XGBoost minimizes the following regularized loss.[@xgboostPaper]
+
+```{=tex}
+\begin{equation}
+  \begin{split}
+  \mathcal{L}(\phi) = L(\phi) + \sum_{k=1}^K \Omega(t_k) \\
+  \text{where } \Omega(t) = \nu J + \frac{1}{2} \lambda ||\gamma||^2 \quad t \in \mathcal{T}
+  \end{split}
+  (\#eq:regLoss)
+\end{equation}
+```
+Here $J$ and $\gamma$ again parameterize the regression trees $t \in \mathcal{T}$ as defined in \@ref(eq:treeDef). As evident from the formula both hyperparameters $\nu$ and $\lambda$ favor when increased less complex models at each iteration. This is again a measure against overfitting.
+
+This regularized objective leads to a slightly modified version of the minimization problem \@ref(eq:oneStepTreeBoost) that has to be solved in each iteration.
+
+```{=tex}
+\begin{equation}
+  (\gamma^{(k)},R^{(k)}) = argmin_{\gamma,R} \sum_{i=1}^N L(y_i, \phi_{k-1}(x_i) + t(x_i,\gamma,R)) + \Omega(t(x_i,\gamma,R))
+  (\#eq:oneStepXGBoost)
+\end{equation}
+```
+Instead of the first order approach, that has been introduced in \@ref(numOpt), XGBoost uses a second order approximation to further simplify the objective. This means that besides the first order gradient $g^{(k)}$ of the loss function evaluated at $\phi_{k-1}$ also the second order gradient $z^{(k)}_i = \bigg[\frac{\partial^2 L(y_i, \phi(x_i))}{\partial^2 \phi(x_i)}\bigg]_{\phi = \phi_{k-1}}$ is used. By neglecting constants one reaches the approximate new objective below.[@xgboostPaper]
+
+```{=tex}
+\begin{equation}
+\begin{split}
+  \tilde{\mathcal{L}}^{(k)} & = \sum_{i=1}^N [g^{(k)}_i t^{(k)}(x_i) + \frac{1}{2} t^{(k)}(x_i)^2] + \Omega(t^{(k)}) \\
+  & = \sum_{j=1}^J [(\sum_{\{i|x_i \in R^{(k)}_j\}} g^{(k)}_i) \gamma^{(k)}_j + \frac{1}{2} (\sum_{\{i|x_i \in R^{(k)}_j\}} z^{(k)}_i + \lambda) (\gamma^{(k)}_j)^2 ] + \nu J
+\end{split}
+(\#eq:oneappStepXGBoost)
+\end{equation}
+```
+This representation is used as it can be decomposed by the $J$ leafs of the tree. One can then define an scoring function for split finding that only depends on $g^{(k)}$ and $z^{(k)}$.
+
+### Shrinkage and subsampling
+
+As discussed above in \@ref(combOver) shrinkage and subsampling are great ways to regularize the model and prevent overfitting. XGBoost implements both shrinkage and subsampling. XGBoost enables the user to use column as well as row subsampling. The authors claim that in practice column subsampling has prevented overfitting more than row subsampling.[@xgboostPaper]
+
+### Even more tweaks
+
+Besides the changes above the authors also implemented an effective approximate algorithm for split finding for the tree building step. A very nice attribute of this approximate procedure is that the algorithm is sparsity aware i.e. the processing of missing values or 0 values is very efficient. This is done via a learned default direction in each split. Moreover they used very efficient data structures to allow a lot of parallel processing.[@xgboostPaper] It is written in C++ but has APIs in various languages like in R via the `xgboost` package.[@xgboost_package]
+
+### Hyperparameters overview
+
+As the **tidymodels** framework will be used in the applied part, the according names from the parsnip interface for tree-based boosting i.e. `boost_tree` are discussed below.[@xgboostPaper, @xgboost_package, @tidymodels]
+
++------------------+----------------+---------------------------------------------------------------------------------------------+
+| Hyperparameter   | Notation above | Meaning                                                                                     |
++==================+================+=============================================================================================+
+| `trees`          | $K$            | Number of trees in the ensemble.                                                            |
++------------------+----------------+---------------------------------------------------------------------------------------------+
+| `tree_depth`     | $max(J^{(k)})$ | Maximum depth of the trees.                                                                 |
++------------------+----------------+---------------------------------------------------------------------------------------------+
+| `learn_rate`     | $\eta$         | Learning rate (shrinkage).                                                                  |
++------------------+----------------+---------------------------------------------------------------------------------------------+
+| `min_n`          |                | Minimum number of observations in terminal region $R^{(k)}_j$.                              |
++------------------+----------------+---------------------------------------------------------------------------------------------+
+| `lambda`         | $\lambda$      | $L_2$ regularization parameter on $\gamma$ as in \@ref(eq:oneappStepXGBoost) (default = 0). |
++------------------+----------------+---------------------------------------------------------------------------------------------+
+| `alpha`          |                | $L_1$ regularization parameter on $\gamma$ (default = 0).                                   |
++------------------+----------------+---------------------------------------------------------------------------------------------+
+| `loss_reduction` | $\nu$          | Minimal loss reduction for terminal partitions. (default = 0)                               |
++------------------+----------------+---------------------------------------------------------------------------------------------+
+| `mtry`           |                | Proportion or number of columns for column subsampling.                                     |
++------------------+----------------+---------------------------------------------------------------------------------------------+
+| `sample_size`    |                | Proportion of observations for row subsampling.                                             |
++------------------+----------------+---------------------------------------------------------------------------------------------+
+| `stop_iter`      |                | Allowed number of rounds without improvement before early stopping.                         |
++------------------+----------------+---------------------------------------------------------------------------------------------+
+
+: (\#tab:xgboostHyper) XGBoost hyperparameters overview.
+
+Note that the $L_1$ penalization term would be added to the $\Omega$ term in the loss $\mathcal{L}$ of XGBoost.
+
+This closes the chapter on the theory of boosting methods with a focus on tree-based gradient boosting. The discussed tools will be put to the test in the subsequent sections where real world data will be analyzed with them.
