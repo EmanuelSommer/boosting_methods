@@ -4,27 +4,27 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Chapter 2 Introduction | Boosting methods</title>
-  <meta name="description" content="Chapter 2 Introduction | Boosting methods: Theory and Application (xgboost)" />
+  <title>Chapter 2 Introduction | Boosting methods: Theory and Application in R (XGBoost)</title>
+  <meta name="description" content="Chapter 2 Introduction | Boosting methods: Theory and Application in R (XGBoost)" />
   <meta name="generator" content="bookdown 0.21 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="Chapter 2 Introduction | Boosting methods" />
+  <meta property="og:title" content="Chapter 2 Introduction | Boosting methods: Theory and Application in R (XGBoost)" />
   <meta property="og:type" content="book" />
   
   
-  <meta property="og:description" content="Chapter 2 Introduction | Boosting methods: Theory and Application (xgboost)" />
+  <meta property="og:description" content="Chapter 2 Introduction | Boosting methods: Theory and Application in R (XGBoost)" />
   <meta name="github-repo" content="EmanuelSommer/boosting_methods" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Chapter 2 Introduction | Boosting methods" />
+  <meta name="twitter:title" content="Chapter 2 Introduction | Boosting methods: Theory and Application in R (XGBoost)" />
   
-  <meta name="twitter:description" content="Chapter 2 Introduction | Boosting methods: Theory and Application (xgboost)" />
+  <meta name="twitter:description" content="Chapter 2 Introduction | Boosting methods: Theory and Application in R (XGBoost)" />
   
 
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-04-16" />
+<meta name="date" content="2021-04-20" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -175,7 +175,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <div class="body-inner">
         <div class="book-header" role="navigation">
           <h1>
-            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Boosting methods</a>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Boosting methods: Theory and Application in R (XGBoost)</a>
           </h1>
         </div>
 
@@ -185,11 +185,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
             <section class="normal" id="section-">
 <div id="intro" class="section level1" number="2">
 <h1><span class="header-section-number">Chapter 2</span> Introduction</h1>
-<p>Introduction to the whole setting (seminar topic/ intro to topic maybe mention kaggle wins)</p>
+<p>This bookdown project shows my work for the main master’s seminar from my <em>M.Sc. Mathematics in Data Science</em> at the TUM. The topic of the seminar is <em>Statistical Methods and Models</em>. During the seminar I was supervised by Prof. Claudia Czado and Özge Sahin. My topic and thus covered in this project are boosting methods. Those are unarguably one of the hottest machine learning algorithms for tabular data to date.</p>
 <blockquote>
 <p>“Boosting is one of the most powerful learning ideas introduced in the last
 twenty years.” <span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
 </blockquote>
+<p>Hereby the focus will lie on the regression and not the more often discussed classification setting. The main idea of boosting is to sequentially build models from some class of base learners to finally combine them to a powerful ensemble model. As the base learners regression trees will be chosen in this project.</p>
+<p>The next chapter will cover the theory behind boosting and especially tree-based gradient boosting. Besides a very prominent, efficient and successful implementation of tree-based gradient boosting namely XGBoost will be discussed in this chapter. It gained a lot of attention when it was integral to many winning submissions in machine learning competitions on the platform Kaggle and comes with some interesting tweaks to the general algorithm.</p>
+<p>The application of the discussed boosting models to two real world data sets with the use of the programming language R are the content of the subsequent chapters. This will be divided into exploratory data analysis and the modeling itself. Notably the framework of <code>tidymodels</code> is used in the practical part.</p>
 
 </div>
             </section>

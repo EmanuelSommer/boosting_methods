@@ -1,6 +1,24 @@
 # Introduction {#intro}
 
-Introduction to the whole setting (seminar topic/ intro to topic maybe mention kaggle wins)
+
+This bookdown project shows my work for the main master's seminar from my *M.Sc. Mathematics in Data Science* at the TUM. The topic of the seminar is *Statistical Methods and Models*. During the seminar I was supervised by Prof. Claudia Czado and Özge Sahin. My topic and thus covered in this project are boosting methods. Those are unarguably one of the hottest machine learning algorithms for tabular data to date.
 
 > "Boosting is one of the most powerful learning ideas introduced in the last
 > twenty years." [@elements]
+
+
+Hereby the focus will lie on the regression and not the more often discussed classification setting. The main idea of boosting is to sequentially build models from some class of base learners to finally combine them to a powerful ensemble model. As the base learners regression trees will be chosen in this project. 
+
+The next chapter will cover the theory behind boosting and especially tree-based gradient boosting. Besides a very prominent, efficient and successful implementation of tree-based gradient boosting namely XGBoost will be discussed in this chapter. It gained a lot of attention when it was integral to many winning submissions in machine learning competitions on the platform Kaggle and comes with some interesting tweaks to the general algorithm.
+
+The application of the discussed boosting models to two real world data sets with the use of the programming language R are the content of the subsequent chapters. This will be divided into exploratory data analysis and the modeling itself. Notably the framework of `tidymodels` is used in the practical part.
+
+
+
+
+
+
+
+
+
+

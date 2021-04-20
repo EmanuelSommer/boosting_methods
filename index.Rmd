@@ -1,5 +1,5 @@
 ---
-title: "Boosting methods"
+title: "Boosting methods: Theory and application in R"
 author: "Emanuel Sommer"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
@@ -9,7 +9,7 @@ biblio-style: apalike
 csl: the-annals-of-statistics.csl
 link-citations: yes
 nocite: '@*'
-description: "Boosting methods: Theory and Application (xgboost)"
+description: "Boosting methods: Theory and Application in R (XGBoost)"
 github-repo: EmanuelSommer/boosting_methods
 ---
 

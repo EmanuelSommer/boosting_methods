@@ -4,27 +4,27 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Chapter 3 Theory | Boosting methods</title>
-  <meta name="description" content="Chapter 3 Theory | Boosting methods: Theory and Application (xgboost)" />
+  <title>Chapter 3 Theory | Boosting methods: Theory and Application in R (XGBoost)</title>
+  <meta name="description" content="Chapter 3 Theory | Boosting methods: Theory and Application in R (XGBoost)" />
   <meta name="generator" content="bookdown 0.21 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="Chapter 3 Theory | Boosting methods" />
+  <meta property="og:title" content="Chapter 3 Theory | Boosting methods: Theory and Application in R (XGBoost)" />
   <meta property="og:type" content="book" />
   
   
-  <meta property="og:description" content="Chapter 3 Theory | Boosting methods: Theory and Application (xgboost)" />
+  <meta property="og:description" content="Chapter 3 Theory | Boosting methods: Theory and Application in R (XGBoost)" />
   <meta name="github-repo" content="EmanuelSommer/boosting_methods" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Chapter 3 Theory | Boosting methods" />
+  <meta name="twitter:title" content="Chapter 3 Theory | Boosting methods: Theory and Application in R (XGBoost)" />
   
-  <meta name="twitter:description" content="Chapter 3 Theory | Boosting methods: Theory and Application (xgboost)" />
+  <meta name="twitter:description" content="Chapter 3 Theory | Boosting methods: Theory and Application in R (XGBoost)" />
   
 
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-04-16" />
+<meta name="date" content="2021-04-20" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -175,7 +175,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <div class="body-inner">
         <div class="book-header" role="navigation">
           <h1>
-            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Boosting methods</a>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Boosting methods: Theory and Application in R (XGBoost)</a>
           </h1>
         </div>
 
@@ -391,7 +391,7 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 </div>
 <div id="hyperparameters-overview" class="section level3" number="3.3.4">
 <h3><span class="header-section-number">3.3.4</span> Hyperparameters overview</h3>
-<p>As the <strong>tidymodels</strong> framework will be used in the practical part, the according names from the parsnip interface for tree-based boosting i.e. <code>boost_tree</code> are discussed below.<span class="citation">[<a href="references.html#ref-tidymodels" role="doc-biblioref">6</a>]</span></p>
+<p>As the <strong>tidymodels</strong> framework will be used in the applied part, the according names from the parsnip interface for tree-based boosting i.e. <code>boost_tree</code> are discussed below.<span class="citation">[<a href="references.html#ref-tidymodels" role="doc-biblioref">6</a>]</span></p>
 <table>
 <caption><span id="tab:xgboostHyper">Table 3.2: </span> XGBoost hyperparameters overview.</caption>
 <colgroup>
@@ -440,7 +440,7 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 <tr class="odd">
 <td><code>loss_reduction</code></td>
 <td><span class="math inline">\(\nu\)</span></td>
-<td>Minimal loss reduction for each partition.</td>
+<td>Minimal loss reduction for terminal partitions. (default = 0)</td>
 </tr>
 <tr class="even">
 <td><code>mtry</code></td>
@@ -459,6 +459,7 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 </tr>
 </tbody>
 </table>
+<p>Note that the <span class="math inline">\(L_1\)</span> penalization term would be added to the <span class="math inline">\(\Omega\)</span> term in the loss <span class="math inline">\(\mathcal{L}\)</span> of XGBoost.</p>
 <p>This closes the chapter on the theory of boosting methods with a focus on tree-based gradient boosting. The discussed tools will be put to the test in the subsequent sections where real world data will be analyzed with them.</p>
 
 </div>

@@ -36,7 +36,7 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \hypersetup{
-  pdftitle={Boosting methods},
+  pdftitle={Boosting methods: Theory and Application in R (XGBoost)},
   pdfauthor={Emanuel Sommer},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
@@ -136,9 +136,9 @@
 \newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
-\title{Boosting methods}
+\title{Boosting methods: Theory and Application in R (XGBoost)}
 \author{Emanuel Sommer}
-\date{2021-04-16}
+\date{2021-04-20}
 
 \begin{document}
 \maketitle
@@ -179,12 +179,18 @@ The reader should have some basic knowledge of the following topics:
 \hypertarget{intro}{%
 \chapter{Introduction}\label{intro}}
 
-Introduction to the whole setting (seminar topic/ intro to topic maybe mention kaggle wins)
+This bookdown project shows my work for the main master's seminar from my \emph{M.Sc. Mathematics in Data Science} at the TUM. The topic of the seminar is \emph{Statistical Methods and Models}. During the seminar I was supervised by Prof.~Claudia Czado and Özge Sahin. My topic and thus covered in this project are boosting methods. Those are unarguably one of the hottest machine learning algorithms for tabular data to date.
 
 \begin{quote}
 ``Boosting is one of the most powerful learning ideas introduced in the last
 twenty years.'' \citep{elements}
 \end{quote}
+
+Hereby the focus will lie on the regression and not the more often discussed classification setting. The main idea of boosting is to sequentially build models from some class of base learners to finally combine them to a powerful ensemble model. As the base learners regression trees will be chosen in this project.
+
+The next chapter will cover the theory behind boosting and especially tree-based gradient boosting. Besides a very prominent, efficient and successful implementation of tree-based gradient boosting namely XGBoost will be discussed in this chapter. It gained a lot of attention when it was integral to many winning submissions in machine learning competitions on the platform Kaggle and comes with some interesting tweaks to the general algorithm.
+
+The application of the discussed boosting models to two real world data sets with the use of the programming language R are the content of the subsequent chapters. This will be divided into exploratory data analysis and the modeling itself. Notably the framework of \texttt{tidymodels} is used in the practical part.
 
 \hypertarget{theory}{%
 \chapter{Theory}\label{theory}}
@@ -473,7 +479,7 @@ Besides the changes above the authors also implemented an effective approximate 
 \hypertarget{hyperparameters-overview}{%
 \subsection{Hyperparameters overview}\label{hyperparameters-overview}}
 
-As the \textbf{tidymodels} framework will be used in the practical part, the according names from the parsnip interface for tree-based boosting i.e.~\texttt{boost\_tree} are discussed below.\citep[\citet{xgboost_package}, \citet{tidymodels}]{xgboostPaper}
+As the \textbf{tidymodels} framework will be used in the applied part, the according names from the parsnip interface for tree-based boosting i.e.~\texttt{boost\_tree} are discussed below.\citep[\citet{xgboost_package}, \citet{tidymodels}]{xgboostPaper}
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.15}}
@@ -494,12 +500,14 @@ Hyperparameter & Notation above & Meaning \\
 \texttt{min\_n} & & Minimum number of observations in terminal region \(R^{(k)}_j\). \\
 \texttt{lambda} & \(\lambda\) & \(L_2\) regularization parameter on \(\gamma\) as in \eqref{eq:oneappStepXGBoost} (default = 0). \\
 \texttt{alpha} & & \(L_1\) regularization parameter on \(\gamma\) (default = 0). \\
-\texttt{loss\_reduction} & \(\nu\) & Minimal loss reduction for each partition. \\
+\texttt{loss\_reduction} & \(\nu\) & Minimal loss reduction for terminal partitions. (default = 0) \\
 \texttt{mtry} & & Proportion or number of columns for column subsampling. \\
 \texttt{sample\_size} & & Proportion of observations for row subsampling. \\
 \texttt{stop\_iter} & & Allowed number of rounds without improvement before early stopping. \\
 \bottomrule
 \end{longtable}
+
+Note that the \(L_1\) penalization term would be added to the \(\Omega\) term in the loss \(\mathcal{L}\) of XGBoost.
 
 This closes the chapter on the theory of boosting methods with a focus on tree-based gradient boosting. The discussed tools will be put to the test in the subsequent sections where real world data will be analyzed with them.
 
