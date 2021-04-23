@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>main_talk.utf8</title>
+    <meta charset="utf-8" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+class: left, middle, inverse, hide-logo
+
+
+
+
+
+
+### Boosting methods for regression
+&lt;!-- 
+English title page
+--&gt;
+
+#### Emanuel Sommer
+#### 2021-04-23
+
+
+&lt;center&gt;
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+&lt;img src="img/maTUM_w.png" width="100"&gt;
+&lt;br&gt;
+&lt;br&gt;
+Department of Mathematics
+&lt;br&gt;
+Technical University of Munich
+&lt;/center&gt;
+
+
+---
+
+## Previously
+
+.pull-left[
+### CART
+
+&lt;img src="img/tree_illustration.png" width="45%" style="display: block; margin: auto;" /&gt;
+
+Let `\(\mathcal{T}\)` be the space of CART models.
+
+`$$t(x, \gamma, R) = \sum_{j=1}^J \gamma_j I(x \in R_j) \quad \text{for  } t \in \mathcal{T}$$`
+with `\(R_j\)` being distinct regions of the predictor space and `\(\gamma_j\)` the prediction w.r.t. the region.
+]
+
+--
+
+.pull-right[
+### Random forest
+
+&lt;img src="img/rf_illustration.png" width="70%" style="display: block; margin: auto;" /&gt;
+
+Build many deep trees in parallel and average over the individual predictions. Randomness is induced to decorrelate the trees.
+
+]
+---
+background-image: url("https://media.giphy.com/media/cRH5deQTgTMR2/giphy.gif")
+background-size: cover
+class: center, bottom, hide-logo
+
+---
+
+## The core idea of boosting
+
+**Sequentially** build weak learners that are ultimately combined in an additive fashion. Each additional learner should improve the total model.
+
+&lt;img src="img/boost_illustration.png" width="50%" style="display: block; margin: auto;" /&gt;
+
+**The general additive model:**
+
+`$$\hat{y_i} = \phi(x_i) = \sum_{k=1}^{K} f_k(x_i), \quad f_k \in \mathcal{F}$$`
+
+with `\(\mathcal{F}\)` being the space of learning algorithms. From now on we use `\(\mathcal{T}\)`.
+
+---
+
+## The fitting approach
+
+To fit such a model one uses **Forward Stagewise Additive Modeling**.
+
+* Sequentially add `\(t \in \mathcal{T}\)` to the current model.
+* Do not change the parameters of the previous trees.
+
+`$$\phi_k(x) = \phi_{k-1}(x) + t_k(x, \gamma^{(k)}, R^{(k)})$$`
+
+Each tree that is added should solve the following optimization problem:
+
+`$$(\gamma^{(k)},R^{(k)}) = argmin_{\gamma,R} \sum_{i=1}^N L(y_i, \phi_{k-1}(x_i) + t(x_i,\gamma,R))$$`
+where `\(L\)` is a convex and differentiable loss function.
+
+---
+
+## Connection with Gradient descent
+
+**General minimization problem:**
+
+$$
+s_{opt} = argmin_sf(s) \quad s \in \mathbb{R}^N
+$$
+
+With `\(f\)` is differentiable and `\(\lambda \in \mathbb{R}\)` a scalar.
+
+**Gradient descent in a nutshell:** 
+
+$$
+s^{(k)} = s^{(k-1)} - \lambda \bigg[\frac{\partial f(s)}{\partial s}\bigg]_{s=s^{(k-1)}}
+$$
+--
+
+This looks quite similar to the structure of our boosting model:
+
+`$$\phi_k(x) = \phi_{k-1}(x) + t_k(x, \gamma^{(k)}, R^{(k)})$$`
+
+Corresponding parts:
+
+* The loss function `\(L\)` to the function `\(f\)`
+* The predictions `\(\phi_k(x)\)` to the input `\(s^{(k)}\)`
+* The predictions of the tree `\(t_k\)` to the gradient of `\(f\)`
+
+---
+
+## Tree-based gradient boosting
+
+**Algorithm:**
+
+1.  Initialize `\(\phi_0(x)\)` as a singular node tree.
+
+2.  For `\(k = 1\)` to `\(K\)` do:
+
+    -   For `\(i = 1\)` to `\(N\)` compute:
+
+        `\(g^{(k)}_{i} = \bigg[\frac{\partial L(y_i, \phi(x_i))}{\partial \phi(x_i)}\bigg]_{\phi = \phi_{k-1}}\)`
+
+    -   Fit a regression tree by least squares to the outcome vector `\(-g^{(k)}\)` in order to get the `\(J^{(k)}\)` distinct regions `\(\tilde{R}^{(k)}_j\)`.
+
+    -   For each of these `\(J^{(k)}\)` regions perform a line search in order to compute the leaf predictions `\(\tilde{\gamma}^{(k)}_{j}\)`.
+
+    -   Set `\(\phi_k(x) = \phi_{k-1}(x) + t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)\)` with `\(t \in \mathcal{T}\)`
+
+---
+
+## Which loss to pick?
+
+### `\(L_2\)` loss
+
+➖ Sensitive to outliers.
+
+➕ Simplifications possible as the gradient is the residuals.
+
+.pull-left[
+### Alternatives
+
+* `\(L_1\)` loss
+* Huber loss
+]
+
+.pull-right[
+### Comparison
+
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/huber_loss.png" width="100%" style="display: block; margin: auto auto auto 0;" /&gt;
+
+]
+
+---
+class: inverse, center, middle, hide-logo
+&lt;!-- 
+example for an inverse slide + hide-logo
+--&gt;
+## Get Started
+
+---
+
+## Footnotes
+&lt;!--
+footnotes!
+--&gt;
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.&lt;sup&gt;*&lt;/sup&gt;
+
+
+.footnote[[*] reference]
+
+---
+
+
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+<style>
+.logo {
+  background-image: url(img/TUM.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 1em;
+  right: 1em;
+  width: 80px;
+  height: 80px;
+  z-index: 0;
+}
+</style>
+
+<script>
+document
+  .querySelectorAll(
+    '.remark-slide-content' +
+    ':not(.title-slide)' +
+    // add additional classes to exclude here, e.g.
+    // ':not(.inverse)' +
+    ':not(.hide-logo)'
+  )
+  .forEach(el => {
+    el.innerHTML += '<div class="logo"></div>';
+  });
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

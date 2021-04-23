@@ -1,0 +1,222 @@
+---
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: xaringan-themer.css
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+    includes:
+      after_body: logo_placer.html
+    seal: false
+---
+class: left, middle, inverse, hide-logo
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
+
+```{r xaringan-themer, include=FALSE, warning=FALSE}
+# Here the slides theme (TUM blue) is set and the fonts 
+# feel free to change them
+library(xaringanthemer)
+style_mono_accent(
+  base_color = "#0073C3",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono")
+)
+```
+
+
+### Boosting methods for regression
+<!-- 
+English title page
+-->
+
+#### Emanuel Sommer
+#### `r Sys.Date()`
+
+
+<center>
+<br><br><br>
+<img src="img/maTUM_w.png" width="100">
+<br>
+<br>
+Department of Mathematics
+<br>
+Technical University of Munich
+</center>
+
+
+---
+
+## Previously
+
+.pull-left[
+### CART
+
+```{r, echo=FALSE, out.width="45%", fig.align='center'}
+knitr::include_graphics("img/tree_illustration.png")
+```
+
+Let $\mathcal{T}$ be the space of CART models.
+
+$$t(x, \gamma, R) = \sum_{j=1}^J \gamma_j I(x \in R_j) \quad \text{for  } t \in \mathcal{T}$$
+with $R_j$ being distinct regions of the predictor space and $\gamma_j$ the prediction w.r.t. the region.
+]
+
+--
+
+.pull-right[
+### Random forest
+
+```{r, echo=FALSE, out.width="70%", fig.align='center'}
+knitr::include_graphics("img/rf_illustration.png")
+```
+
+Build many deep trees in parallel and average over the individual predictions. Randomness is induced to decorrelate the trees.
+
+]
+---
+background-image: url("https://media.giphy.com/media/cRH5deQTgTMR2/giphy.gif")
+background-size: cover
+class: center, bottom, hide-logo
+
+---
+
+## The core idea of boosting
+
+**Sequentially** build weak learners that are ultimately combined in an additive fashion. Each additional learner should improve the total model.
+
+```{r, echo=FALSE, out.width="50%", fig.align='center'}
+knitr::include_graphics("img/boost_illustration.png")
+```
+
+**The general additive model:**
+
+$$\hat{y_i} = \phi(x_i) = \sum_{k=1}^{K} f_k(x_i), \quad f_k \in \mathcal{F}$$
+
+with $\mathcal{F}$ being the space of learning algorithms. From now on we use $\mathcal{T}$.
+
+---
+
+## The fitting approach
+
+To fit such a model one uses **Forward Stagewise Additive Modeling**.
+
+* Sequentially add $t \in \mathcal{T}$ to the current model.
+* Do not change the parameters of the previous trees.
+
+$$\phi_k(x) = \phi_{k-1}(x) + t_k(x, \gamma^{(k)}, R^{(k)})$$
+
+Each tree that is added should solve the following optimization problem:
+
+$$(\gamma^{(k)},R^{(k)}) = argmin_{\gamma,R} \sum_{i=1}^N L(y_i, \phi_{k-1}(x_i) + t(x_i,\gamma,R))$$
+where $L$ is a convex and differentiable loss function.
+
+---
+
+## Connection with Gradient descent
+
+**General minimization problem:**
+
+$$
+s_{opt} = argmin_sf(s) \quad s \in \mathbb{R}^N
+$$
+
+With $f$ is differentiable and $\lambda \in \mathbb{R}$ a scalar.
+
+**Gradient descent in a nutshell:** 
+
+$$
+s^{(k)} = s^{(k-1)} - \lambda \bigg[\frac{\partial f(s)}{\partial s}\bigg]_{s=s^{(k-1)}}
+$$
+--
+
+This looks quite similar to the structure of our boosting model:
+
+$$\phi_k(x) = \phi_{k-1}(x) + t_k(x, \gamma^{(k)}, R^{(k)})$$
+
+Corresponding parts:
+
+* The loss function $L$ to the function $f$
+* The predictions $\phi_k(x)$ to the input $s^{(k)}$
+* The predictions of the tree $t_k$ to the gradient of $f$
+
+---
+
+## Tree-based gradient boosting
+
+**Algorithm:**
+
+1.  Initialize $\phi_0(x)$ as a singular node tree.
+
+2.  For $k = 1$ to $K$ do:
+
+    -   For $i = 1$ to $N$ compute:
+
+        $g^{(k)}_{i} = \bigg[\frac{\partial L(y_i, \phi(x_i))}{\partial \phi(x_i)}\bigg]_{\phi = \phi_{k-1}}$
+
+    -   Fit a regression tree by least squares to the outcome vector $-g^{(k)}$ in order to get the $J^{(k)}$ distinct regions $\tilde{R}^{(k)}_j$.
+
+    -   For each of these $J^{(k)}$ regions perform a line search in order to compute the leaf predictions $\tilde{\gamma}^{(k)}_{j}$.
+
+    -   Set $\phi_k(x) = \phi_{k-1}(x) + t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$ with $t \in \mathcal{T}$
+
+---
+
+## Which loss to pick?
+
+### $L_2$ loss
+
+`r emo::ji("minus")` Sensitive to outliers.
+
+`r emo::ji("plus")` Simplifications possible as the gradient is the residuals.
+
+.pull-left[
+### Alternatives
+
+* $L_1$ loss
+* Huber loss
+]
+
+.pull-right[
+### Comparison
+
+```{r, echo=FALSE, out.width="90%", fig.align='left'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/huber_loss.png"))
+```
+
+]
+
+---
+
+## Combat Overfitting
+
+### Shrinkage
+
+### Subsampling
+
+---
+class: inverse, center, middle, hide-logo
+<!-- 
+example for an inverse slide + hide-logo
+-->
+## Get Started
+
+---
+
+## Footnotes
+<!--
+footnotes!
+-->
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.<sup>*</sup>
+
+
+.footnote[[*] reference]
+
+---
+
+
