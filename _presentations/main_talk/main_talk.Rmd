@@ -84,6 +84,7 @@ background-image: url("https://media.giphy.com/media/cRH5deQTgTMR2/giphy.gif")
 background-size: cover
 class: center, bottom, hide-logo
 
+
 ---
 
 ## The core idea of boosting
@@ -195,16 +196,95 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/huber_loss.
 
 ## Combat Overfitting
 
+### Early stopping
+
+Monitor the loss on one or many (CV) validation sets and stop the addition of trees when the validation loss increases.
+
+--
+
+### Shrinkage
+
+Introduce a learning rate $\eta$ that scales the contribution of the new model. 
+
+$$\phi_k(x) = \phi_{k-1}(x) + \eta * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$$
+
+--
+
+### Subsampling
+
+**Row-subsampling:** In each step use only a fraction of the training data.
+
+**Column-subsampling:** In each step use only a fraction of the training features.
+
+---
+class: inverse, hide-logo, middle, center
+
+
+
+```{r, echo=FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("img/xgb_hist_annot.jpg")
+```
+
+---
+
+## An implementation: XGBoost
+
+<br>
+<center>
+** A highly scalable end-to-end tree boosting system.**
+</center>
+<br>
+
+### Core strengths
+
+* Strong regularization
+* Parallelized tree building
+* Extremely efficient on sparse data (default directions)
+* Efficient tree pruning
+* Cache aware algorithm (clever data structure)
+
+---
+## XGBoost vs overfitting 
+
+### Regularized Loss
+
+$$\mathcal{L}(\phi) = L(\phi) + \sum_{k=1}^K \Omega_{\alpha, \lambda, \nu}(t_k)$$
+
+
+Where $\Omega_{\alpha, \lambda, \nu}$ is the penalizing term for model complexity.
+
+
+* $\alpha$ is a $L_1$ regularization parameter on $\gamma$.
+* $\lambda$ is a $L_2$ regularization parameter on $\gamma$.
+* $\nu$ is the minimal loss reduction for terminal partitions.
+* Second order approximations of the loss allow for better parallelization.
+
+--
+
+.pull-left[
 ### Shrinkage
 
 ### Subsampling
+]
+
+.pull-right[
+### Early stopping
+
+### Maximum tree depth
+]
+
+---
+background-image: url("https://media.giphy.com/media/BpGWitbFZflfSUYuZ9/giphy.gif")
+background-size: cover
+class: center, bottom, hide-logo
 
 ---
 class: inverse, center, middle, hide-logo
 <!-- 
 example for an inverse slide + hide-logo
 -->
-## Get Started
+## Application!
+
 
 ---
 

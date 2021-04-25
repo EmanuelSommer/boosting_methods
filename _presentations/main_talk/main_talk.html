@@ -22,7 +22,7 @@ English title page
 --&gt;
 
 #### Emanuel Sommer
-#### 2021-04-23
+#### 2021-04-25
 
 
 &lt;center&gt;
@@ -65,6 +65,7 @@ Build many deep trees in parallel and average over the individual predictions. R
 background-image: url("https://media.giphy.com/media/cRH5deQTgTMR2/giphy.gif")
 background-size: cover
 class: center, bottom, hide-logo
+
 
 ---
 
@@ -165,16 +166,101 @@ Corresponding parts:
 .pull-right[
 ### Comparison
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/huber_loss.png" width="100%" style="display: block; margin: auto auto auto 0;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/huber_loss.png" width="90%" style="display: block; margin: auto auto auto 0;" /&gt;
 
 ]
+
+---
+
+## Combat Overfitting
+
+### Early stopping
+
+Monitor the loss on one or many (CV) validation sets and stop the addition of trees when the validation loss increases.
+
+--
+
+### Shrinkage
+
+Introduce a learning rate `\(\eta\)` that scales the contribution of the new model. 
+
+`$$\phi_k(x) = \phi_{k-1}(x) + \eta * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$$`
+
+--
+
+### Subsampling
+
+**Row-subsampling:** In each step use only a fraction of the training data.
+
+**Column-subsampling:** In each step use only a fraction of the training features.
+
+---
+class: inverse, hide-logo, middle, center
+
+
+
+&lt;img src="img/xgb_hist_annot.jpg" width="80%" style="display: block; margin: auto;" /&gt;
+
+---
+
+## An implementation: XGBoost
+
+&lt;br&gt;
+&lt;center&gt;
+** A highly scalable end-to-end tree boosting system.**
+&lt;/center&gt;
+&lt;br&gt;
+
+### Core strengths
+
+* Strong regularization
+* Parallelized tree building
+* Extremely efficient on sparse data (default directions)
+* Efficient tree pruning
+* Cache aware algorithm (clever data structure)
+
+---
+## XGBoost vs overfitting 
+
+### Regularized Loss
+
+`$$\mathcal{L}(\phi) = L(\phi) + \sum_{k=1}^K \Omega_{\alpha, \lambda, \nu}(t_k)$$`
+
+
+Where `\(\Omega_{\alpha, \lambda, \nu}\)` is the penalizing term for model complexity.
+
+
+* `\(\alpha\)` is a `\(L_1\)` regularization parameter on `\(\gamma\)`.
+* `\(\lambda\)` is a `\(L_2\)` regularization parameter on `\(\gamma\)`.
+* `\(\nu\)` is the minimal loss reduction for terminal partitions.
+* Second order approximations of the loss allow for better parallelization.
+
+--
+
+.pull-left[
+### Shrinkage
+
+### Subsampling
+]
+
+.pull-right[
+### Early stopping
+
+### Maximum tree depth
+]
+
+---
+background-image: url("https://media.giphy.com/media/BpGWitbFZflfSUYuZ9/giphy.gif")
+background-size: cover
+class: center, bottom, hide-logo
 
 ---
 class: inverse, center, middle, hide-logo
 &lt;!-- 
 example for an inverse slide + hide-logo
 --&gt;
-## Get Started
+## Application!
+
 
 ---
 
