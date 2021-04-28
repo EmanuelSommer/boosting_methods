@@ -1,23 +1,303 @@
-# Expore the data {#eda}
+# Explore the data {#eda}
 
-We use the following packages.[@tidyverse; @tidymodels] and use the mantra of tidyverse as well as tidy modeling with R
+Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this the following packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork]
 
-```{r load_packages, message=FALSE}
-library(tidyverse)
-library(tidymodels)
+```{r load_packages, message=FALSE, warning=FALSE}
+library(tidyverse) # general data handling tools
+library(tidymodels) # data modeling and preprocessing
+# color palettes
+library(viridis)
+library(viridisLite)
+library(patchwork) # composing of ggplots
 ```
 
-## Train-test split
+## Burnout data
+
+The data is from the machine learning challenge bla from Kaggle. <https://www.kaggle.com/blurredmachine/are-your-employees-burning-out?select=train.csv>
+
+```{r loadBurn, message=FALSE}
+burnout_data <- read_csv("_data/burn_out_train.csv")
+colnames(burnout_data) <- tolower(
+  stringr::str_replace_all(
+    colnames(burnout_data),
+    " ",
+    "_"
+  ))
+# omit missing values in the outcome variable
+burnout_data <- burnout_data[!is.na(burnout_data$burn_rate),]
+```
+
+### Train-test split
 
 ```{r traintest}
 set.seed(2)
-# ames_split <- initial_split(ames, prop = 0.80, strata = Sale_Price)
-# ames_train <- training(ames_split)
-# ames_test  <-  testing(ames_split)
+burnout_split <- rsample::initial_split(burnout_data, prop = 0.80)
+burnout_train <- rsample::training(burnout_split)
+burnout_test  <- rsample::testing(burnout_split)
 ```
 
-## Visualize the data
+```{r, include=FALSE}
+remove(burnout_data)
+remove(burnout_split)
+```
 
+The training data set contains `r nrow(burnout_train)` rows and `r ncol(burnout_train)` variables.
+
+The test data set contains `r nrow(burnout_test)` observations and naturally also `r ncol(burnout_test)` variables.
+
+First look at the classes of the variables.
+
+```{r, echo=FALSE}
+col_classes_burn <- burnout_train %>%
+  summarise_all(class)
+knitr::kable(
+  data.frame(column = colnames(burnout_train),
+             class = as.character(col_classes_burn[1, ]))
+)
+```
+
+A general visualization to detect missing values.
+
+```{r visdat, echo=FALSE}
+visdat::vis_dat(burnout_train)
+```
+
+```{r}
+# percentage of missing values in the training data set
+mean(rowSums(is.na(burnout_train)) > 0)
+```
+As we know that XGBoost can handle missing values we do not have to be concerned. Although one can think about imputation. But more on that later.
+
+What about the outcome variable?
+
+`burn_rate`: For each employee telling the rate of burnout should be in $[0,1]$. The greater the score the worse the burnout. As the variable is continuous we have a regression task.
+
+The five point summary below shows that the full range is covered and no not allowed values are in the data.
+
+```{r, echo=FALSE}
+summary(burnout_train$burn_rate)
+```
+
+
+```{r , echo=FALSE}
+burn_rate_box <- ggplot(burnout_train, aes(x = 1, y = burn_rate)) +
+  geom_jitter(alpha = 0.05, col = plasma(1)) +
+  geom_boxplot(col = "black", size = .8, fill = NA) +
+  labs(x = "", y = "Burn rate") +
+  coord_flip() +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank())
+
+
+burn_rate_hist <- ggplot(burnout_train, aes(x = burn_rate)) +
+  geom_histogram(fill = plasma(1), binwidth = 0.05) +
+  labs(x = "", y = "", subtitle = "binwidth = 0.05",
+       title = "Outcome variable: **Burn Rate**") +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        plot.title = ggtext::element_markdown(size = 11),
+        plot.subtitle = ggtext::element_markdown(size = 8))
+burn_rate_hist / burn_rate_box
+remove(burn_rate_box)
+remove(burn_rate_hist)
+```
+
+The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region $[0,1]$ is quite well covered.
+
+
+Look at every feature and its main effects individually:
+
+`employee_id` is just an ID variable and thus is not useful for any prediction model. But one has to check for duplicates.
+
+```{r}
+burnout_train %>%
+  group_by(employee_id) %>%
+  summarise(n = n()) %>%
+  nrow() == nrow(burnout_train)
+```
+Thus there are no duplicates which is good.
+
+`date_of_joining` is the Date the employee has joined the company. Thus a continuous variable that most likely needs some kind of feature engineering.
+
+`gender` represents the gender of the employee. Definitely a categorical variable.
+
+```{r}
+# have a look at the discrete distribution
+summary(factor(burnout_train$gender))
+```
+
+The two classes are well balanced. Now a look at the main effect of the feature.
+
+```{r echo=FALSE}
+gender_burn_rate_box <- ggplot(burnout_train,
+                               aes(x = as.factor(gender),
+                                   y = burn_rate,
+                                   col = as.factor(gender))) +
+  geom_jitter(alpha = 0.05) +
+  geom_boxplot(size = 0.8, col = "black", fill = NA) +
+  labs(x = "", y = "Burn rate", col = "") +
+  scale_color_viridis_d(option = "C") +
+  coord_flip() +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        legend.position = "None",
+        axis.text.y = element_blank())
+
+gender_burn_rate_hist <- ggplot(burnout_train,
+                                aes(x = burn_rate,
+                                    fill = as.factor(gender))) +
+  geom_histogram(binwidth = 0.05, alpha = 0.7,
+                 position = "identity") +
+  scale_fill_viridis_d(option = "C") +
+  labs(x = "", y = "", subtitle = "binwidth = 0.05",
+       fill = "",title = "Main effect of variable **gender**") +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        legend.position = "top",
+        axis.text.y = element_blank(),
+        plot.title = ggtext::element_markdown(size = 11),
+        plot.subtitle = ggtext::element_markdown(size = 8))
+
+gender_burn_rate_hist / gender_burn_rate_box
+remove(gender_burn_rate_hist)
+remove(gender_burn_rate_box)
+```
+
+For both classes the distributions are very similar and symmetrical. It seems like the male employees have overall a slightly higher risk of having a higher burn score i.e. a burnout.
+
+
+
+`company_type` is a binary categorical variable that indicates whether the company is a service or product company.
+
+```{r}
+# have a look at the discrete distribution
+summary(factor(burnout_train$company_type))
+```
+In this case the classes are not fully balanced but each class is still well represented. Now a look at the main effect of the feature.
+
+```{r echo=FALSE}
+comptype_burn_rate_box <- ggplot(burnout_train,
+                               aes(x = as.factor(company_type),
+                                   y = burn_rate,
+                                   col = as.factor(company_type))) +
+  geom_jitter(alpha = 0.05) +
+  geom_boxplot(size = 0.8, col = "black", fill = NA) +
+  labs(x = "", y = "Burn rate", col = "") +
+  scale_color_viridis_d(option = "C") +
+  coord_flip() +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        legend.position = "None",
+        axis.text.y = element_blank())
+
+comptype_burn_rate_hist <- ggplot(burnout_train,
+                                aes(x = burn_rate,
+                                    fill = as.factor(company_type))) +
+  geom_histogram(binwidth = 0.05, alpha = 0.6,
+                 position = "identity") +
+  scale_fill_viridis_d(option = "C") +
+  labs(x = "", y = "", subtitle = "binwidth = 0.05",
+       fill = "",title = "Main effect of variable **Company Type**") +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        legend.position = "top",
+        axis.text.y = element_blank(),
+        plot.title = ggtext::element_markdown(size = 11),
+        plot.subtitle = ggtext::element_markdown(size = 8))
+
+comptype_burn_rate_hist / comptype_burn_rate_box
+remove(comptype_burn_rate_hist)
+remove(comptype_burn_rate_box)
+```
+
+For both classes the distributions are almost identical and symmetrical. From an univariate point of view no notable main effect is visible from these visualizations. 
+
+
+`wfh_setup_available` indicates whether a working from home setup is available for the employee. So this is again a binary variable.
+
+```{r}
+# have a look at the discrete distribution
+summary(factor(burnout_train$wfh_setup_available))
+```
+
+The two classes are well balanced. Now a look at the main effect of the feature.
+
+```{r echo=FALSE}
+wfh_burn_rate_box <- ggplot(burnout_train,
+                               aes(x = as.factor(wfh_setup_available),
+                                   y = burn_rate,
+                                   col = as.factor(wfh_setup_available))) +
+  geom_jitter(alpha = 0.05) +
+  geom_boxplot(size = 0.8, col = "black", fill = NA) +
+  labs(x = "", y = "Burn rate", col = "") +
+  scale_color_viridis_d(option = "C") +
+  coord_flip() +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        legend.position = "None",
+        axis.text.y = element_blank())
+
+wfh_burn_rate_hist <- ggplot(burnout_train,
+                                aes(x = burn_rate,
+                                    fill = as.factor(wfh_setup_available))) +
+  geom_histogram(binwidth = 0.05, alpha = 0.6,
+                 position = "identity") +
+  scale_fill_viridis_d(option = "C") +
+  labs(x = "", y = "", subtitle = "binwidth = 0.05",
+       fill = "",title = "Main effect of variable **Work from home setup**") +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        legend.position = "top",
+        axis.text.y = element_blank(),
+        plot.title = ggtext::element_markdown(size = 11),
+        plot.subtitle = ggtext::element_markdown(size = 8))
+
+wfh_burn_rate_hist / wfh_burn_rate_box
+remove(wfh_burn_rate_hist)
+remove(wfh_burn_rate_box)
+```
+Again both distributions are quite similar i.e. bell shaped and symmetrical. Here quite a main effect is visible. A work from home setup most likely has a positive influence on the wellbeing and thus lowers the risk for a high burn rate.
+
+
+`designation` A rate within $[0,5]$ that represents the designation in the company for the employee. High values indicate a greater amount of designation.
+
+```{r}
+unique(burnout_train$designation)
+```
+But as there are only 6 unique values the feature will be treated as a ordinal categorical feature.
+
+```{r}
+burnout_train %>%
+  group_by(designation) %>%
+  summarize(count = n()) %>%
+  ggplot(aes(x = factor(designation), y = count)) +
+  geom_bar(fill = plasma(1), stat = "identity") +
+  coord_flip() +
+  theme_light() +
+  labs(title = "Distribution of the variable **Designation**",
+       x = "level of designation") +
+  theme(plot.title = ggtext::element_markdown(size = 11))
+```
+
+
+
+`resource_allocation` A rate within $[1,10]$ that represents the resource allocation to the employee. High values indicate more ressources allocated to the employee.
+
+```{r}
+unique(burnout_train$resource_allocation)
+```
+Here again the question is whether one should encode this variable as a continuous or an ordinal categorical feature. In this case as there are quite some levels the variable will be used as a continuous score.
+
+`mental_fatigue_score` is the level of mental fatigue the employee is facing.
+
+```{r}
+length(unique(burnout_train$mental_fatigue_score)) 
+```
+This variable will be treated in a continuous way.
+
+### Visualize the data
 
 -   pair plots
 
@@ -33,7 +313,14 @@ set.seed(2)
 
 -   feature engineering
 
-## Create recipe
+```{r, echo=FALSE}
+ggplot(burnout_test, aes(x = `Burn Rate`)) +
+  geom_histogram(aes(y = stat(count) / sum(count)), bins = 30,
+                 na.rm = TRUE) +
+  labs(x = "Burn rate",y = "")
+```
+
+### Create recipe
 
 one for lm (dummify categorical features) and one for the tree based approaches
 
@@ -47,12 +334,3 @@ one for lm (dummify categorical features) and one for the tree based approaches
 #   step_interact( ~ Gr_Liv_Area:starts_with("Bldg_Type_") ) %>% 
 #   step_ns(Latitude, Longitude, deg_free = 20)
 ```
-
-
-
-
-
-
-
-
-
