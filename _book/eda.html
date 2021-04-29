@@ -4,27 +4,27 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Chapter 4 Expore the data | Boosting methods: Theory and Application in R (XGBoost)</title>
-  <meta name="description" content="Chapter 4 Expore the data | Boosting methods: Theory and Application in R (XGBoost)" />
+  <title>Chapter 4 Explore the data | Boosting methods: Theory and application in R</title>
+  <meta name="description" content="Boosting methods: Theory and Application in R (XGBoost)" />
   <meta name="generator" content="bookdown 0.21 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="Chapter 4 Expore the data | Boosting methods: Theory and Application in R (XGBoost)" />
+  <meta property="og:title" content="Chapter 4 Explore the data | Boosting methods: Theory and application in R" />
   <meta property="og:type" content="book" />
   
   
-  <meta property="og:description" content="Chapter 4 Expore the data | Boosting methods: Theory and Application in R (XGBoost)" />
+  <meta property="og:description" content="Boosting methods: Theory and Application in R (XGBoost)" />
   <meta name="github-repo" content="EmanuelSommer/boosting_methods" />
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Chapter 4 Expore the data | Boosting methods: Theory and Application in R (XGBoost)" />
+  <meta name="twitter:title" content="Chapter 4 Explore the data | Boosting methods: Theory and application in R" />
   
-  <meta name="twitter:description" content="Chapter 4 Expore the data | Boosting methods: Theory and Application in R (XGBoost)" />
+  <meta name="twitter:description" content="Boosting methods: Theory and Application in R (XGBoost)" />
   
 
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-04-20" />
+<meta name="date" content="2021-04-29" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -157,11 +157,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="3.3.4" data-path="theory.html"><a href="theory.html#hyperparameters-overview"><i class="fa fa-check"></i><b>3.3.4</b> Hyperparameters overview</a></li>
 </ul></li>
 </ul></li>
-<li class="chapter" data-level="4" data-path="eda.html"><a href="eda.html"><i class="fa fa-check"></i><b>4</b> Expore the data</a>
+<li class="chapter" data-level="4" data-path="eda.html"><a href="eda.html"><i class="fa fa-check"></i><b>4</b> Explore the data</a>
 <ul>
-<li class="chapter" data-level="4.1" data-path="eda.html"><a href="eda.html#train-test-split"><i class="fa fa-check"></i><b>4.1</b> Train-test split</a></li>
-<li class="chapter" data-level="4.2" data-path="eda.html"><a href="eda.html#visualize-the-data"><i class="fa fa-check"></i><b>4.2</b> Visualize the data</a></li>
-<li class="chapter" data-level="4.3" data-path="eda.html"><a href="eda.html#create-recipe"><i class="fa fa-check"></i><b>4.3</b> Create recipe</a></li>
+<li class="chapter" data-level="4.1" data-path="eda.html"><a href="eda.html#burnout-data"><i class="fa fa-check"></i><b>4.1</b> Burnout data</a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="eda.html"><a href="eda.html#train-test-split"><i class="fa fa-check"></i><b>4.1.1</b> Train-test split</a></li>
+<li class="chapter" data-level="4.1.2" data-path="eda.html"><a href="eda.html#visualize-the-data"><i class="fa fa-check"></i><b>4.1.2</b> Visualize the data</a></li>
+<li class="chapter" data-level="4.1.3" data-path="eda.html"><a href="eda.html#create-recipe"><i class="fa fa-check"></i><b>4.1.3</b> Create recipe</a></li>
+</ul></li>
 </ul></li>
 <li class="chapter" data-level="5" data-path="modeling.html"><a href="modeling.html"><i class="fa fa-check"></i><b>5</b> Let’s boost the models</a></li>
 <li class="chapter" data-level="6" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>6</b> Conclusion</a></li>
@@ -175,7 +178,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <div class="body-inner">
         <div class="book-header" role="navigation">
           <h1>
-            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Boosting methods: Theory and Application in R (XGBoost)</a>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Boosting methods: Theory and application in R</a>
           </h1>
         </div>
 
@@ -184,19 +187,159 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
             <section class="normal" id="section-">
 <div id="eda" class="section level1" number="4">
-<h1><span class="header-section-number">Chapter 4</span> Expore the data</h1>
-<p>We use the following packages.<span class="citation">[<a href="references.html#ref-tidymodels" role="doc-biblioref">6</a>, <a href="references.html#ref-tidyverse" role="doc-biblioref">7</a>]</span> and use the mantra of tidyverse as well as tidy modeling with R</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="eda.html#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb1-2"><a href="eda.html#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span></code></pre></div>
-<div id="train-test-split" class="section level2" number="4.1">
-<h2><span class="header-section-number">4.1</span> Train-test split</h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="eda.html#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
-<span id="cb2-2"><a href="eda.html#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ames_split &lt;- initial_split(ames, prop = 0.80, strata = Sale_Price)</span></span>
-<span id="cb2-3"><a href="eda.html#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ames_train &lt;- training(ames_split)</span></span>
-<span id="cb2-4"><a href="eda.html#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ames_test  &lt;-  testing(ames_split)</span></span></code></pre></div>
+<h1><span class="header-section-number">Chapter 4</span> Explore the data</h1>
+<p>Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.<span class="citation">[<a href="references.html#ref-tidymodels" role="doc-biblioref">6</a>–<a href="references.html#ref-ggtext" role="doc-biblioref">9</a>, <a href="references.html#ref-viridisLite" role="doc-biblioref">10</a>, <a href="references.html#ref-patchwork" role="doc-biblioref">11</a>, <a href="references.html#ref-visdat" role="doc-biblioref">12</a>]</span> The most important ones will be loaded below.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="eda.html#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse) <span class="co"># general data handling tools</span></span>
+<span id="cb1-2"><a href="eda.html#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels) <span class="co"># data modeling and preprocessing</span></span>
+<span id="cb1-3"><a href="eda.html#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># color palettes</span></span>
+<span id="cb1-4"><a href="eda.html#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(viridis)</span>
+<span id="cb1-5"><a href="eda.html#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(viridisLite)</span>
+<span id="cb1-6"><a href="eda.html#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork) <span class="co"># composing of ggplots</span></span></code></pre></div>
+<div id="burnout-data" class="section level2" number="4.1">
+<h2><span class="header-section-number">4.1</span> Burnout data</h2>
+<p>The data is from the machine learning challenge bla from Kaggle. <a href="https://www.kaggle.com/blurredmachine/are-your-employees-burning-out?select=train.csv" class="uri">https://www.kaggle.com/blurredmachine/are-your-employees-burning-out?select=train.csv</a></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="eda.html#cb2-1" aria-hidden="true" tabindex="-1"></a>burnout_data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">&quot;_data/burn_out_train.csv&quot;</span>)</span>
+<span id="cb2-2"><a href="eda.html#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(burnout_data) <span class="ot">&lt;-</span> <span class="fu">tolower</span>(</span>
+<span id="cb2-3"><a href="eda.html#cb2-3" aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(</span>
+<span id="cb2-4"><a href="eda.html#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">colnames</span>(burnout_data),</span>
+<span id="cb2-5"><a href="eda.html#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot; &quot;</span>,</span>
+<span id="cb2-6"><a href="eda.html#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;_&quot;</span></span>
+<span id="cb2-7"><a href="eda.html#cb2-7" aria-hidden="true" tabindex="-1"></a>  ))</span>
+<span id="cb2-8"><a href="eda.html#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># omit missing values in the outcome variable</span></span>
+<span id="cb2-9"><a href="eda.html#cb2-9" aria-hidden="true" tabindex="-1"></a>burnout_data <span class="ot">&lt;-</span> burnout_data[<span class="sc">!</span><span class="fu">is.na</span>(burnout_data<span class="sc">$</span>burn_rate),]</span></code></pre></div>
+<div id="train-test-split" class="section level3" number="4.1.1">
+<h3><span class="header-section-number">4.1.1</span> Train-test split</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="eda.html#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb3-2"><a href="eda.html#cb3-2" aria-hidden="true" tabindex="-1"></a>burnout_split <span class="ot">&lt;-</span> rsample<span class="sc">::</span><span class="fu">initial_split</span>(burnout_data, <span class="at">prop =</span> <span class="fl">0.80</span>)</span>
+<span id="cb3-3"><a href="eda.html#cb3-3" aria-hidden="true" tabindex="-1"></a>burnout_train <span class="ot">&lt;-</span> rsample<span class="sc">::</span><span class="fu">training</span>(burnout_split)</span>
+<span id="cb3-4"><a href="eda.html#cb3-4" aria-hidden="true" tabindex="-1"></a>burnout_test  <span class="ot">&lt;-</span> rsample<span class="sc">::</span><span class="fu">testing</span>(burnout_split)</span></code></pre></div>
+<p>The training data set contains 17301 rows and 9 variables.</p>
+<p>The test data set contains 4325 observations and naturally also 9 variables.</p>
+<p>First look at the classes of the variables.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">column</th>
+<th align="left">class</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">employee_id</td>
+<td align="left">character</td>
+</tr>
+<tr class="even">
+<td align="left">date_of_joining</td>
+<td align="left">Date</td>
+</tr>
+<tr class="odd">
+<td align="left">gender</td>
+<td align="left">character</td>
+</tr>
+<tr class="even">
+<td align="left">company_type</td>
+<td align="left">character</td>
+</tr>
+<tr class="odd">
+<td align="left">wfh_setup_available</td>
+<td align="left">character</td>
+</tr>
+<tr class="even">
+<td align="left">designation</td>
+<td align="left">numeric</td>
+</tr>
+<tr class="odd">
+<td align="left">resource_allocation</td>
+<td align="left">numeric</td>
+</tr>
+<tr class="even">
+<td align="left">mental_fatigue_score</td>
+<td align="left">numeric</td>
+</tr>
+<tr class="odd">
+<td align="left">burn_rate</td>
+<td align="left">numeric</td>
+</tr>
+</tbody>
+</table>
+<p>A general visualization to detect missing values.</p>
+<p><img src="boosting_methods_files/figure-html/visdat-1.png" width="672" /></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="eda.html#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># percentage of missing values in the training data set</span></span>
+<span id="cb4-2"><a href="eda.html#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="fu">rowSums</span>(<span class="fu">is.na</span>(burnout_train)) <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code></pre></div>
+<pre><code>## [1] 0.1407433</code></pre>
+<p>As we know that XGBoost can handle missing values we do not have to be concerned. Although one can think about imputation. But more on that later.</p>
+<p>What about the outcome variable?</p>
+<p><code>burn_rate</code>: For each employee telling the rate of burnout should be in <span class="math inline">\([0,1]\)</span>. The greater the score the worse the burnout. As the variable is continuous we have a regression task.</p>
+<p>The five point summary below shows that the full range is covered and no not allowed values are in the data.</p>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  0.0000  0.3100  0.4500  0.4513  0.5900  1.0000</code></pre>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region <span class="math inline">\([0,1]\)</span> is quite well covered.</p>
+<p>Look at every feature and its main effects individually:</p>
+<p><code>employee_id</code> is just an ID variable and thus is not useful for any prediction model. But one has to check for duplicates.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="eda.html#cb7-1" aria-hidden="true" tabindex="-1"></a>burnout_train <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="eda.html#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(employee_id) <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="eda.html#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb7-4"><a href="eda.html#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>() <span class="sc">==</span> <span class="fu">nrow</span>(burnout_train)</span></code></pre></div>
+<pre><code>## [1] TRUE</code></pre>
+<p>Thus there are no duplicates which is good.</p>
+<p><code>date_of_joining</code> is the Date the employee has joined the company. Thus a continuous variable that most likely needs some kind of feature engineering.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>Although there is a lot of variation no major trends in hirings are visible from this plot. Overall the variable seems to be quite equally distributed over the year 2008.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-8-1.png" width="672" />
+In its raw form the variable <code>date_of_joining</code> seems not to have a notable main effect on the outcome variable. Nevertheless the feature will be used in the model and as tree-based model have an in-built feature selection one can see after the fitting if the feature was helpful overall. The feature will not be included just as an integer (the default format how Dates are represented) but rather some more features like weekday or month will be extracted from the raw variable further down the road.</p>
+<p><code>gender</code> represents the gender of the employee. Definitely a categorical variable.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="eda.html#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># have a look at the discrete distribution</span></span>
+<span id="cb9-2"><a href="eda.html#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">factor</span>(burnout_train<span class="sc">$</span>gender))</span></code></pre></div>
+<pre><code>## Female   Male 
+##   9101   8200</code></pre>
+<p>The two classes are well balanced. Now a look at the main effect of the feature.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>For both classes the distributions are very similar and symmetrical. It seems like the male employees have overall a slightly higher risk of having a higher burn score i.e. a burnout.</p>
+<p><code>company_type</code> is a binary categorical variable that indicates whether the company is a service or product company.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="eda.html#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># have a look at the discrete distribution</span></span>
+<span id="cb11-2"><a href="eda.html#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">factor</span>(burnout_train<span class="sc">$</span>company_type))</span></code></pre></div>
+<pre><code>## Product Service 
+##    6018   11283</code></pre>
+<p>In this case the classes are not fully balanced but each class is still well represented. Now a look at the main effect of the feature.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>For both classes the distributions are almost identical and symmetrical. From an univariate point of view no notable main effect is visible from these visualizations.</p>
+<p><code>wfh_setup_available</code> indicates whether a working from home setup is available for the employee. So this is again a binary variable.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="eda.html#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># have a look at the discrete distribution</span></span>
+<span id="cb13-2"><a href="eda.html#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(<span class="fu">factor</span>(burnout_train<span class="sc">$</span>wfh_setup_available))</span></code></pre></div>
+<pre><code>##   No  Yes 
+## 7929 9372</code></pre>
+<p>The two classes are well balanced. Now a look at the main effect of the feature.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-14-1.png" width="672" />
+Again both distributions are quite similar i.e. bell shaped and symmetrical. Here quite a main effect is visible. A work from home setup most likely has a positive influence on the wellbeing and thus lowers the risk for a high burn rate.</p>
+<p><code>designation</code> A rate within <span class="math inline">\([0,5]\)</span> that represents the designation in the company for the employee. High values indicate a greater amount of designation.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="eda.html#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># unique values of the feature</span></span>
+<span id="cb15-2"><a href="eda.html#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(burnout_train<span class="sc">$</span>designation)</span></code></pre></div>
+<pre><code>## [1] 2 1 3 0 4 5</code></pre>
+<p>As the feature has a natural encoding this variable will be treated as an ordinal one i.e. be encoded with the integers and not by one-hot-encoding.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>A strong main effect is visible in the plot. The plot also further strengthens the hypothesis that we should treat the feature as ordinal. A higher level of designation seems to have an influence on the risk of having a burnout.</p>
+<p><code>resource_allocation</code> A rate within <span class="math inline">\([1,10]\)</span> that represents the resource allocation to the employee. High values indicate more resources allocated to the employee.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="eda.html#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># unique values of the feature</span></span>
+<span id="cb17-2"><a href="eda.html#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(burnout_train<span class="sc">$</span>resource_allocation)</span></code></pre></div>
+<pre><code>##  [1]  3  1  7  4  6  5  2 NA  8 10  9</code></pre>
+<p>Here again the question is whether one should encode this variable as a categorical or an ordinal categorical feature. In this case as there are quite some levels and again a natural ordering the variable will be used as a continuous integer score.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-20-1.png" width="672" />
+A strong main effect is visible in the plot. The plot again further strengthens the hypothesis that we should treat this feature as ordinal. A higher amount of resources assigned to an employee seems to have a positive influence on the risk of having a burnout.</p>
+<p><code>mental_fatigue_score</code> is the level of mental fatigue the employee is facing.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="eda.html#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># number of unique values</span></span>
+<span id="cb19-2"><a href="eda.html#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(burnout_train<span class="sc">$</span>mental_fatigue_score)) </span></code></pre></div>
+<pre><code>## [1] 102</code></pre>
+<p>This variable will be treated in a continuous way.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-22-1.png" width="672" />
+Although there is a very slight skew towards a higher mental fatigue score the overall distribution is still more or less bell shaped and quite symmetrical. Moreover the whole allowed range is covered and the bounds are not violated. Next the main effect of the variable.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p>This scatterplot shows drastic results! The mental fatigue score has an almost perfect linear relationship with the outcome variable. This is also underlined by the very high pearson correlation. This indicates that mental fatigue score will be a most important predictor. If a communication with the data collector would be possible it would be important to check whether the two scores have common confounding variables as then one would have to question the practical usability of this predictor. This comes from the fact that no model would be needed if it was as hard to collect the data about the predictors as the outcome data. Moreover there are 1555 missing values in the feature so for those the model has to rely on the other maybe more weak predictors. It should be noted that when evaluating the final model one should consider to compare its performance to a trivial model (like a single intercept model). When constructing such a trivial model one could and maybe should also use this variable (when available) to get a trivial prediction by scaling the <code>mental_fatigue_score</code> feature by a simple scalar.</p>
 </div>
-<div id="visualize-the-data" class="section level2" number="4.2">
-<h2><span class="header-section-number">4.2</span> Visualize the data</h2>
+<div id="visualize-the-data" class="section level3" number="4.1.2">
+<h3><span class="header-section-number">4.1.2</span> Visualize the data</h3>
 <ul>
 <li><p>pair plots</p>
 <ul>
@@ -204,23 +347,22 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><p>correlations</p></li>
 </ul></li>
 <li><p>correlation plot</p></li>
-<li><p>individual distributions</p></li>
-<li><p>identify categorical features</p></li>
 <li><p>feature engineering</p></li>
 </ul>
 </div>
-<div id="create-recipe" class="section level2" number="4.3">
-<h2><span class="header-section-number">4.3</span> Create recipe</h2>
+<div id="create-recipe" class="section level3" number="4.1.3">
+<h3><span class="header-section-number">4.1.3</span> Create recipe</h3>
 <p>one for lm (dummify categorical features) and one for the tree based approaches</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="eda.html#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ames_rec &lt;- </span></span>
-<span id="cb3-2"><a href="eda.html#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   recipe(Sale_Price ~ Neighborhood + Gr_Liv_Area + Year_Built + Bldg_Type + </span></span>
-<span id="cb3-3"><a href="eda.html#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#            Latitude + Longitude, data = ames_train) %&gt;%</span></span>
-<span id="cb3-4"><a href="eda.html#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_log(Gr_Liv_Area, base = 10) %&gt;% </span></span>
-<span id="cb3-5"><a href="eda.html#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_other(Neighborhood, threshold = 0.01) %&gt;% </span></span>
-<span id="cb3-6"><a href="eda.html#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_dummy(all_nominal()) %&gt;% </span></span>
-<span id="cb3-7"><a href="eda.html#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_interact( ~ Gr_Liv_Area:starts_with(&quot;Bldg_Type_&quot;) ) %&gt;% </span></span>
-<span id="cb3-8"><a href="eda.html#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_ns(Latitude, Longitude, deg_free = 20)</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="eda.html#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ames_rec &lt;- </span></span>
+<span id="cb21-2"><a href="eda.html#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   recipe(Sale_Price ~ Neighborhood + Gr_Liv_Area + Year_Built + Bldg_Type + </span></span>
+<span id="cb21-3"><a href="eda.html#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co">#            Latitude + Longitude, data = ames_train) %&gt;%</span></span>
+<span id="cb21-4"><a href="eda.html#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_log(Gr_Liv_Area, base = 10) %&gt;% </span></span>
+<span id="cb21-5"><a href="eda.html#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_other(Neighborhood, threshold = 0.01) %&gt;% </span></span>
+<span id="cb21-6"><a href="eda.html#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_dummy(all_nominal()) %&gt;% </span></span>
+<span id="cb21-7"><a href="eda.html#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_interact( ~ Gr_Liv_Area:starts_with(&quot;Bldg_Type_&quot;) ) %&gt;% </span></span>
+<span id="cb21-8"><a href="eda.html#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_ns(Latitude, Longitude, deg_free = 20)</span></span></code></pre></div>
 
+</div>
 </div>
 </div>
             </section>

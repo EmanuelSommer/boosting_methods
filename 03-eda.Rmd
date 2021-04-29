@@ -1,6 +1,6 @@
 # Explore the data {#eda}
 
-Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this the following packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork]
+Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork; @visdat] The most important ones will be loaded below.
 
 ```{r load_packages, message=FALSE, warning=FALSE}
 library(tidyverse) # general data handling tools
@@ -120,6 +120,36 @@ burnout_train %>%
 Thus there are no duplicates which is good.
 
 `date_of_joining` is the Date the employee has joined the company. Thus a continuous variable that most likely needs some kind of feature engineering.
+
+```{r, echo=FALSE}
+burnout_train %>%
+  group_by(date_of_joining) %>%
+  summarise(count = n()) %>%
+  ggplot(aes(x = date_of_joining, y = count)) +
+  geom_line(col = plasma(1), na.rm = TRUE) +
+  theme_light() +
+  labs(title = "Distribution of the variable **Date of joining**",
+       x = "Date of joining") +
+  theme(plot.title = ggtext::element_markdown(size = 11),
+        plot.subtitle = ggtext::element_markdown(size = 8))
+```
+
+Although there is a lot of variation no major trends in hirings are visible from this plot. Overall the variable seems to be quite equally distributed over the year 2008.
+
+
+```{r echo=FALSE}
+ggplot(burnout_train,
+       aes(y = date_of_joining,
+           x = burn_rate)) +
+  geom_point(alpha = 0.1, col = plasma(1),
+             na.rm = TRUE) +
+  labs(y = "Date of joining", x = "Burn rate",
+       title = "Main effect of variable **Date of joining**") +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+In its raw form the variable `date_of_joining` seems not to have a notable main effect on the outcome variable. Nevertheless the feature will be used in the model and as tree-based model have an in-built feature selection one can see after the fitting if the feature was helpful overall. The feature will not be included just as an integer (the default format how Dates are represented) but rather some more features like weekday or month will be extracted from the raw variable further down the road.
 
 `gender` represents the gender of the employee. Definitely a categorical variable.
 
@@ -264,11 +294,12 @@ Again both distributions are quite similar i.e. bell shaped and symmetrical. Her
 `designation` A rate within $[0,5]$ that represents the designation in the company for the employee. High values indicate a greater amount of designation.
 
 ```{r}
+# unique values of the feature
 unique(burnout_train$designation)
 ```
-But as there are only 6 unique values the feature will be treated as a ordinal categorical feature.
+As the feature has a natural encoding this variable will be treated as an ordinal one i.e. be encoded with the integers and not by one-hot-encoding.
 
-```{r}
+```{r, echo=FALSE}
 burnout_train %>%
   group_by(designation) %>%
   summarize(count = n()) %>%
@@ -281,21 +312,121 @@ burnout_train %>%
   theme(plot.title = ggtext::element_markdown(size = 11))
 ```
 
+```{r echo=FALSE}
+ggplot(burnout_train,
+       aes(x = as.factor(designation),
+           y = burn_rate,
+           col = as.factor(designation))) +
+  geom_jitter(alpha = 0.1) +
+  geom_boxplot(size = 0.8, col = "black", fill = NA) +
+  labs(x = "level of designation", y = "Burn rate", col = "",
+       title = "Main effect of variable **Designation**") +
+  scale_color_viridis_d(option = "C") +
+  coord_flip() +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+A strong main effect is visible in the plot. The plot also further strengthens the hypothesis that we should treat the feature as ordinal. A higher level of designation seems to have an influence on the risk of having a burnout.
 
 
-`resource_allocation` A rate within $[1,10]$ that represents the resource allocation to the employee. High values indicate more ressources allocated to the employee.
+`resource_allocation` A rate within $[1,10]$ that represents the resource allocation to the employee. High values indicate more resources allocated to the employee.
 
 ```{r}
+# unique values of the feature
 unique(burnout_train$resource_allocation)
 ```
-Here again the question is whether one should encode this variable as a continuous or an ordinal categorical feature. In this case as there are quite some levels the variable will be used as a continuous score.
+Here again the question is whether one should encode this variable as a categorical or an ordinal categorical feature. In this case as there are quite some levels and again a natural ordering the variable will be used as a continuous integer score.
+
+```{r, echo=FALSE}
+burnout_train %>%
+  group_by(resource_allocation) %>%
+  summarize(count = n()) %>%
+  ggplot(aes(x = factor(resource_allocation), y = count)) +
+  geom_bar(fill = plasma(1), stat = "identity") +
+  coord_flip() +
+  theme_light() +
+  labs(title = "Distribution of the variable **Resource Allocation**",
+       x = "Resource Allocation") +
+  theme(plot.title = ggtext::element_markdown(size = 11))
+```
+
+```{r echo=FALSE}
+burnout_train %>%
+  mutate(resource_allocation = as.character(resource_allocation),
+         resource_allocation = if_else(is.na(resource_allocation),
+                                       "NA",
+                                       resource_allocation),
+         resource_allocation = as_factor(resource_allocation),
+         resource_allocation = fct_relevel(resource_allocation,
+                                           c("NA", paste(1:10)))) %>%
+  ggplot(
+       aes(x = resource_allocation,
+           y = burn_rate,
+           col = resource_allocation)) +
+  geom_jitter(alpha = 0.1, na.rm = TRUE) +
+  geom_boxplot(size = 0.8, col = "black", fill = NA, na.rm = TRUE) +
+  labs(x = "Resource Allocation", y = "Burn rate", col = "",
+       title = "Main effect of variable **Resource Allocation**") +
+  scale_color_viridis_d(option = "C") +
+  coord_flip() +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+A strong main effect is visible in the plot. The plot again further strengthens the hypothesis that we should treat this feature as ordinal. A higher amount of resources assigned to an employee seems to have a positive influence on the risk of having a burnout.
 
 `mental_fatigue_score` is the level of mental fatigue the employee is facing.
 
 ```{r}
+# number of unique values
 length(unique(burnout_train$mental_fatigue_score)) 
 ```
 This variable will be treated in a continuous way.
+
+```{r, echo=FALSE}
+ggplot(burnout_train, aes(x = mental_fatigue_score)) +
+  geom_density(fill = plasma(1), col = plasma(1),
+               na.rm = TRUE, bw = .8) +
+  theme_light() +
+  labs(title = "Distribution of the variable **Mental Fatigue Score**",
+       subtitle = "bw = 0.8",
+       x = "Mental Fatigue Score") +
+  theme(plot.title = ggtext::element_markdown(size = 11),
+        plot.subtitle = ggtext::element_markdown(size = 8))
+```
+Although there is a very slight skew towards a higher mental fatigue score the overall distribution is still more or less bell shaped and quite symmetrical. Moreover the whole allowed range is covered and the bounds are not violated. Next the main effect of the variable.
+
+```{r echo=FALSE}
+ggplot(burnout_train,
+       aes(y = mental_fatigue_score,
+           x = burn_rate)) +
+  geom_point(alpha = 0.1, col = plasma(1),
+             na.rm = TRUE) +
+  labs(y = "Mental Fatigue Score", x = "Burn rate",
+       title = "Main effect of variable **Mental Fatigue Score**") +
+  annotate("text", x = .75, y = 2.5,
+           label = paste("Pearson Correlation:",
+                         round(
+                           cor(burnout_train$burn_rate,
+                               burnout_train$mental_fatigue_score,
+                               use = "comp"),
+                           3
+                         )),
+           col = plasma(1), size = 5) +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+This scatterplot shows drastic results! The mental fatigue score has an almost perfect linear relationship with the outcome variable. This is also underlined by the very high pearson correlation. This indicates that mental fatigue score will be a most important predictor. If a communication with the data collector would be possible it would be important to check whether the two scores have common confounding variables as then one would have to question the practical usability of this predictor. This comes from the fact that no model would be needed if it was as hard to collect the data about the predictors as the outcome data. Moreover there are `r sum(is.na(burnout_train$mental_fatigue_score))` missing values in the feature so for those the model has to rely on the other maybe more weak predictors. It should be noted that when evaluating the final model one should consider to compare its performance to a trivial model (like a single intercept model). When constructing such a trivial model one could and maybe should also use this variable (when available) to get a trivial prediction by scaling the `mental_fatigue_score` feature by a simple scalar.
+
+```{r, include=FALSE}
+sum(is.na(burnout_train$mental_fatigue_score))
+```
+
+
 
 ### Visualize the data
 
@@ -307,18 +438,9 @@ This variable will be treated in a continuous way.
 
 -   correlation plot
 
--   individual distributions
-
--   identify categorical features
-
 -   feature engineering
 
-```{r, echo=FALSE}
-ggplot(burnout_test, aes(x = `Burn Rate`)) +
-  geom_histogram(aes(y = stat(count) / sum(count)), bins = 30,
-                 na.rm = TRUE) +
-  labs(x = "Burn rate",y = "")
-```
+
 
 ### Create recipe
 
