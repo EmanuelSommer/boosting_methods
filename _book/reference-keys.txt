@@ -51,7 +51,7 @@ company-type-vs.-the-remaining
 work-from-home-setup-vs.-the-remaining
 designation-vs-the-remaining
 some-feature-engineering
-create-recipe
+create-the-recipe
 modeling
 conclusion
 references

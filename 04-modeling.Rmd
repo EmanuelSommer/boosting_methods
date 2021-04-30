@@ -1,13 +1,46 @@
 # Let's boost the models {#modeling}
 
-boooooooooooooooooooooost them (gif here?)
 
-Cite additional model packages.[@xgboost_package, @ranger_package]
+For modeling two additional packages are required.[@xgboost_package, @ranger_package]
 
 ```{r loadModelPackages}
 library(xgboost)
 library(ranger)
 ```
+
+First one has to set a metric for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the $L_1$ norm of performance metrics.
+
+The first thing is to set up some trivial benchmark models.
+
+```{r}
+# the trivial intercept only model:
+predict_trivial_mean <- function(new_data) {
+  rep(mean(burnout_train$burn_rate), nrow(new_data))
+}
+
+# the trivial scoring of mental fatigue score (if missing intercept model)
+predict_trivial_mfs <- function(new_data) {
+  pred <- new_data[["mental_fatigue_score"]] / 10
+  pred[is.na(pred)] <- mean(burnout_train$burn_rate)
+  pred
+}
+```
+
+Evaluate the performance of the two models on the training data. In the end of this section they will be applied to the test data set alongside the other models.
+
+```{r}
+# intercept only model
+mae_vec(truth = burnout_train$burn_rate,
+        estimate = predict_trivial_mean(burnout_train))
+```
+```{r}
+# trivial mixed model
+mae_vec(truth = burnout_train$burn_rate,
+        estimate = predict_trivial_mfs(burnout_train))
+```
+
+
+
 
 To do
 

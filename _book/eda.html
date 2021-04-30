@@ -167,7 +167,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="4.1.4" data-path="eda.html"><a href="eda.html#distribution-and-main-effects-of-the-predictors"><i class="fa fa-check"></i><b>4.1.4</b> Distribution and main effects of the predictors</a></li>
 <li class="chapter" data-level="4.1.5" data-path="eda.html"><a href="eda.html#relationships-between-the-predictors"><i class="fa fa-check"></i><b>4.1.5</b> Relationships between the predictors</a></li>
 <li class="chapter" data-level="4.1.6" data-path="eda.html"><a href="eda.html#some-feature-engineering"><i class="fa fa-check"></i><b>4.1.6</b> Some feature engineering</a></li>
-<li class="chapter" data-level="4.1.7" data-path="eda.html"><a href="eda.html#create-recipe"><i class="fa fa-check"></i><b>4.1.7</b> Create recipe</a></li>
+<li class="chapter" data-level="4.1.7" data-path="eda.html"><a href="eda.html#create-the-recipe"><i class="fa fa-check"></i><b>4.1.7</b> Create the recipe</a></li>
 </ul></li>
 </ul></li>
 <li class="chapter" data-level="5" data-path="modeling.html"><a href="modeling.html"><i class="fa fa-check"></i><b>5</b> Let’s boost the models</a></li>
@@ -285,8 +285,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##  0.0000  0.3100  0.4500  0.4513  0.5900  1.0000</code></pre>
 <p>Now the distribution of the outcome.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-70-1.png" width="672" /></p>
-<p>The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region <span class="math inline">\([0,1]\)</span> is quite well covered.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region <span class="math inline">\([0,1]\)</span> is covered quite well.</p>
 </div>
 <div id="distribution-and-main-effects-of-the-predictors" class="section level3" number="4.1.4">
 <h3><span class="header-section-number">4.1.4</span> Distribution and main effects of the predictors</h3>
@@ -304,9 +304,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="date-of-joining" class="section level4" number="4.1.4.2">
 <h4><span class="header-section-number">4.1.4.2</span> Date of joining</h4>
 <p><code>date_of_joining</code> is the date the employee has joined the company. Thus a continuous variable that most likely needs some kind of feature engineering.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-72-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
 <p>Although there is a lot of variation no major trends in hirings are visible from this plot. Overall the variable seems to be quite equally distributed over the year 2008.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-73-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
 <p>In its raw form the variable <code>date_of_joining</code> seems not to have a notable main effect on the outcome variable. Nevertheless the feature will be used in the model and as tree-based models have an in-built feature selection one can see after the fitting if the feature was helpful overall. The feature will not be included just as an integer (the default format how Dates are represented) but rather some more features like weekday or month will be extracted from the raw variable further down the road.</p>
 </div>
 <div id="gender" class="section level4" number="4.1.4.3">
@@ -317,7 +317,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>## Female   Male 
 ##   9101   8200</code></pre>
 <p>The two classes are well balanced. Now a look at the main effect of the feature.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-75-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
 <p>For both classes the distributions are very similar and symmetrical. It seems like the male employees have overall a slightly higher risk of having a higher burn score i.e. a burnout.</p>
 </div>
 <div id="company-type" class="section level4" number="4.1.4.4">
@@ -328,7 +328,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>## Product Service 
 ##    6018   11283</code></pre>
 <p>In this case the classes are not fully balanced but each class is still well represented. Now a look at the main effect of the feature.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-77-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
 <p>For both classes the distributions are almost identical and symmetrical. From an univariate point of view no notable main effect is visible from these visualizations.</p>
 </div>
 <div id="work-from-home-setup" class="section level4" number="4.1.4.5">
@@ -339,8 +339,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>##   No  Yes 
 ## 7929 9372</code></pre>
 <p>The two classes are well balanced. Now a look at the main effect of the feature.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-79-1.png" width="672" />
-Again both distributions are quite similar i.e. bell shaped and symmetrical. Here quite a main effect is visible. A work from home setup most likely has a positive influence on the wellbeing and thus lowers the risk for a high burn rate.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<p>Again both distributions are quite similar i.e. bell shaped and symmetrical. Here quite a main effect is visible. A work from home setup most likely has a positive influence on the wellbeing and thus lowers the risk for a high burn rate.</p>
 </div>
 <div id="designation" class="section level4" number="4.1.4.6">
 <h4><span class="header-section-number">4.1.4.6</span> Designation</h4>
@@ -349,9 +349,9 @@ Again both distributions are quite similar i.e. bell shaped and symmetrical. He
 <span id="cb15-2"><a href="eda.html#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(burnout_train<span class="sc">$</span>designation)</span></code></pre></div>
 <pre><code>## [1] 2 1 3 0 4 5</code></pre>
 <p>As the feature has a natural ordering this variable will be treated as an ordinal one i.e. be encoded with the integers and not by one-hot-encoding.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-81-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
 <p>Here clearly the more extreme levels of designation are less represented in the data. This makes total sense w.r.t. the meaning of the variable.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-82-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-27-1.png" width="672" /></p>
 <p>A strong main effect is visible in the plot. The plot also further strengthens the hypothesis that we should treat the feature as ordinal. A higher level of designation seems to have an influence on the risk of having a burnout. For example employees from the training data set with a level of designation below 3 never even achieved a maximal burn score of one.</p>
 </div>
 <div id="resource-allocation" class="section level4" number="4.1.4.7">
@@ -361,10 +361,10 @@ Again both distributions are quite similar i.e. bell shaped and symmetrical. He
 <span id="cb17-2"><a href="eda.html#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(burnout_train<span class="sc">$</span>resource_allocation)</span></code></pre></div>
 <pre><code>##  [1]  3  1  7  4  6  5  2 NA  8 10  9</code></pre>
 <p>Here again the question is whether one should encode this variable as a categorical or an ordinal categorical feature. In this case as there are quite some levels and again a natural ordering the variable will be encoded as a continuous integer score.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-84-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
 <p>A similar behavior as the one of the previous variable is visible. But here there are some missing values (NA’s).</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-85-1.png" width="672" />
-A strong main effect is visible in the plot. The plot again further strengthens the hypothesis that we should treat this feature as ordinal. A higher amount of resources assigned to an employee seems to have a positive influence on the risk of having a burnout. The missing values do not seem to have some structure as they replicate the base distribution of the outcome variable.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
+<p>A strong main effect is visible in the plot. The plot again further strengthens the hypothesis that we should treat this feature as ordinal. A higher amount of resources assigned to an employee seems to have a positive influence on the risk of having a burnout. The missing values do not seem to have some structure as they replicate the base distribution of the outcome variable.</p>
 </div>
 <div id="mental-fatigue-score" class="section level4" number="4.1.4.8">
 <h4><span class="header-section-number">4.1.4.8</span> Mental fatigue score</h4>
@@ -373,9 +373,9 @@ A strong main effect is visible in the plot. The plot again further strengthens 
 <span id="cb19-2"><a href="eda.html#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(burnout_train<span class="sc">$</span>mental_fatigue_score)) </span></code></pre></div>
 <pre><code>## [1] 102</code></pre>
 <p>This variable will without a question be treated in a continuous way.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-87-1.png" width="672" />
-Although there is a very slight skew towards a higher mental fatigue score the overall distribution is still more or less bell shaped and quite symmetrical. Moreover the whole allowed range is covered and the bounds are not violated. Next the main effect of the variable.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-88-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
+<p>Although there is a very slight skew towards a higher mental fatigue score the overall distribution is still more or less bell shaped and quite symmetrical. Moreover the whole allowed range is covered and the bounds are not violated. Next the main effect of the variable.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-33-1.png" width="672" /></p>
 <p>This scatterplot shows drastic results! The mental fatigue score has an almost perfect linear relationship with the outcome variable. This is also underlined by the very high pearson correlation. This indicates that mental fatigue score will be a most important predictor. If a communication with the data collector would be possible it would be important to check whether the two scores have common confounding variables as then one would have to question the practical usability of this predictor. This comes from the fact that no model would be needed if it was as hard to collect the data about the predictors as the outcome data. Moreover there are 1555 missing values in the feature so for those the model has to rely on the other maybe more weak predictors. It should be noted that when evaluating the final model one should consider to compare its performance to a trivial model (like a single intercept model). When constructing such a trivial model one could and maybe should also use this variable (when available) to get a trivial prediction by scaling the <code>mental_fatigue_score</code> feature by a simple scalar.</p>
 </div>
 </div>
@@ -404,12 +404,12 @@ Although there is a very slight skew towards a higher mental fatigue score the o
 ##   Male   4094 4106</code></pre>
 <p>Slightly more women have a work from home setup available.</p>
 <p><strong>Now the ordinal variables:</strong></p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-92-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-37-1.png" width="672" /></p>
 <p>It has to be noted again that female and male emplyees are almost equally represented in the data set. Thus one can see from the above plot that the biggest difference in distribution is for the levels 1 and 4 with opposing effects. While male employees more often have a quite high designation of 4 females are the much more frequent employee with designation level 1.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-93-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-38-1.png" width="672" /></p>
 <p>Here a major shift in distribution is visible towards men getting more resources allocated to them. This reflects the society that still promotes men much more often to high paying jobs that most often come with resource responsibility.</p>
 <p><strong>Now the mental fatigue score:</strong></p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-94-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-39-1.png" width="672" /></p>
 <p>This is of course very similar to the main effect of the <code>gender</code> variable as the outcome and the feature <code>mental_fatigue_score</code> are highly linearly correlated.</p>
 </div>
 <div id="company-type-vs.-the-remaining" class="section level4" number="4.1.5.3">
@@ -421,49 +421,66 @@ Although there is a very slight skew towards a higher mental fatigue score the o
 ##   Product 2764 3254
 ##   Service 5165 6118</code></pre>
 <p>No notable trend.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-96-1.png" width="672" />
-No trend here either.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-97-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-41-1.png" width="672" /></p>
+<p>No trend here either.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-42-1.png" width="672" /></p>
 <p>The same verdict as above.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-98-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-43-1.png" width="672" /></p>
+<p>Once again there is no notable difference in distribution.</p>
 </div>
 <div id="work-from-home-setup-vs.-the-remaining" class="section level4" number="4.1.5.4">
 <h4><span class="header-section-number">4.1.5.4</span> Work from home setup vs. the remaining</h4>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-99-1.png" width="672" />
-A work from home setup is way more often available for employees with a lower designation (<span class="math inline">\(\leq 2\)</span>).</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-100-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-44-1.png" width="672" /></p>
+<p>A work from home setup is way more often available for employees with a lower designation (<span class="math inline">\(\leq 2\)</span>).</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-45-1.png" width="672" /></p>
 <p>The same structure as in the previous comparison is visible here again. Employees with a lower amount of resources allocated to them have more often a work from home setup available. This could be due to the fewer responsibilities they have in the business.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-101-1.png" width="672" />
-Again this is of course very similar to the main effect of the <code>wfh_setup_available</code> variable as the outcome and the feature <code>mental_fatigue_score</code> are highly linearly correlated.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-46-1.png" width="672" /></p>
+<p>Again this is of course very similar to the main effect of the <code>wfh_setup_available</code> variable as the outcome and the feature <code>mental_fatigue_score</code> are highly linearly correlated.</p>
 </div>
 <div id="designation-vs-the-remaining" class="section level4" number="4.1.5.5">
 <h4><span class="header-section-number">4.1.5.5</span> Designation vs the remaining</h4>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-102-1.png" width="672" />
-Here a strong quite linear relationship is visible. This is sensible as often more resource responsibility is given to employees with high designation.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-47-1.png" width="672" /></p>
+<p>Here a strong quite linear relationship is visible. This is sensible as often more resource responsibility is given to employees with high designation.</p>
 <p>The last two relationships will be omitted here as both for the variable <code>designation</code> as well as for <code>resource_allocation</code> the comparison with <code>mental_fatigue_score</code> will be very similar to the main effect of the two variables. This comes again from the high correlation of the latter with the outcome.</p>
+<p>Overall some stronger and mainly less strong relationships between the predictors could be detected. Not like in ordinary least squares regression for gradient tree boosting no decorrelation and normalization of the features is needed.</p>
 </div>
 </div>
 <div id="some-feature-engineering" class="section level3" number="4.1.6">
 <h3><span class="header-section-number">4.1.6</span> Some feature engineering</h3>
-<p>The only variable that allows for some feature engineering is the date of joining one. One can try to extract some underlying patterns and see if an effect on the outcome is visible.</p>
+<p>The only variable that allows for some reasonable feature engineering is the date of joining predictor. One can try to extract some underlying patterns and see if an effect on the outcome is visible.</p>
 <p>First extract the day of the week:</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-103-1.png" width="672" /></p>
-<p>No main effect is visible here.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-104-1.png" width="672" />
-Again no main effect is visible.</p>
-<p>Nevertheless one can include those two variables into the model because as mentioned before tree-based models actually perform a feature selection at each split.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-48-1.png" width="672" /></p>
+<p>No main effect is visible here. So try the month next.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-49-1.png" width="672" /></p>
+<p>Again no main effect is visible.</p>
+<p>Nevertheless one can include those two variables into the model because as mentioned before tree-based models actually perform a feature selection at each split. So including these just comes only at a small computational cost. This minimal pre-processing that is needed when dealing with tree-based models is actually one of its biggest strengths. It is very robust against any kind of weird selection of features. This is one of the reasons beside the strong predictive power for the heavy use of such models in data mining applications.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
 </div>
-<div id="create-recipe" class="section level3" number="4.1.7">
-<h3><span class="header-section-number">4.1.7</span> Create recipe</h3>
-<p>one for lm (dummify categorical features) and one for the tree based approaches</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="eda.html#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ames_rec &lt;- </span></span>
-<span id="cb27-2"><a href="eda.html#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   recipe(Sale_Price ~ Neighborhood + Gr_Liv_Area + Year_Built + Bldg_Type + </span></span>
-<span id="cb27-3"><a href="eda.html#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="co">#            Latitude + Longitude, data = ames_train) %&gt;%</span></span>
-<span id="cb27-4"><a href="eda.html#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_log(Gr_Liv_Area, base = 10) %&gt;% </span></span>
-<span id="cb27-5"><a href="eda.html#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_other(Neighborhood, threshold = 0.01) %&gt;% </span></span>
-<span id="cb27-6"><a href="eda.html#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_dummy(all_nominal()) %&gt;% </span></span>
-<span id="cb27-7"><a href="eda.html#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_interact( ~ Gr_Liv_Area:starts_with(&quot;Bldg_Type_&quot;) ) %&gt;% </span></span>
-<span id="cb27-8"><a href="eda.html#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="co">#   step_ns(Latitude, Longitude, deg_free = 20)</span></span></code></pre></div>
+<div id="create-the-recipe" class="section level3" number="4.1.7">
+<h3><span class="header-section-number">4.1.7</span> Create the recipe</h3>
+<p>A recipe is an object that defines a series of steps for data pre-processing and feature engineering.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb27-1"><a href="eda.html#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="do">### recipe for xgboost (nominal variables must be dummy variables)</span></span>
+<span id="cb27-2"><a href="eda.html#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co"># define outcome, predictors and training data set</span></span>
+<span id="cb27-3"><a href="eda.html#cb27-3" aria-hidden="true" tabindex="-1"></a>burnout_rec_boost <span class="ot">&lt;-</span> <span class="fu">recipe</span>(burn_rate <span class="sc">~</span> date_of_joining <span class="sc">+</span> gender <span class="sc">+</span></span>
+<span id="cb27-4"><a href="eda.html#cb27-4" aria-hidden="true" tabindex="-1"></a>                            company_type <span class="sc">+</span> wfh_setup_available <span class="sc">+</span></span>
+<span id="cb27-5"><a href="eda.html#cb27-5" aria-hidden="true" tabindex="-1"></a>                            designation <span class="sc">+</span> resource_allocation <span class="sc">+</span></span>
+<span id="cb27-6"><a href="eda.html#cb27-6" aria-hidden="true" tabindex="-1"></a>                            mental_fatigue_score,</span>
+<span id="cb27-7"><a href="eda.html#cb27-7" aria-hidden="true" tabindex="-1"></a>                            <span class="at">data =</span> burnout_train) <span class="sc">%&gt;%</span></span>
+<span id="cb27-8"><a href="eda.html#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># extract the date features day of the week and month</span></span>
+<span id="cb27-9"><a href="eda.html#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_date</span>(date_of_joining, <span class="at">features =</span> <span class="fu">c</span>(<span class="st">&quot;dow&quot;</span>, <span class="st">&quot;month&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb27-10"><a href="eda.html#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># dummify all nominal features</span></span>
+<span id="cb27-11"><a href="eda.html#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb27-12"><a href="eda.html#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># encode the date as integers</span></span>
+<span id="cb27-13"><a href="eda.html#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(<span class="at">date_of_joining =</span> <span class="fu">as.integer</span>(date_of_joining))</span>
+<span id="cb27-14"><a href="eda.html#cb27-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-15"><a href="eda.html#cb27-15" aria-hidden="true" tabindex="-1"></a><span class="do">### recipe for a random forest model for comparison (no dummy encoding needed)</span></span>
+<span id="cb27-16"><a href="eda.html#cb27-16" aria-hidden="true" tabindex="-1"></a><span class="co"># same as above without dummification</span></span>
+<span id="cb27-17"><a href="eda.html#cb27-17" aria-hidden="true" tabindex="-1"></a>burnout_rec_rf <span class="ot">&lt;-</span> <span class="fu">recipe</span>(burn_rate <span class="sc">~</span> date_of_joining <span class="sc">+</span> gender <span class="sc">+</span></span>
+<span id="cb27-18"><a href="eda.html#cb27-18" aria-hidden="true" tabindex="-1"></a>                         company_type <span class="sc">+</span> wfh_setup_available <span class="sc">+</span></span>
+<span id="cb27-19"><a href="eda.html#cb27-19" aria-hidden="true" tabindex="-1"></a>                         designation <span class="sc">+</span> resource_allocation <span class="sc">+</span></span>
+<span id="cb27-20"><a href="eda.html#cb27-20" aria-hidden="true" tabindex="-1"></a>                         mental_fatigue_score,</span>
+<span id="cb27-21"><a href="eda.html#cb27-21" aria-hidden="true" tabindex="-1"></a>                         <span class="at">data =</span> burnout_train) <span class="sc">%&gt;%</span></span>
+<span id="cb27-22"><a href="eda.html#cb27-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_date</span>(date_of_joining, <span class="at">features =</span> <span class="fu">c</span>(<span class="st">&quot;dow&quot;</span>, <span class="st">&quot;month&quot;</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb27-23"><a href="eda.html#cb27-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_mutate</span>(<span class="at">date_of_joining =</span> <span class="fu">as.integer</span>(date_of_joining))</span></code></pre></div>
 
 </div>
 </div>
