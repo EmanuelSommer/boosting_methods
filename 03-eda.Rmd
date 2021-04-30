@@ -841,6 +841,130 @@ remove(ins_split)
 ```
 
 
+### A general overview
+
+A general visualization to detect missing values.
+
+```{r visdatIns, echo=FALSE}
+visdat::vis_dat(ins_train)
+```
+So there are no missing values!
+
+### What about the outcome?
+
+`charges`: Individual medical costs billed by health insurance.
+
+The five point summary below shows that the no invalid values i.e. negative ones are in the data.
+
+```{r, echo=FALSE}
+summary(ins_train$charges)
+```
+Now the distribution of the outcome.
+
+```{r , echo=FALSE}
+charges_box <- ggplot(ins_train, aes(x = 1, y = charges)) +
+  geom_jitter(alpha = 0.05, col = plasma(1)) +
+  geom_boxplot(col = "black", size = .8, fill = NA) +
+  labs(x = "", y = "Charges") +
+  coord_flip() +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank())
+
+
+charges_hist <- ggplot(ins_train, aes(x = charges)) +
+  geom_histogram(fill = plasma(1), binwidth = 800) +
+  labs(x = "", y = "", subtitle = "binwidth = 800",
+       title = "Outcome variable: **Charges**") +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        plot.title = ggtext::element_markdown(size = 11),
+        plot.subtitle = ggtext::element_markdown(size = 8))
+charges_hist / charges_box
+remove(charges_box)
+remove(charges_hist)
+```
+Not like the `burn_rate` previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting `log_charges` outcome variable is shown below. 
+
+
+```{r , echo=FALSE}
+charges_box <- ggplot(ins_train, aes(x = 1, y = log10(charges))) +
+  geom_jitter(alpha = 0.05, col = plasma(1)) +
+  geom_boxplot(col = "black", size = .8, fill = NA) +
+  labs(x = "", y = "log<sub>10</sub>(Charges)") +
+  coord_flip() +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.x = ggtext::element_markdown())
+
+
+charges_hist <- ggplot(ins_train, aes(x = log10(charges))) +
+  geom_histogram(fill = plasma(1), binwidth = 0.1) +
+  labs(x = "", y = "", subtitle = "binwidth = 0.1",
+       title = "Outcome variable: **log<sub>10</sub>(Charges)**") +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        plot.title = ggtext::element_markdown(size = 11),
+        plot.subtitle = ggtext::element_markdown(size = 8))
+charges_hist / charges_box
+remove(charges_box)
+remove(charges_hist)
+```
+
+Although such a transformation of the outcome variable is not needed for tree-based modeling it can make the job of the algorithm somewhat easier. 
+
+### Distribution and main effects of the predictors
+
+#### Age
+
+`age`: The age of the insurance contractor. This is naturally a continuous variable.
+
+```{r echo=FALSE}
+ggplot(ins_train,
+       aes(y = age,
+           x = log10(charges))) +
+  geom_point(alpha = 0.1, col = plasma(1),
+             na.rm = TRUE) +
+  labs(y = "Age", x = "log<sub>10</sub>(Charges)",
+       title = "Main effect of the variable **Age**") +
+  theme_light() +
+  theme(legend.position = "None",
+        axis.title.x = ggtext::element_markdown(),
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+There seems to be a strong main effect although it does not seem to be linear. The general trend is that older contractors generally accumulate more medical costs. This is very intuitive.
+
+#### Sex
+
+`sex`: The insurance contractors gender. Here either female or male. This means it is a binary variable and will be treated as such.
+
+#### Body mass index
+
+`bmi`: The body mass index is providing an understanding of the body composition. It is a ratio composed out of the weight which is divided by the height $\frac{kg}{m^2}$. Ideally the ratio is between 18.5 and 24.9. The variable is obviously a continuous variable.
+
+
+#### Number of children
+
+`children`: The number of children or dependents covered by the health insurance. 
+
+```{r}
+unique(ins_train$children)
+```
+
+This could be treated as categorical but as there is a natural ordering it will be encoded by the integers so the treatment is like the one of a continuous feature.
+
+#### Smoking
+
+`smoker`: Is the contractor smoking? Of course a binary variable.
+
+#### Region
+
+`region`: The beneficiary's residential area in the US. Either northeast, southeast, southwest or northwest. This definitely is a categorical variable.
+
 
 
 
