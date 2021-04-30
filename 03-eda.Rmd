@@ -813,3 +813,36 @@ burnout_rec_rf <- recipe(burn_rate ~ date_of_joining + gender +
   step_date(date_of_joining, features = c("dow", "month")) %>%
   step_mutate(date_of_joining = as.integer(date_of_joining))
 ```
+
+
+## Insurence data
+
+
+The insurance data set is part of the book *Machine Learning with R* by Brett Lantz. It can be downloaded here:
+<https://raw.githubusercontent.com/stedy/Machine-Learning-with-R-datasets/master/insurance.csv>
+
+```{r loadIns, message=FALSE}
+# load the data
+insurance_data <- read_csv("_data/insurance.csv")
+```
+
+### Train-test split
+
+```{r traintestIns}
+set.seed(2)
+ins_split <- rsample::initial_split(insurance_data, prop = 0.80)
+ins_train <- rsample::training(ins_split)
+ins_test  <- rsample::testing(ins_split)
+```
+
+```{r, include=FALSE}
+remove(insurance_data)
+remove(ins_split)
+```
+
+
+
+
+
+
+
