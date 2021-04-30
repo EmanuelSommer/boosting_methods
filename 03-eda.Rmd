@@ -1,6 +1,6 @@
 # Explore the data {#eda}
 
-Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork; @visdat] The most important ones will be loaded below.
+Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork; @visdat; @lubridate] The most important ones will be loaded below.
 
 ```{r load_packages, message=FALSE, warning=FALSE}
 library(tidyverse) # general data handling tools
@@ -13,10 +13,12 @@ library(patchwork) # composing of ggplots
 
 ## Burnout data
 
-The data is from the machine learning challenge bla from Kaggle. <https://www.kaggle.com/blurredmachine/are-your-employees-burning-out?select=train.csv>
+The data is from the machine learning challenge *HackerEarth Machine Learning Challenge: Are your employees burning out?*. And can be downloaded here: <https://www.kaggle.com/blurredmachine/are-your-employees-burning-out?select=train.csv>
 
 ```{r loadBurn, message=FALSE}
+# load the data
 burnout_data <- read_csv("_data/burn_out_train.csv")
+# convert colnames to snake_case
 colnames(burnout_data) <- tolower(
   stringr::str_replace_all(
     colnames(burnout_data),
@@ -45,6 +47,8 @@ The training data set contains `r nrow(burnout_train)` rows and `r ncol(burnout_
 
 The test data set contains `r nrow(burnout_test)` observations and naturally also `r ncol(burnout_test)` variables.
 
+### Quick general overview
+
 First look at the classes of the variables.
 
 ```{r, echo=FALSE}
@@ -68,16 +72,16 @@ mean(rowSums(is.na(burnout_train)) > 0)
 ```
 As we know that XGBoost can handle missing values we do not have to be concerned. Although one can think about imputation. But more on that later.
 
-What about the outcome variable?
+### What about the outcome variable?
 
-`burn_rate`: For each employee telling the rate of burnout should be in $[0,1]$. The greater the score the worse the burnout. As the variable is continuous we have a regression task.
+`burn_rate`: For each employee telling the rate of burnout should be in $[0,1]$. The greater the score the worse the burnout (0 means no burnout at all). As the variable is continuous we have a regression task. Yet it has bounds which has to be treated with when predicting.
 
-The five point summary below shows that the full range is covered and no not allowed values are in the data.
+The five point summary below shows that the full range is covered and no invalid values are in the data.
 
 ```{r, echo=FALSE}
 summary(burnout_train$burn_rate)
 ```
-
+Now the distribution of the outcome.
 
 ```{r , echo=FALSE}
 burn_rate_box <- ggplot(burnout_train, aes(x = 1, y = burn_rate)) +
@@ -104,14 +108,17 @@ remove(burn_rate_box)
 remove(burn_rate_hist)
 ```
 
-The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region $[0,1]$ is quite well covered.
+The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region $[0,1]$ is covered quite well. 
 
 
-Look at every feature and its main effects individually:
+### Distribution and main effects of the predictors
+
+#### Employee ID
 
 `employee_id` is just an ID variable and thus is not useful for any prediction model. But one has to check for duplicates.
 
 ```{r}
+# TRUE if there are NO duplicates
 burnout_train %>%
   group_by(employee_id) %>%
   summarise(n = n()) %>%
@@ -119,7 +126,9 @@ burnout_train %>%
 ```
 Thus there are no duplicates which is good.
 
-`date_of_joining` is the Date the employee has joined the company. Thus a continuous variable that most likely needs some kind of feature engineering.
+#### Date of joining
+
+`date_of_joining` is the date the employee has joined the company. Thus a continuous variable that most likely needs some kind of feature engineering.
 
 ```{r, echo=FALSE}
 burnout_train %>%
@@ -144,12 +153,15 @@ ggplot(burnout_train,
   geom_point(alpha = 0.1, col = plasma(1),
              na.rm = TRUE) +
   labs(y = "Date of joining", x = "Burn rate",
-       title = "Main effect of variable **Date of joining**") +
+       title = "Main effect of the variable **Date of joining**") +
   theme_light() +
   theme(legend.position = "None",
         plot.title = ggtext::element_markdown(size = 11))
 ```
-In its raw form the variable `date_of_joining` seems not to have a notable main effect on the outcome variable. Nevertheless the feature will be used in the model and as tree-based model have an in-built feature selection one can see after the fitting if the feature was helpful overall. The feature will not be included just as an integer (the default format how Dates are represented) but rather some more features like weekday or month will be extracted from the raw variable further down the road.
+
+In its raw form the variable `date_of_joining` seems not to have a notable main effect on the outcome variable. Nevertheless the feature will be used in the model and as tree-based models have an in-built feature selection one can see after the fitting if the feature was helpful overall. The feature will not be included just as an integer (the default format how Dates are represented) but rather some more features like weekday or month will be extracted from the raw variable further down the road.
+
+#### Gender 
 
 `gender` represents the gender of the employee. Definitely a categorical variable.
 
@@ -182,7 +194,7 @@ gender_burn_rate_hist <- ggplot(burnout_train,
                  position = "identity") +
   scale_fill_viridis_d(option = "C") +
   labs(x = "", y = "", subtitle = "binwidth = 0.05",
-       fill = "",title = "Main effect of variable **gender**") +
+       fill = "",title = "Main effect of the variable **gender**") +
   theme_light() +
   theme(axis.ticks.y = element_blank(),
         legend.position = "top",
@@ -197,7 +209,7 @@ remove(gender_burn_rate_box)
 
 For both classes the distributions are very similar and symmetrical. It seems like the male employees have overall a slightly higher risk of having a higher burn score i.e. a burnout.
 
-
+#### Company type
 
 `company_type` is a binary categorical variable that indicates whether the company is a service or product company.
 
@@ -229,7 +241,7 @@ comptype_burn_rate_hist <- ggplot(burnout_train,
                  position = "identity") +
   scale_fill_viridis_d(option = "C") +
   labs(x = "", y = "", subtitle = "binwidth = 0.05",
-       fill = "",title = "Main effect of variable **Company Type**") +
+       fill = "",title = "Main effect of the variable **Company Type**") +
   theme_light() +
   theme(axis.ticks.y = element_blank(),
         legend.position = "top",
@@ -244,6 +256,7 @@ remove(comptype_burn_rate_box)
 
 For both classes the distributions are almost identical and symmetrical. From an univariate point of view no notable main effect is visible from these visualizations. 
 
+#### Work from home setup
 
 `wfh_setup_available` indicates whether a working from home setup is available for the employee. So this is again a binary variable.
 
@@ -276,7 +289,7 @@ wfh_burn_rate_hist <- ggplot(burnout_train,
                  position = "identity") +
   scale_fill_viridis_d(option = "C") +
   labs(x = "", y = "", subtitle = "binwidth = 0.05",
-       fill = "",title = "Main effect of variable **Work from home setup**") +
+       fill = "",title = "Main effect of the variable **Work from home setup**") +
   theme_light() +
   theme(axis.ticks.y = element_blank(),
         legend.position = "top",
@@ -288,8 +301,11 @@ wfh_burn_rate_hist / wfh_burn_rate_box
 remove(wfh_burn_rate_hist)
 remove(wfh_burn_rate_box)
 ```
+
+
 Again both distributions are quite similar i.e. bell shaped and symmetrical. Here quite a main effect is visible. A work from home setup most likely has a positive influence on the wellbeing and thus lowers the risk for a high burn rate.
 
+#### Designation
 
 `designation` A rate within $[0,5]$ that represents the designation in the company for the employee. High values indicate a greater amount of designation.
 
@@ -297,7 +313,7 @@ Again both distributions are quite similar i.e. bell shaped and symmetrical. Her
 # unique values of the feature
 unique(burnout_train$designation)
 ```
-As the feature has a natural encoding this variable will be treated as an ordinal one i.e. be encoded with the integers and not by one-hot-encoding.
+As the feature has a natural ordering this variable will be treated as an ordinal one i.e. be encoded with the integers and not by one-hot-encoding.
 
 ```{r, echo=FALSE}
 burnout_train %>%
@@ -312,6 +328,9 @@ burnout_train %>%
   theme(plot.title = ggtext::element_markdown(size = 11))
 ```
 
+
+Here clearly the more extreme levels of designation are less represented in the data. This makes total sense w.r.t. the meaning of the variable.
+
 ```{r echo=FALSE}
 ggplot(burnout_train,
        aes(x = as.factor(designation),
@@ -320,7 +339,7 @@ ggplot(burnout_train,
   geom_jitter(alpha = 0.1) +
   geom_boxplot(size = 0.8, col = "black", fill = NA) +
   labs(x = "level of designation", y = "Burn rate", col = "",
-       title = "Main effect of variable **Designation**") +
+       title = "Main effect of the variable **Designation**") +
   scale_color_viridis_d(option = "C") +
   coord_flip() +
   theme_light() +
@@ -328,8 +347,9 @@ ggplot(burnout_train,
         plot.title = ggtext::element_markdown(size = 11))
 ```
 
-A strong main effect is visible in the plot. The plot also further strengthens the hypothesis that we should treat the feature as ordinal. A higher level of designation seems to have an influence on the risk of having a burnout.
+A strong main effect is visible in the plot. The plot also further strengthens the hypothesis that we should treat the feature as ordinal. A higher level of designation seems to have an influence on the risk of having a burnout. For example employees from the training data set with a level of designation below 3 never even achieved a maximal burn score of one.
 
+#### Resource allocation
 
 `resource_allocation` A rate within $[1,10]$ that represents the resource allocation to the employee. High values indicate more resources allocated to the employee.
 
@@ -337,7 +357,7 @@ A strong main effect is visible in the plot. The plot also further strengthens t
 # unique values of the feature
 unique(burnout_train$resource_allocation)
 ```
-Here again the question is whether one should encode this variable as a categorical or an ordinal categorical feature. In this case as there are quite some levels and again a natural ordering the variable will be used as a continuous integer score.
+Here again the question is whether one should encode this variable as a categorical or an ordinal categorical feature. In this case as there are quite some levels and again a natural ordering the variable will be encoded as a continuous integer score.
 
 ```{r, echo=FALSE}
 burnout_train %>%
@@ -351,6 +371,8 @@ burnout_train %>%
        x = "Resource Allocation") +
   theme(plot.title = ggtext::element_markdown(size = 11))
 ```
+
+A similar behavior as the one of the previous variable is visible. But here there are some missing values (NA's).
 
 ```{r echo=FALSE}
 burnout_train %>%
@@ -368,14 +390,18 @@ burnout_train %>%
   geom_jitter(alpha = 0.1, na.rm = TRUE) +
   geom_boxplot(size = 0.8, col = "black", fill = NA, na.rm = TRUE) +
   labs(x = "Resource Allocation", y = "Burn rate", col = "",
-       title = "Main effect of variable **Resource Allocation**") +
+       title = "Main effect of the variable **Resource Allocation**") +
   scale_color_viridis_d(option = "C") +
   coord_flip() +
   theme_light() +
   theme(legend.position = "None",
         plot.title = ggtext::element_markdown(size = 11))
 ```
-A strong main effect is visible in the plot. The plot again further strengthens the hypothesis that we should treat this feature as ordinal. A higher amount of resources assigned to an employee seems to have a positive influence on the risk of having a burnout.
+
+
+A strong main effect is visible in the plot. The plot again further strengthens the hypothesis that we should treat this feature as ordinal. A higher amount of resources assigned to an employee seems to have a positive influence on the risk of having a burnout. The missing values do not seem to have some structure as they replicate the base distribution of the outcome variable.
+
+#### Mental fatigue score
 
 `mental_fatigue_score` is the level of mental fatigue the employee is facing.
 
@@ -383,19 +409,21 @@ A strong main effect is visible in the plot. The plot again further strengthens 
 # number of unique values
 length(unique(burnout_train$mental_fatigue_score)) 
 ```
-This variable will be treated in a continuous way.
+This variable will without a question be treated in a continuous way.
 
 ```{r, echo=FALSE}
 ggplot(burnout_train, aes(x = mental_fatigue_score)) +
   geom_density(fill = plasma(1), col = plasma(1),
                na.rm = TRUE, bw = .8) +
   theme_light() +
-  labs(title = "Distribution of the variable **Mental Fatigue Score**",
+  labs(title = "Distribution of the variable **Mental fatigue score**",
        subtitle = "bw = 0.8",
-       x = "Mental Fatigue Score") +
+       x = "Mental fatigue score") +
   theme(plot.title = ggtext::element_markdown(size = 11),
         plot.subtitle = ggtext::element_markdown(size = 8))
 ```
+
+
 Although there is a very slight skew towards a higher mental fatigue score the overall distribution is still more or less bell shaped and quite symmetrical. Moreover the whole allowed range is covered and the bounds are not violated. Next the main effect of the variable.
 
 ```{r echo=FALSE}
@@ -404,8 +432,8 @@ ggplot(burnout_train,
            x = burn_rate)) +
   geom_point(alpha = 0.1, col = plasma(1),
              na.rm = TRUE) +
-  labs(y = "Mental Fatigue Score", x = "Burn rate",
-       title = "Main effect of variable **Mental Fatigue Score**") +
+  labs(y = "Mental fatigue score", x = "Burn rate",
+       title = "Main effect of the variable **Mental fatigue score**") +
   annotate("text", x = .75, y = 2.5,
            label = paste("Pearson Correlation:",
                          round(
@@ -426,33 +454,362 @@ This scatterplot shows drastic results! The mental fatigue score has an almost p
 sum(is.na(burnout_train$mental_fatigue_score))
 ```
 
+### Relationships between the predictors
+
+#### Date of joining vs. the others
+
+```{r ggpairs, echo=FALSE, message=FALSE, warning=FALSE, out.width='90%'}
+# first date of joining vs the purely continuous feature
+date_vs_mental <- ggplot(burnout_train,
+                         aes(y = date_of_joining,
+                             x = mental_fatigue_score)) +
+  geom_point(alpha = 0.1, col = plasma(1),
+             na.rm = TRUE) +
+  labs(y = "Mental fatigue score", x = "Date of joining",
+       title = "") +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+# now the categorical ones
+date_vs_cat <- sapply(colnames(burnout_train)[3:7], function(var) {
+  ggplot(burnout_train, aes(y = date_of_joining,
+                            x = factor(.data[[var]]),
+                            col = factor(.data[[var]]))) +
+    geom_jitter(alpha = 0.1, na.rm = TRUE) +
+    geom_boxplot(size = 0.8, col = "black", fill = NA, na.rm = TRUE) +
+    labs(y = "Date of joining", x = var, col = "",
+         title = "") +
+    scale_color_viridis_d(option = "C") +
+    coord_flip() +
+    theme_light() +
+    theme(legend.position = "None")
+}, simplify = FALSE)
+
+(date_vs_mental | date_vs_cat[[1]]) /
+  (date_vs_cat[[2]] | date_vs_cat[[3]]) /
+  (date_vs_cat[[4]] | date_vs_cat[[5]])
+
+remove(date_vs_cat, date_vs_mental)
+```
+
+No major relationship can be detected here.
+
+#### Gender vs. the remaining
+
+**Contingency tables for the comparison of two binary features:**
+
+```{r}
+# Gender vs Company type
+table(burnout_train$gender, burnout_train$company_type)
+```
+No huge tendency visible.
+
+```{r}
+# Gender vs Work from home setup
+table(burnout_train$gender, burnout_train$wfh_setup_available)
+```
+Slightly more women have a work from home setup available.
+
+**Now the ordinal variables:**
+
+```{r, echo=FALSE}
+burnout_train %>%
+  group_by(designation, gender) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = factor(designation), y = count,
+             fill = gender)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  coord_flip() +
+  scale_fill_viridis_d(option = "C") +
+  theme_light() +
+  labs(title = "**Designation** vs **Gender**",
+       x = "level of designation") +
+  theme(plot.title = ggtext::element_markdown(size = 11))
+```
+
+It has to be noted again that female and male emplyees are almost equally represented in the data set. Thus one can see from the above plot that the biggest difference in distribution is for the levels 1 and 4 with opposing effects. While male employees more often have a quite high designation of 4 females are the much more frequent employee with designation level 1.
+
+```{r, echo=FALSE}
+burnout_train %>%
+  group_by(resource_allocation, gender) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = factor(resource_allocation), y = count,
+             fill = gender)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  coord_flip() +
+  scale_fill_viridis_d(option = "C") +
+  theme_light() +
+  labs(title = "**Resource allocation** vs **Gender**",
+       x = "Resource allocation") +
+  theme(plot.title = ggtext::element_markdown(size = 11))
+```
+
+Here a major shift in distribution is visible towards men getting more resources allocated to them. This reflects the society that still promotes men much more often to high paying jobs that most often come with resource responsibility.
+
+**Now the mental fatigue score:**
+
+```{r, echo=FALSE}
+ggplot(burnout_train, 
+       aes(x = as.factor(gender),
+       y = mental_fatigue_score,
+       col = as.factor(gender))) +
+  geom_jitter(alpha = 0.05, na.rm = TRUE) +
+  geom_boxplot(size = 0.8, col = "black", fill = NA, na.rm = TRUE) +
+  labs(x = "", y = "Mental fatigue score", col = "",
+       title = "**Mental fatigue score** vs **Gender**") +
+  scale_color_viridis_d(option = "C") +
+  coord_flip() +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+This is of course very similar to the main effect of the `gender` variable as the outcome and the feature `mental_fatigue_score` are highly linearly correlated.
 
 
-### Visualize the data
-
--   pair plots
-
-    -   indiviual main effects
-
-    -   correlations
-
--   correlation plot
-
--   feature engineering
+#### Company type vs. the remaining
 
 
+```{r}
+# Company type vs Work from home setup
+table(burnout_train$company_type, burnout_train$wfh_setup_available)
+```
 
-### Create recipe
+No notable trend.
 
-one for lm (dummify categorical features) and one for the tree based approaches
+```{r, echo=FALSE}
+burnout_train %>%
+  group_by(designation, company_type) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  group_by(company_type) %>%
+  mutate(rel_count = count / sum(count)) %>%
+  ggplot(aes(x = factor(designation), y = rel_count,
+             fill = company_type)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  coord_flip() +
+  scale_fill_viridis_d(option = "C") +
+  theme_light() +
+  labs(title = "**Designation** vs **Company type**",
+       fill = "Company type", y = "relative frequency",
+       x = "level of designation") +
+  theme(plot.title = ggtext::element_markdown(size = 11))
+```
 
-```{r recipes}
-# ames_rec <- 
-#   recipe(Sale_Price ~ Neighborhood + Gr_Liv_Area + Year_Built + Bldg_Type + 
-#            Latitude + Longitude, data = ames_train) %>%
-#   step_log(Gr_Liv_Area, base = 10) %>% 
-#   step_other(Neighborhood, threshold = 0.01) %>% 
-#   step_dummy(all_nominal()) %>% 
-#   step_interact( ~ Gr_Liv_Area:starts_with("Bldg_Type_") ) %>% 
-#   step_ns(Latitude, Longitude, deg_free = 20)
+No trend here either.
+
+```{r, echo=FALSE}
+burnout_train %>%
+  group_by(resource_allocation, company_type) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  group_by(company_type) %>%
+  mutate(rel_count = count / sum(count)) %>%
+  ggplot(aes(x = factor(resource_allocation), y = rel_count,
+             fill = company_type)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  coord_flip() +
+  scale_fill_viridis_d(option = "C") +
+  theme_light() +
+  labs(title = "**Resource allocation** vs **Company type**",
+       fill = "Company type", y = "relative frequency",
+       x = "Resource allocation") +
+  theme(plot.title = ggtext::element_markdown(size = 11))
+```
+
+The same verdict as above.
+
+```{r, echo=FALSE}
+ggplot(burnout_train, 
+       aes(x = as.factor(company_type),
+       y = mental_fatigue_score,
+       col = as.factor(company_type))) +
+  geom_jitter(alpha = 0.05, na.rm = TRUE) +
+  geom_boxplot(size = 0.8, col = "black", fill = NA, na.rm = TRUE) +
+  labs(x = "", y = "Mental fatigue score", col = "",
+       title = "**Mental fatigue score** vs **Company type**") +
+  scale_color_viridis_d(option = "C") +
+  coord_flip() +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+Once again there is no notable difference in distribution.
+
+
+#### Work from home setup vs. the remaining
+
+
+```{r, echo=FALSE}
+burnout_train %>%
+  group_by(designation, wfh_setup_available) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = factor(designation), y = count,
+             fill = wfh_setup_available)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  coord_flip() +
+  scale_fill_viridis_d(option = "C") +
+  theme_light() +
+  labs(title = "**Designation** vs **Work from home setup**",
+       fill = "Work from home setup",
+       x = "level of designation") +
+  theme(plot.title = ggtext::element_markdown(size = 11))
+```
+
+A work from home setup is way more often available for employees with a lower designation ($\leq 2$).
+
+
+```{r, echo=FALSE}
+burnout_train %>%
+  group_by(resource_allocation, wfh_setup_available) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = factor(resource_allocation), y = count,
+             fill = wfh_setup_available)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  coord_flip() +
+  scale_fill_viridis_d(option = "C") +
+  theme_light() +
+  labs(title = "**Resource allocation** vs **Work from home setup**",
+       fill = "Work from home setup",
+       x = "Resource allocation") +
+  theme(plot.title = ggtext::element_markdown(size = 11))
+```
+
+The same structure as in the previous comparison is visible here again. Employees with a lower amount of resources allocated to them have more often a work from home setup available. This could be due to the fewer responsibilities they have in the business.
+
+```{r, echo=FALSE}
+ggplot(burnout_train, 
+       aes(x = as.factor(wfh_setup_available),
+       y = mental_fatigue_score,
+       col = as.factor(wfh_setup_available))) +
+  geom_jitter(alpha = 0.05, na.rm = TRUE) +
+  geom_boxplot(size = 0.8, col = "black", fill = NA, na.rm = TRUE) +
+  labs(y = "Mental fatigue score", col = "",
+       x = "Work from home setup",
+       title = "**Mental fatigue score** vs **Work from home setup**") +
+  scale_color_viridis_d(option = "C") +
+  coord_flip() +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+Again this is of course very similar to the main effect of the `wfh_setup_available` variable as the outcome and the feature `mental_fatigue_score` are highly linearly correlated.
+
+#### Designation vs the remaining
+
+```{r, echo=FALSE}
+burnout_train %>%
+  group_by(designation, resource_allocation) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = factor(designation),
+             y = factor(resource_allocation),
+             fill = count,
+             label = as.character(count))) +
+  geom_tile() +
+  geom_text() +
+  scale_fill_viridis_c(option = "C") +
+  labs(x = "Level of designation",
+       y = "Resource allocation",
+       title = "**Designation** vs **Resource allocation**") +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+Here a strong quite linear relationship is visible. This is sensible as often more resource responsibility is given to employees with high designation.
+
+
+The last two relationships will be omitted here as both for the variable `designation` as well as for `resource_allocation` the comparison with  `mental_fatigue_score` will be very similar to the main effect of the two variables. This comes again from the high correlation of the latter with the outcome.
+
+Overall some stronger and mainly less strong relationships between the predictors could be detected. Not like in ordinary least squares regression for gradient tree boosting no decorrelation and normalization of the features is needed. 
+
+
+### Some feature engineering
+
+The only variable that allows for some reasonable feature engineering is the date of joining predictor. One can try to extract some underlying patterns and see if an effect on the outcome is visible.
+
+First extract the day of the week:
+
+
+```{r echo=FALSE}
+burnout_train %>%
+  mutate(wday = lubridate::wday(date_of_joining),
+         wday = ordered(wday,
+      levels = c("2", "3", "4", "5", "6", "7", "1"),
+      labels = c(
+        "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday",
+        "Sunday"
+      )
+    )) %>%
+  ggplot(
+       aes(x = as.factor(wday),
+           y = burn_rate,
+           col = as.factor(wday))
+         ) +
+  geom_jitter(alpha = 0.1) +
+  geom_boxplot(size = 0.8, col = "black", fill = NA) +
+  labs(x = "Weekday", y = "Burn rate", col = "",
+       title = "Main effect of the variable **Weekday**") +
+  scale_color_viridis_d(option = "C") +
+  coord_flip() +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+No main effect is visible here. So try the month next.
+
+
+```{r echo=FALSE}
+burnout_train %>%
+  mutate(wday = lubridate::month(date_of_joining)) %>%
+  ggplot(
+       aes(x = as.factor(wday),
+           y = burn_rate,
+           col = as.factor(wday))
+         ) +
+  geom_jitter(alpha = 0.1) +
+  geom_boxplot(size = 0.8, col = "black", fill = NA) +
+  labs(x = "Month", y = "Burn rate", col = "",
+       title = "Main effect of the variable **Month**") +
+  scale_color_viridis_d(option = "C") +
+  coord_flip() +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+Again no main effect is visible.
+
+Nevertheless one can include those two variables into the model because as mentioned before tree-based models actually perform a feature selection at each split. So including these just comes only at a small computational cost. This minimal pre-processing that is needed when dealing with tree-based models is actually one of its biggest strengths. It is very robust against any kind of weird selection of features. This is one of the reasons beside the strong predictive power for the heavy use of such models in data mining applications.[@elements]
+
+### Create the recipe
+
+A recipe is an object that defines a series of steps for data pre-processing and feature engineering.
+
+```{r recipeBurn}
+### recipe for xgboost (nominal variables must be dummy variables)
+# define outcome, predictors and training data set
+burnout_rec_boost <- recipe(burn_rate ~ date_of_joining + gender +
+                            company_type + wfh_setup_available +
+                            designation + resource_allocation +
+                            mental_fatigue_score,
+                            data = burnout_train) %>%
+  # extract the date features day of the week and month
+  step_date(date_of_joining, features = c("dow", "month")) %>%
+  # dummify all nominal features
+  step_dummy(all_nominal()) %>%
+  # encode the date as integers
+  step_mutate(date_of_joining = as.integer(date_of_joining))
+
+### recipe for a random forest model for comparison (no dummy encoding needed)
+# same as above without dummification
+burnout_rec_rf <- recipe(burn_rate ~ date_of_joining + gender +
+                         company_type + wfh_setup_available +
+                         designation + resource_allocation +
+                         mental_fatigue_score,
+                         data = burnout_train) %>%
+  step_date(date_of_joining, features = c("dow", "month")) %>%
+  step_mutate(date_of_joining = as.integer(date_of_joining))
 ```
