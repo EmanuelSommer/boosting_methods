@@ -169,6 +169,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="4.1.6" data-path="eda.html"><a href="eda.html#some-feature-engineering"><i class="fa fa-check"></i><b>4.1.6</b> Some feature engineering</a></li>
 <li class="chapter" data-level="4.1.7" data-path="eda.html"><a href="eda.html#create-the-recipe"><i class="fa fa-check"></i><b>4.1.7</b> Create the recipe</a></li>
 </ul></li>
+<li class="chapter" data-level="4.2" data-path="eda.html"><a href="eda.html#insurence-data"><i class="fa fa-check"></i><b>4.2</b> Insurence data</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="eda.html"><a href="eda.html#train-test-split-1"><i class="fa fa-check"></i><b>4.2.1</b> Train-test split</a></li>
+<li class="chapter" data-level="4.2.2" data-path="eda.html"><a href="eda.html#a-general-overview"><i class="fa fa-check"></i><b>4.2.2</b> A general overview</a></li>
+<li class="chapter" data-level="4.2.3" data-path="eda.html"><a href="eda.html#what-about-the-outcome"><i class="fa fa-check"></i><b>4.2.3</b> What about the outcome?</a></li>
+<li class="chapter" data-level="4.2.4" data-path="eda.html"><a href="eda.html#distribution-and-main-effects-of-the-predictors-1"><i class="fa fa-check"></i><b>4.2.4</b> Distribution and main effects of the predictors</a></li>
+<li class="chapter" data-level="4.2.5" data-path="eda.html"><a href="eda.html#relationships-between-the-predictors-1"><i class="fa fa-check"></i><b>4.2.5</b> Relationships between the predictors</a></li>
+<li class="chapter" data-level="4.2.6" data-path="eda.html"><a href="eda.html#create-the-recipe-1"><i class="fa fa-check"></i><b>4.2.6</b> Create the recipe</a></li>
+</ul></li>
 </ul></li>
 <li class="chapter" data-level="5" data-path="modeling.html"><a href="modeling.html"><i class="fa fa-check"></i><b>5</b> Let’s boost the models</a></li>
 <li class="chapter" data-level="6" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>6</b> Conclusion</a></li>
@@ -193,29 +202,35 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div id="modeling" class="section level1" number="5">
 <h1><span class="header-section-number">Chapter 5</span> Let’s boost the models</h1>
 <p>For modeling two additional packages are required.<span class="citation">[<a href="references.html#ref-ranger_package" role="doc-biblioref">14</a>]</span></p>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="modeling.html#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)</span>
-<span id="cb28-2"><a href="modeling.html#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger)</span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="modeling.html#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)</span></code></pre></div>
+<pre><code>## Warning: package &#39;xgboost&#39; was built under R version 4.0.3</code></pre>
+<pre><code>## 
+## Attaching package: &#39;xgboost&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:dplyr&#39;:
+## 
+##     slice</code></pre>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="modeling.html#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger)</span></code></pre></div>
 <p>First one has to set a metric for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the <span class="math inline">\(L_1\)</span> norm of performance metrics.</p>
 <p>The first thing is to set up some trivial benchmark models.</p>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="modeling.html#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the trivial intercept only model:</span></span>
-<span id="cb29-2"><a href="modeling.html#cb29-2" aria-hidden="true" tabindex="-1"></a>predict_trivial_mean <span class="ot">&lt;-</span> <span class="cf">function</span>(new_data) {</span>
-<span id="cb29-3"><a href="modeling.html#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rep</span>(<span class="fu">mean</span>(burnout_train<span class="sc">$</span>burn_rate), <span class="fu">nrow</span>(new_data))</span>
-<span id="cb29-4"><a href="modeling.html#cb29-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb29-5"><a href="modeling.html#cb29-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-6"><a href="modeling.html#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="co"># the trivial scoring of mental fatigue score (if missing intercept model)</span></span>
-<span id="cb29-7"><a href="modeling.html#cb29-7" aria-hidden="true" tabindex="-1"></a>predict_trivial_mfs <span class="ot">&lt;-</span> <span class="cf">function</span>(new_data) {</span>
-<span id="cb29-8"><a href="modeling.html#cb29-8" aria-hidden="true" tabindex="-1"></a>  pred <span class="ot">&lt;-</span> new_data[[<span class="st">&quot;mental_fatigue_score&quot;</span>]] <span class="sc">/</span> <span class="dv">10</span></span>
-<span id="cb29-9"><a href="modeling.html#cb29-9" aria-hidden="true" tabindex="-1"></a>  pred[<span class="fu">is.na</span>(pred)] <span class="ot">&lt;-</span> <span class="fu">mean</span>(burnout_train<span class="sc">$</span>burn_rate)</span>
-<span id="cb29-10"><a href="modeling.html#cb29-10" aria-hidden="true" tabindex="-1"></a>  pred</span>
-<span id="cb29-11"><a href="modeling.html#cb29-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="modeling.html#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the trivial intercept only model:</span></span>
+<span id="cb46-2"><a href="modeling.html#cb46-2" aria-hidden="true" tabindex="-1"></a>predict_trivial_mean <span class="ot">&lt;-</span> <span class="cf">function</span>(new_data) {</span>
+<span id="cb46-3"><a href="modeling.html#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rep</span>(<span class="fu">mean</span>(burnout_train<span class="sc">$</span>burn_rate), <span class="fu">nrow</span>(new_data))</span>
+<span id="cb46-4"><a href="modeling.html#cb46-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb46-5"><a href="modeling.html#cb46-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-6"><a href="modeling.html#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="co"># the trivial scoring of mental fatigue score (if missing intercept model)</span></span>
+<span id="cb46-7"><a href="modeling.html#cb46-7" aria-hidden="true" tabindex="-1"></a>predict_trivial_mfs <span class="ot">&lt;-</span> <span class="cf">function</span>(new_data) {</span>
+<span id="cb46-8"><a href="modeling.html#cb46-8" aria-hidden="true" tabindex="-1"></a>  pred <span class="ot">&lt;-</span> new_data[[<span class="st">&quot;mental_fatigue_score&quot;</span>]] <span class="sc">/</span> <span class="dv">10</span></span>
+<span id="cb46-9"><a href="modeling.html#cb46-9" aria-hidden="true" tabindex="-1"></a>  pred[<span class="fu">is.na</span>(pred)] <span class="ot">&lt;-</span> <span class="fu">mean</span>(burnout_train<span class="sc">$</span>burn_rate)</span>
+<span id="cb46-10"><a href="modeling.html#cb46-10" aria-hidden="true" tabindex="-1"></a>  pred</span>
+<span id="cb46-11"><a href="modeling.html#cb46-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
 <p>Evaluate the performance of the two models on the training data. In the end of this section they will be applied to the test data set alongside the other models.</p>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="modeling.html#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># intercept only model</span></span>
-<span id="cb30-2"><a href="modeling.html#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mae_vec</span>(<span class="at">truth =</span> burnout_train<span class="sc">$</span>burn_rate,</span>
-<span id="cb30-3"><a href="modeling.html#cb30-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">estimate =</span> <span class="fu">predict_trivial_mean</span>(burnout_train))</span></code></pre></div>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="modeling.html#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># intercept only model</span></span>
+<span id="cb47-2"><a href="modeling.html#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mae_vec</span>(<span class="at">truth =</span> burnout_train<span class="sc">$</span>burn_rate,</span>
+<span id="cb47-3"><a href="modeling.html#cb47-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">estimate =</span> <span class="fu">predict_trivial_mean</span>(burnout_train))</span></code></pre></div>
 <pre><code>## [1] 0.1596372</code></pre>
-<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="modeling.html#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># trivial mixed model</span></span>
-<span id="cb32-2"><a href="modeling.html#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mae_vec</span>(<span class="at">truth =</span> burnout_train<span class="sc">$</span>burn_rate,</span>
-<span id="cb32-3"><a href="modeling.html#cb32-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">estimate =</span> <span class="fu">predict_trivial_mfs</span>(burnout_train))</span></code></pre></div>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="modeling.html#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># trivial mixed model</span></span>
+<span id="cb49-2"><a href="modeling.html#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mae_vec</span>(<span class="at">truth =</span> burnout_train<span class="sc">$</span>burn_rate,</span>
+<span id="cb49-3"><a href="modeling.html#cb49-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">estimate =</span> <span class="fu">predict_trivial_mfs</span>(burnout_train))</span></code></pre></div>
 <pre><code>## [1] 0.1262089</code></pre>
 <p>To do</p>
 <ol style="list-style-type: decimal">
@@ -228,113 +243,113 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><p>save final model</p></li>
 </ol>
 <p>cite <span class="citation">[<a href="references.html#ref-doParallel_package" role="doc-biblioref">15</a>]</span></p>
-<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="modeling.html#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(doParallel)</span>
-<span id="cb34-2"><a href="modeling.html#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-3"><a href="modeling.html#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a cluster object and then register: </span></span>
-<span id="cb34-4"><a href="modeling.html#cb34-4" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> <span class="fu">makePSOCKcluster</span>(<span class="dv">2</span>)</span>
-<span id="cb34-5"><a href="modeling.html#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="fu">registerDoParallel</span>(cl)</span>
-<span id="cb34-6"><a href="modeling.html#cb34-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-7"><a href="modeling.html#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Put at the end:</span></span>
-<span id="cb34-8"><a href="modeling.html#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="fu">stopCluster</span>(cl)</span></code></pre></div>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="modeling.html#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(doParallel)</span>
+<span id="cb51-2"><a href="modeling.html#cb51-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-3"><a href="modeling.html#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a cluster object and then register: </span></span>
+<span id="cb51-4"><a href="modeling.html#cb51-4" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> <span class="fu">makePSOCKcluster</span>(<span class="dv">2</span>)</span>
+<span id="cb51-5"><a href="modeling.html#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="fu">registerDoParallel</span>(cl)</span>
+<span id="cb51-6"><a href="modeling.html#cb51-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-7"><a href="modeling.html#cb51-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Put at the end:</span></span>
+<span id="cb51-8"><a href="modeling.html#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="fu">stopCluster</span>(cl)</span></code></pre></div>
 <p>for 2. set engine specific arguments in the set_engine() function use tune() for parameters that should be tuned (optional tune(“id_name”))</p>
-<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="modeling.html#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Models:</span></span>
-<span id="cb35-2"><a href="modeling.html#cb35-2" aria-hidden="true" tabindex="-1"></a>lm_model <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb35-3"><a href="modeling.html#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;lm&quot;</span>)</span>
-<span id="cb35-4"><a href="modeling.html#cb35-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-5"><a href="modeling.html#cb35-5" aria-hidden="true" tabindex="-1"></a>rf_model <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">trees =</span> <span class="dv">1000</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb35-6"><a href="modeling.html#cb35-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;ranger&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb35-7"><a href="modeling.html#cb35-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span>
-<span id="cb35-8"><a href="modeling.html#cb35-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-9"><a href="modeling.html#cb35-9" aria-hidden="true" tabindex="-1"></a>boost_model <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb35-10"><a href="modeling.html#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;xgboost&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb35-11"><a href="modeling.html#cb35-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="modeling.html#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Workflows:</span></span>
-<span id="cb36-2"><a href="modeling.html#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-3"><a href="modeling.html#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="co"># lm_wflow &lt;- </span></span>
-<span id="cb36-4"><a href="modeling.html#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   workflow() %&gt;% </span></span>
-<span id="cb36-5"><a href="modeling.html#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   add_model(lm_model) %&gt;% </span></span>
-<span id="cb36-6"><a href="modeling.html#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   add_recipe()</span></span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="modeling.html#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Models:</span></span>
+<span id="cb52-2"><a href="modeling.html#cb52-2" aria-hidden="true" tabindex="-1"></a>lm_model <span class="ot">&lt;-</span> <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb52-3"><a href="modeling.html#cb52-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;lm&quot;</span>)</span>
+<span id="cb52-4"><a href="modeling.html#cb52-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-5"><a href="modeling.html#cb52-5" aria-hidden="true" tabindex="-1"></a>rf_model <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">trees =</span> <span class="dv">1000</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb52-6"><a href="modeling.html#cb52-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;ranger&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb52-7"><a href="modeling.html#cb52-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span>
+<span id="cb52-8"><a href="modeling.html#cb52-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-9"><a href="modeling.html#cb52-9" aria-hidden="true" tabindex="-1"></a>boost_model <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb52-10"><a href="modeling.html#cb52-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;xgboost&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb52-11"><a href="modeling.html#cb52-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="modeling.html#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Workflows:</span></span>
+<span id="cb53-2"><a href="modeling.html#cb53-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-3"><a href="modeling.html#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="co"># lm_wflow &lt;- </span></span>
+<span id="cb53-4"><a href="modeling.html#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   workflow() %&gt;% </span></span>
+<span id="cb53-5"><a href="modeling.html#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   add_model(lm_model) %&gt;% </span></span>
+<span id="cb53-6"><a href="modeling.html#cb53-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   add_recipe()</span></span></code></pre></div>
 <p>for 3.</p>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="modeling.html#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create Resampling objects</span></span>
-<span id="cb37-2"><a href="modeling.html#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="co"># set.seed(2)</span></span>
-<span id="cb37-3"><a href="modeling.html#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ames_folds &lt;- vfold_cv(ames_train, v = 10)</span></span></code></pre></div>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="modeling.html#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create Resampling objects</span></span>
+<span id="cb54-2"><a href="modeling.html#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="co"># set.seed(2)</span></span>
+<span id="cb54-3"><a href="modeling.html#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ames_folds &lt;- vfold_cv(ames_train, v = 10)</span></span></code></pre></div>
 <p>for fitting resampling objects without tuning:</p>
-<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="modeling.html#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set.seed(2)</span></span>
-<span id="cb38-2"><a href="modeling.html#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="co"># rf_res &lt;- rf_wflow %&gt;% </span></span>
-<span id="cb38-3"><a href="modeling.html#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   fit_resamples(resamples = ames_folds)</span></span>
-<span id="cb38-4"><a href="modeling.html#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="co"># # collect the metrics during resampling with</span></span>
-<span id="cb38-5"><a href="modeling.html#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="co"># collect_metrics()</span></span></code></pre></div>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="modeling.html#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set.seed(2)</span></span>
+<span id="cb55-2"><a href="modeling.html#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="co"># rf_res &lt;- rf_wflow %&gt;% </span></span>
+<span id="cb55-3"><a href="modeling.html#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   fit_resamples(resamples = ames_folds)</span></span>
+<span id="cb55-4"><a href="modeling.html#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="co"># # collect the metrics during resampling with</span></span>
+<span id="cb55-5"><a href="modeling.html#cb55-5" aria-hidden="true" tabindex="-1"></a><span class="co"># collect_metrics()</span></span></code></pre></div>
 <p>for 4. and following</p>
-<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="modeling.html#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># show the parameters to be tuned with the range</span></span>
-<span id="cb39-2"><a href="modeling.html#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="co"># dials::parameters()</span></span>
-<span id="cb39-3"><a href="modeling.html#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="co"># get and modify the parameters to be tuned with:</span></span>
-<span id="cb39-4"><a href="modeling.html#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="co"># name()</span></span>
-<span id="cb39-5"><a href="modeling.html#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="co"># wflow_param %&gt;% pull_dials_object(&quot;threshold&quot;)</span></span>
-<span id="cb39-6"><a href="modeling.html#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="co"># parameters(ames_rec) %&gt;% </span></span>
-<span id="cb39-7"><a href="modeling.html#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="co">#  update(threshold = threshold(c(0.8, 1.0)))</span></span>
-<span id="cb39-8"><a href="modeling.html#cb39-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-9"><a href="modeling.html#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="co"># finalize for data dependent params</span></span>
-<span id="cb39-10"><a href="modeling.html#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="co"># updated_param &lt;- </span></span>
-<span id="cb39-11"><a href="modeling.html#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="co">#   workflow() %&gt;% </span></span>
-<span id="cb39-12"><a href="modeling.html#cb39-12" aria-hidden="true" tabindex="-1"></a><span class="co">#   add_model(rf_spec) %&gt;% </span></span>
-<span id="cb39-13"><a href="modeling.html#cb39-13" aria-hidden="true" tabindex="-1"></a><span class="co">#   add_recipe(pca_rec) %&gt;% </span></span>
-<span id="cb39-14"><a href="modeling.html#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="co">#   parameters() %&gt;% </span></span>
-<span id="cb39-15"><a href="modeling.html#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="co">#   finalize(ames_train)</span></span></code></pre></div>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="modeling.html#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># show the parameters to be tuned with the range</span></span>
+<span id="cb56-2"><a href="modeling.html#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="co"># dials::parameters()</span></span>
+<span id="cb56-3"><a href="modeling.html#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="co"># get and modify the parameters to be tuned with:</span></span>
+<span id="cb56-4"><a href="modeling.html#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="co"># name()</span></span>
+<span id="cb56-5"><a href="modeling.html#cb56-5" aria-hidden="true" tabindex="-1"></a><span class="co"># wflow_param %&gt;% pull_dials_object(&quot;threshold&quot;)</span></span>
+<span id="cb56-6"><a href="modeling.html#cb56-6" aria-hidden="true" tabindex="-1"></a><span class="co"># parameters(ames_rec) %&gt;% </span></span>
+<span id="cb56-7"><a href="modeling.html#cb56-7" aria-hidden="true" tabindex="-1"></a><span class="co">#  update(threshold = threshold(c(0.8, 1.0)))</span></span>
+<span id="cb56-8"><a href="modeling.html#cb56-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-9"><a href="modeling.html#cb56-9" aria-hidden="true" tabindex="-1"></a><span class="co"># finalize for data dependent params</span></span>
+<span id="cb56-10"><a href="modeling.html#cb56-10" aria-hidden="true" tabindex="-1"></a><span class="co"># updated_param &lt;- </span></span>
+<span id="cb56-11"><a href="modeling.html#cb56-11" aria-hidden="true" tabindex="-1"></a><span class="co">#   workflow() %&gt;% </span></span>
+<span id="cb56-12"><a href="modeling.html#cb56-12" aria-hidden="true" tabindex="-1"></a><span class="co">#   add_model(rf_spec) %&gt;% </span></span>
+<span id="cb56-13"><a href="modeling.html#cb56-13" aria-hidden="true" tabindex="-1"></a><span class="co">#   add_recipe(pca_rec) %&gt;% </span></span>
+<span id="cb56-14"><a href="modeling.html#cb56-14" aria-hidden="true" tabindex="-1"></a><span class="co">#   parameters() %&gt;% </span></span>
+<span id="cb56-15"><a href="modeling.html#cb56-15" aria-hidden="true" tabindex="-1"></a><span class="co">#   finalize(ames_train)</span></span></code></pre></div>
 <p>grids: grid_regular(levels = c(hidden_units = 3, penalty = 2, epochs = 2)) space filling: grid_latin_hypercube(size = 15, original = FALSE) then tune_grid() function instead of fit_resamples</p>
-<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="modeling.html#cb40-1" aria-hidden="true" tabindex="-1"></a>roc_res <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(roc_auc)</span>
-<span id="cb40-2"><a href="modeling.html#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">99</span>)</span>
-<span id="cb40-3"><a href="modeling.html#cb40-3" aria-hidden="true" tabindex="-1"></a>mlp_reg_tune <span class="ot">&lt;-</span></span>
-<span id="cb40-4"><a href="modeling.html#cb40-4" aria-hidden="true" tabindex="-1"></a>  mlp_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb40-5"><a href="modeling.html#cb40-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tune_grid</span>(</span>
-<span id="cb40-6"><a href="modeling.html#cb40-6" aria-hidden="true" tabindex="-1"></a>    cell_folds,</span>
-<span id="cb40-7"><a href="modeling.html#cb40-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">grid =</span> mlp_param <span class="sc">%&gt;%</span> <span class="fu">grid_regular</span>(<span class="at">levels =</span> <span class="dv">3</span>),</span>
-<span id="cb40-8"><a href="modeling.html#cb40-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">metrics =</span> roc_res</span>
-<span id="cb40-9"><a href="modeling.html#cb40-9" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb40-10"><a href="modeling.html#cb40-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-11"><a href="modeling.html#cb40-11" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(mlp_reg_tune) <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;top&quot;</span>)</span>
-<span id="cb40-12"><a href="modeling.html#cb40-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-13"><a href="modeling.html#cb40-13" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(mlp_reg_tune)</span>
-<span id="cb40-14"><a href="modeling.html#cb40-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-15"><a href="modeling.html#cb40-15" aria-hidden="true" tabindex="-1"></a><span class="co"># for spacefilling</span></span>
-<span id="cb40-16"><a href="modeling.html#cb40-16" aria-hidden="true" tabindex="-1"></a>mlp_sfd_tune <span class="ot">&lt;-</span></span>
-<span id="cb40-17"><a href="modeling.html#cb40-17" aria-hidden="true" tabindex="-1"></a>  mlp_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb40-18"><a href="modeling.html#cb40-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tune_grid</span>(</span>
-<span id="cb40-19"><a href="modeling.html#cb40-19" aria-hidden="true" tabindex="-1"></a>    cell_folds,</span>
-<span id="cb40-20"><a href="modeling.html#cb40-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">grid =</span> <span class="dv">20</span>,</span>
-<span id="cb40-21"><a href="modeling.html#cb40-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Pass in the parameter object to use the appropriate range: </span></span>
-<span id="cb40-22"><a href="modeling.html#cb40-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">param_info =</span> mlp_param,</span>
-<span id="cb40-23"><a href="modeling.html#cb40-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">metrics =</span> roc_res</span>
-<span id="cb40-24"><a href="modeling.html#cb40-24" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb40-25"><a href="modeling.html#cb40-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb40-26"><a href="modeling.html#cb40-26" aria-hidden="true" tabindex="-1"></a><span class="fu">select_best</span>()</span></code></pre></div>
-<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="modeling.html#cb41-1" aria-hidden="true" tabindex="-1"></a>logistic_param <span class="ot">&lt;-</span> </span>
-<span id="cb41-2"><a href="modeling.html#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
-<span id="cb41-3"><a href="modeling.html#cb41-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">num_comp =</span> <span class="dv">0</span>,</span>
-<span id="cb41-4"><a href="modeling.html#cb41-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">epochs =</span> <span class="dv">125</span>,</span>
-<span id="cb41-5"><a href="modeling.html#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">hidden_units =</span> <span class="dv">1</span>,</span>
-<span id="cb41-6"><a href="modeling.html#cb41-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">penalty =</span> <span class="dv">1</span></span>
-<span id="cb41-7"><a href="modeling.html#cb41-7" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb41-8"><a href="modeling.html#cb41-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-9"><a href="modeling.html#cb41-9" aria-hidden="true" tabindex="-1"></a>final_mlp_wflow <span class="ot">&lt;-</span> </span>
-<span id="cb41-10"><a href="modeling.html#cb41-10" aria-hidden="true" tabindex="-1"></a>  mlp_wflow <span class="sc">%&gt;%</span> </span>
-<span id="cb41-11"><a href="modeling.html#cb41-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(logistic_param)</span>
-<span id="cb41-12"><a href="modeling.html#cb41-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb41-13"><a href="modeling.html#cb41-13" aria-hidden="true" tabindex="-1"></a>final_mlp_fit <span class="ot">&lt;-</span> </span>
-<span id="cb41-14"><a href="modeling.html#cb41-14" aria-hidden="true" tabindex="-1"></a>  final_mlp_wflow <span class="sc">%&gt;%</span> </span>
-<span id="cb41-15"><a href="modeling.html#cb41-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(cells)</span></code></pre></div>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="modeling.html#cb57-1" aria-hidden="true" tabindex="-1"></a>roc_res <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(roc_auc)</span>
+<span id="cb57-2"><a href="modeling.html#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">99</span>)</span>
+<span id="cb57-3"><a href="modeling.html#cb57-3" aria-hidden="true" tabindex="-1"></a>mlp_reg_tune <span class="ot">&lt;-</span></span>
+<span id="cb57-4"><a href="modeling.html#cb57-4" aria-hidden="true" tabindex="-1"></a>  mlp_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb57-5"><a href="modeling.html#cb57-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tune_grid</span>(</span>
+<span id="cb57-6"><a href="modeling.html#cb57-6" aria-hidden="true" tabindex="-1"></a>    cell_folds,</span>
+<span id="cb57-7"><a href="modeling.html#cb57-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">grid =</span> mlp_param <span class="sc">%&gt;%</span> <span class="fu">grid_regular</span>(<span class="at">levels =</span> <span class="dv">3</span>),</span>
+<span id="cb57-8"><a href="modeling.html#cb57-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">metrics =</span> roc_res</span>
+<span id="cb57-9"><a href="modeling.html#cb57-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb57-10"><a href="modeling.html#cb57-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-11"><a href="modeling.html#cb57-11" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(mlp_reg_tune) <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;top&quot;</span>)</span>
+<span id="cb57-12"><a href="modeling.html#cb57-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-13"><a href="modeling.html#cb57-13" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(mlp_reg_tune)</span>
+<span id="cb57-14"><a href="modeling.html#cb57-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-15"><a href="modeling.html#cb57-15" aria-hidden="true" tabindex="-1"></a><span class="co"># for spacefilling</span></span>
+<span id="cb57-16"><a href="modeling.html#cb57-16" aria-hidden="true" tabindex="-1"></a>mlp_sfd_tune <span class="ot">&lt;-</span></span>
+<span id="cb57-17"><a href="modeling.html#cb57-17" aria-hidden="true" tabindex="-1"></a>  mlp_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb57-18"><a href="modeling.html#cb57-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tune_grid</span>(</span>
+<span id="cb57-19"><a href="modeling.html#cb57-19" aria-hidden="true" tabindex="-1"></a>    cell_folds,</span>
+<span id="cb57-20"><a href="modeling.html#cb57-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">grid =</span> <span class="dv">20</span>,</span>
+<span id="cb57-21"><a href="modeling.html#cb57-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Pass in the parameter object to use the appropriate range: </span></span>
+<span id="cb57-22"><a href="modeling.html#cb57-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">param_info =</span> mlp_param,</span>
+<span id="cb57-23"><a href="modeling.html#cb57-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">metrics =</span> roc_res</span>
+<span id="cb57-24"><a href="modeling.html#cb57-24" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb57-25"><a href="modeling.html#cb57-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-26"><a href="modeling.html#cb57-26" aria-hidden="true" tabindex="-1"></a><span class="fu">select_best</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="modeling.html#cb58-1" aria-hidden="true" tabindex="-1"></a>logistic_param <span class="ot">&lt;-</span> </span>
+<span id="cb58-2"><a href="modeling.html#cb58-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
+<span id="cb58-3"><a href="modeling.html#cb58-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">num_comp =</span> <span class="dv">0</span>,</span>
+<span id="cb58-4"><a href="modeling.html#cb58-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">epochs =</span> <span class="dv">125</span>,</span>
+<span id="cb58-5"><a href="modeling.html#cb58-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">hidden_units =</span> <span class="dv">1</span>,</span>
+<span id="cb58-6"><a href="modeling.html#cb58-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">penalty =</span> <span class="dv">1</span></span>
+<span id="cb58-7"><a href="modeling.html#cb58-7" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb58-8"><a href="modeling.html#cb58-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-9"><a href="modeling.html#cb58-9" aria-hidden="true" tabindex="-1"></a>final_mlp_wflow <span class="ot">&lt;-</span> </span>
+<span id="cb58-10"><a href="modeling.html#cb58-10" aria-hidden="true" tabindex="-1"></a>  mlp_wflow <span class="sc">%&gt;%</span> </span>
+<span id="cb58-11"><a href="modeling.html#cb58-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(logistic_param)</span>
+<span id="cb58-12"><a href="modeling.html#cb58-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-13"><a href="modeling.html#cb58-13" aria-hidden="true" tabindex="-1"></a>final_mlp_fit <span class="ot">&lt;-</span> </span>
+<span id="cb58-14"><a href="modeling.html#cb58-14" aria-hidden="true" tabindex="-1"></a>  final_mlp_wflow <span class="sc">%&gt;%</span> </span>
+<span id="cb58-15"><a href="modeling.html#cb58-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(cells)</span></code></pre></div>
 <p>Racing:</p>
-<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="modeling.html#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(finetune) <span class="co"># if used to be cited</span></span>
-<span id="cb42-2"><a href="modeling.html#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-3"><a href="modeling.html#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">99</span>)</span>
-<span id="cb42-4"><a href="modeling.html#cb42-4" aria-hidden="true" tabindex="-1"></a>mlp_sfd_race <span class="ot">&lt;-</span></span>
-<span id="cb42-5"><a href="modeling.html#cb42-5" aria-hidden="true" tabindex="-1"></a>  mlp_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb42-6"><a href="modeling.html#cb42-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tune_race_anova</span>(</span>
-<span id="cb42-7"><a href="modeling.html#cb42-7" aria-hidden="true" tabindex="-1"></a>    cell_folds,</span>
-<span id="cb42-8"><a href="modeling.html#cb42-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">grid =</span> <span class="dv">20</span>,</span>
-<span id="cb42-9"><a href="modeling.html#cb42-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">param_info =</span> mlp_param,</span>
-<span id="cb42-10"><a href="modeling.html#cb42-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">metrics =</span> roc_res,</span>
-<span id="cb42-11"><a href="modeling.html#cb42-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">control =</span> <span class="fu">control_race</span>(<span class="at">verbose_elim =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb42-12"><a href="modeling.html#cb42-12" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="modeling.html#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(finetune) <span class="co"># if used to be cited</span></span>
+<span id="cb59-2"><a href="modeling.html#cb59-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-3"><a href="modeling.html#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">99</span>)</span>
+<span id="cb59-4"><a href="modeling.html#cb59-4" aria-hidden="true" tabindex="-1"></a>mlp_sfd_race <span class="ot">&lt;-</span></span>
+<span id="cb59-5"><a href="modeling.html#cb59-5" aria-hidden="true" tabindex="-1"></a>  mlp_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb59-6"><a href="modeling.html#cb59-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tune_race_anova</span>(</span>
+<span id="cb59-7"><a href="modeling.html#cb59-7" aria-hidden="true" tabindex="-1"></a>    cell_folds,</span>
+<span id="cb59-8"><a href="modeling.html#cb59-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">grid =</span> <span class="dv">20</span>,</span>
+<span id="cb59-9"><a href="modeling.html#cb59-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">param_info =</span> mlp_param,</span>
+<span id="cb59-10"><a href="modeling.html#cb59-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">metrics =</span> roc_res,</span>
+<span id="cb59-11"><a href="modeling.html#cb59-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">control =</span> <span class="fu">control_race</span>(<span class="at">verbose_elim =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb59-12"><a href="modeling.html#cb59-12" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
 <p>Here no iterative search as big parameter space, could be done after grid search or for single parameters. (If then Simulated Annealing)</p>
 
 </div>

@@ -36,7 +36,7 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \hypersetup{
-  pdftitle={Boosting methods: Theory and Application in R (XGBoost)},
+  pdftitle={Boosting methods: Theory and application in R},
   pdfauthor={Emanuel Sommer},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
@@ -136,9 +136,9 @@
 \newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
-\title{Boosting methods: Theory and Application in R (XGBoost)}
+\title{Boosting methods: Theory and application in R}
 \author{Emanuel Sommer}
-\date{2021-04-20}
+\date{2021-04-30}
 
 \begin{document}
 \maketitle
@@ -512,76 +512,757 @@ Note that the \(L_1\) penalization term would be added to the \(\Omega\) term in
 This closes the chapter on the theory of boosting methods with a focus on tree-based gradient boosting. The discussed tools will be put to the test in the subsequent sections where real world data will be analyzed with them.
 
 \hypertarget{eda}{%
-\chapter{Expore the data}\label{eda}}
+\chapter{Explore the data}\label{eda}}
 
-We use the following packages.\citep{tidyverse, tidymodels} and use the mantra of tidyverse as well as tidy modeling with R
+Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.\citetext{\citealp{tidyverse}; \citealp{tidymodels}; \citealp{viridis}; \citealp{ggtext}; \citealp[ ]{viridisLite}; \citealp{patchwork}; \citealp{visdat}; \citealp{lubridate}} The most important ones will be loaded below.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{library}\NormalTok{(tidyverse)}
-\FunctionTok{library}\NormalTok{(tidymodels)}
+\FunctionTok{library}\NormalTok{(tidyverse) }\CommentTok{\# general data handling tools}
+\FunctionTok{library}\NormalTok{(tidymodels) }\CommentTok{\# data modeling and preprocessing}
+\CommentTok{\# color palettes}
+\FunctionTok{library}\NormalTok{(viridis)}
+\FunctionTok{library}\NormalTok{(viridisLite)}
+\FunctionTok{library}\NormalTok{(patchwork) }\CommentTok{\# composing of ggplots}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{burnout-data}{%
+\section{Burnout data}\label{burnout-data}}
+
+The data is from the machine learning challenge \emph{HackerEarth Machine Learning Challenge: Are your employees burning out?}. And can be downloaded here: \url{https://www.kaggle.com/blurredmachine/are-your-employees-burning-out?select=train.csv}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# load the data}
+\NormalTok{burnout\_data }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"\_data/burn\_out\_train.csv"}\NormalTok{)}
+\CommentTok{\# convert colnames to snake\_case}
+\FunctionTok{colnames}\NormalTok{(burnout\_data) }\OtherTok{\textless{}{-}} \FunctionTok{tolower}\NormalTok{(}
+\NormalTok{  stringr}\SpecialCharTok{::}\FunctionTok{str\_replace\_all}\NormalTok{(}
+    \FunctionTok{colnames}\NormalTok{(burnout\_data),}
+    \StringTok{" "}\NormalTok{,}
+    \StringTok{"\_"}
+\NormalTok{  ))}
+\CommentTok{\# omit missing values in the outcome variable}
+\NormalTok{burnout\_data }\OtherTok{\textless{}{-}}\NormalTok{ burnout\_data[}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(burnout\_data}\SpecialCharTok{$}\NormalTok{burn\_rate),]}
 \end{Highlighting}
 \end{Shaded}
 
 \hypertarget{train-test-split}{%
-\section{Train-test split}\label{train-test-split}}
+\subsection{Train-test split}\label{train-test-split}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{2}\NormalTok{)}
-\CommentTok{\# ames\_split \textless{}{-} initial\_split(ames, prop = 0.80, strata = Sale\_Price)}
-\CommentTok{\# ames\_train \textless{}{-} training(ames\_split)}
-\CommentTok{\# ames\_test  \textless{}{-}  testing(ames\_split)}
+\NormalTok{burnout\_split }\OtherTok{\textless{}{-}}\NormalTok{ rsample}\SpecialCharTok{::}\FunctionTok{initial\_split}\NormalTok{(burnout\_data, }\AttributeTok{prop =} \FloatTok{0.80}\NormalTok{)}
+\NormalTok{burnout\_train }\OtherTok{\textless{}{-}}\NormalTok{ rsample}\SpecialCharTok{::}\FunctionTok{training}\NormalTok{(burnout\_split)}
+\NormalTok{burnout\_test  }\OtherTok{\textless{}{-}}\NormalTok{ rsample}\SpecialCharTok{::}\FunctionTok{testing}\NormalTok{(burnout\_split)}
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{visualize-the-data}{%
-\section{Visualize the data}\label{visualize-the-data}}
+The training data set contains 17301 rows and 9 variables.
 
-\begin{itemize}
-\item
-  pair plots
+The test data set contains 4325 observations and naturally also 9 variables.
 
-  \begin{itemize}
-  \item
-    indiviual main effects
-  \item
-    correlations
-  \end{itemize}
-\item
-  correlation plot
-\item
-  individual distributions
-\item
-  identify categorical features
-\item
-  feature engineering
-\end{itemize}
+\hypertarget{quick-general-overview}{%
+\subsection{Quick general overview}\label{quick-general-overview}}
 
-\hypertarget{create-recipe}{%
-\section{Create recipe}\label{create-recipe}}
+First look at the classes of the variables.
 
-one for lm (dummify categorical features) and one for the tree based approaches
+\begin{tabular}{l|l}
+\hline
+column & class\\
+\hline
+employee\_id & character\\
+\hline
+date\_of\_joining & Date\\
+\hline
+gender & character\\
+\hline
+company\_type & character\\
+\hline
+wfh\_setup\_available & character\\
+\hline
+designation & numeric\\
+\hline
+resource\_allocation & numeric\\
+\hline
+mental\_fatigue\_score & numeric\\
+\hline
+burn\_rate & numeric\\
+\hline
+\end{tabular}
+
+A general visualization to detect missing values.
+
+\includegraphics{boosting_methods_files/figure-latex/visdat-1.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# ames\_rec \textless{}{-} }
-\CommentTok{\#   recipe(Sale\_Price \textasciitilde{} Neighborhood + Gr\_Liv\_Area + Year\_Built + Bldg\_Type + }
-\CommentTok{\#            Latitude + Longitude, data = ames\_train) \%\textgreater{}\%}
-\CommentTok{\#   step\_log(Gr\_Liv\_Area, base = 10) \%\textgreater{}\% }
-\CommentTok{\#   step\_other(Neighborhood, threshold = 0.01) \%\textgreater{}\% }
-\CommentTok{\#   step\_dummy(all\_nominal()) \%\textgreater{}\% }
-\CommentTok{\#   step\_interact( \textasciitilde{} Gr\_Liv\_Area:starts\_with("Bldg\_Type\_") ) \%\textgreater{}\% }
-\CommentTok{\#   step\_ns(Latitude, Longitude, deg\_free = 20)}
+\CommentTok{\# percentage of missing values in the training data set}
+\FunctionTok{mean}\NormalTok{(}\FunctionTok{rowSums}\NormalTok{(}\FunctionTok{is.na}\NormalTok{(burnout\_train)) }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
+
+\begin{verbatim}
+## [1] 0.1407433
+\end{verbatim}
+
+As we know that XGBoost can handle missing values we do not have to be concerned. Although one can think about imputation. But more on that later.
+
+\hypertarget{what-about-the-outcome-variable}{%
+\subsection{What about the outcome variable?}\label{what-about-the-outcome-variable}}
+
+\texttt{burn\_rate}: For each employee telling the rate of burnout should be in \([0,1]\). The greater the score the worse the burnout (0 means no burnout at all). As the variable is continuous we have a regression task. Yet it has bounds which has to be treated with when predicting.
+
+The five point summary below shows that the full range is covered and no invalid values are in the data.
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  0.0000  0.3100  0.4500  0.4513  0.5900  1.0000
+\end{verbatim}
+
+Now the distribution of the outcome.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-5-1.pdf}
+
+The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region \([0,1]\) is covered quite well.
+
+\hypertarget{distribution-and-main-effects-of-the-predictors}{%
+\subsection{Distribution and main effects of the predictors}\label{distribution-and-main-effects-of-the-predictors}}
+
+\hypertarget{employee-id}{%
+\subsubsection{Employee ID}\label{employee-id}}
+
+\texttt{employee\_id} is just an ID variable and thus is not useful for any prediction model. But one has to check for duplicates.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# TRUE if there are NO duplicates}
+\NormalTok{burnout\_train }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(employee\_id) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{n =} \FunctionTok{n}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{nrow}\NormalTok{() }\SpecialCharTok{==} \FunctionTok{nrow}\NormalTok{(burnout\_train)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] TRUE
+\end{verbatim}
+
+Thus there are no duplicates which is good.
+
+\hypertarget{date-of-joining}{%
+\subsubsection{Date of joining}\label{date-of-joining}}
+
+\texttt{date\_of\_joining} is the date the employee has joined the company. Thus a continuous variable that most likely needs some kind of feature engineering.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-7-1.pdf}
+
+Although there is a lot of variation no major trends in hirings are visible from this plot. Overall the variable seems to be quite equally distributed over the year 2008.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+In its raw form the variable \texttt{date\_of\_joining} seems not to have a notable main effect on the outcome variable. Nevertheless the feature will be used in the model and as tree-based models have an in-built feature selection one can see after the fitting if the feature was helpful overall. The feature will not be included just as an integer (the default format how Dates are represented) but rather some more features like weekday or month will be extracted from the raw variable further down the road.
+
+\hypertarget{gender}{%
+\subsubsection{Gender}\label{gender}}
+
+\texttt{gender} represents the gender of the employee. Definitely a categorical variable.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# have a look at the discrete distribution}
+\FunctionTok{summary}\NormalTok{(}\FunctionTok{factor}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{gender))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Female   Male 
+##   9101   8200
+\end{verbatim}
+
+The two classes are well balanced. Now a look at the main effect of the feature.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+For both classes the distributions are very similar and symmetrical. It seems like the male employees have overall a slightly higher risk of having a higher burn score i.e.~a burnout.
+
+\hypertarget{company-type}{%
+\subsubsection{Company type}\label{company-type}}
+
+\texttt{company\_type} is a binary categorical variable that indicates whether the company is a service or product company.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# have a look at the discrete distribution}
+\FunctionTok{summary}\NormalTok{(}\FunctionTok{factor}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{company\_type))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Product Service 
+##    6018   11283
+\end{verbatim}
+
+In this case the classes are not fully balanced but each class is still well represented. Now a look at the main effect of the feature.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-12-1.pdf}
+
+For both classes the distributions are almost identical and symmetrical. From an univariate point of view no notable main effect is visible from these visualizations.
+
+\hypertarget{work-from-home-setup}{%
+\subsubsection{Work from home setup}\label{work-from-home-setup}}
+
+\texttt{wfh\_setup\_available} indicates whether a working from home setup is available for the employee. So this is again a binary variable.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# have a look at the discrete distribution}
+\FunctionTok{summary}\NormalTok{(}\FunctionTok{factor}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{wfh\_setup\_available))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   No  Yes 
+## 7929 9372
+\end{verbatim}
+
+The two classes are well balanced. Now a look at the main effect of the feature.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-14-1.pdf}
+
+Again both distributions are quite similar i.e.~bell shaped and symmetrical. Here quite a main effect is visible. A work from home setup most likely has a positive influence on the wellbeing and thus lowers the risk for a high burn rate.
+
+\hypertarget{designation}{%
+\subsubsection{Designation}\label{designation}}
+
+\texttt{designation} A rate within \([0,5]\) that represents the designation in the company for the employee. High values indicate a greater amount of designation.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# unique values of the feature}
+\FunctionTok{unique}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{designation)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 2 1 3 0 4 5
+\end{verbatim}
+
+As the feature has a natural ordering this variable will be treated as an ordinal one i.e.~be encoded with the integers and not by one-hot-encoding.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-16-1.pdf}
+
+Here clearly the more extreme levels of designation are less represented in the data. This makes total sense w.r.t. the meaning of the variable.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-17-1.pdf}
+
+A strong main effect is visible in the plot. The plot also further strengthens the hypothesis that we should treat the feature as ordinal. A higher level of designation seems to have an influence on the risk of having a burnout. For example employees from the training data set with a level of designation below 3 never even achieved a maximal burn score of one.
+
+\hypertarget{resource-allocation}{%
+\subsubsection{Resource allocation}\label{resource-allocation}}
+
+\texttt{resource\_allocation} A rate within \([1,10]\) that represents the resource allocation to the employee. High values indicate more resources allocated to the employee.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# unique values of the feature}
+\FunctionTok{unique}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{resource\_allocation)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  [1]  3  1  7  4  6  5  2 NA  8 10  9
+\end{verbatim}
+
+Here again the question is whether one should encode this variable as a categorical or an ordinal categorical feature. In this case as there are quite some levels and again a natural ordering the variable will be encoded as a continuous integer score.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-19-1.pdf}
+
+A similar behavior as the one of the previous variable is visible. But here there are some missing values (NA's).
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-20-1.pdf}
+
+A strong main effect is visible in the plot. The plot again further strengthens the hypothesis that we should treat this feature as ordinal. A higher amount of resources assigned to an employee seems to have a positive influence on the risk of having a burnout. The missing values do not seem to have some structure as they replicate the base distribution of the outcome variable.
+
+\hypertarget{mental-fatigue-score}{%
+\subsubsection{Mental fatigue score}\label{mental-fatigue-score}}
+
+\texttt{mental\_fatigue\_score} is the level of mental fatigue the employee is facing.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# number of unique values}
+\FunctionTok{length}\NormalTok{(}\FunctionTok{unique}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{mental\_fatigue\_score)) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 102
+\end{verbatim}
+
+This variable will without a question be treated in a continuous way.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-22-1.pdf}
+
+Although there is a very slight skew towards a higher mental fatigue score the overall distribution is still more or less bell shaped and quite symmetrical. Moreover the whole allowed range is covered and the bounds are not violated. Next the main effect of the variable.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-23-1.pdf}
+
+This scatterplot shows drastic results! The mental fatigue score has an almost perfect linear relationship with the outcome variable. This is also underlined by the very high pearson correlation. This indicates that mental fatigue score will be a most important predictor. If a communication with the data collector would be possible it would be important to check whether the two scores have common confounding variables as then one would have to question the practical usability of this predictor. This comes from the fact that no model would be needed if it was as hard to collect the data about the predictors as the outcome data. Moreover there are 1555 missing values in the feature so for those the model has to rely on the other maybe more weak predictors. It should be noted that when evaluating the final model one should consider to compare its performance to a trivial model (like a single intercept model). When constructing such a trivial model one could and maybe should also use this variable (when available) to get a trivial prediction by scaling the \texttt{mental\_fatigue\_score} feature by a simple scalar.
+
+\hypertarget{relationships-between-the-predictors}{%
+\subsection{Relationships between the predictors}\label{relationships-between-the-predictors}}
+
+\hypertarget{date-of-joining-vs.-the-others}{%
+\subsubsection{Date of joining vs.~the others}\label{date-of-joining-vs.-the-others}}
+
+\includegraphics[width=0.9\linewidth]{boosting_methods_files/figure-latex/ggpairs-1}
+
+No major relationship can be detected here.
+
+\hypertarget{gender-vs.-the-remaining}{%
+\subsubsection{Gender vs.~the remaining}\label{gender-vs.-the-remaining}}
+
+\textbf{Contingency tables for the comparison of two binary features:}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Gender vs Company type}
+\FunctionTok{table}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{gender, burnout\_train}\SpecialCharTok{$}\NormalTok{company\_type)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##         
+##          Product Service
+##   Female    3097    6004
+##   Male      2921    5279
+\end{verbatim}
+
+No huge tendency visible.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Gender vs Work from home setup}
+\FunctionTok{table}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{gender, burnout\_train}\SpecialCharTok{$}\NormalTok{wfh\_setup\_available)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##         
+##            No  Yes
+##   Female 3835 5266
+##   Male   4094 4106
+\end{verbatim}
+
+Slightly more women have a work from home setup available.
+
+\textbf{Now the ordinal variables:}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-27-1.pdf}
+
+It has to be noted again that female and male emplyees are almost equally represented in the data set. Thus one can see from the above plot that the biggest difference in distribution is for the levels 1 and 4 with opposing effects. While male employees more often have a quite high designation of 4 females are the much more frequent employee with designation level 1.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-28-1.pdf}
+
+Here a major shift in distribution is visible towards men getting more resources allocated to them. This reflects the society that still promotes men much more often to high paying jobs that most often come with resource responsibility.
+
+\textbf{Now the mental fatigue score:}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-29-1.pdf}
+
+This is of course very similar to the main effect of the \texttt{gender} variable as the outcome and the feature \texttt{mental\_fatigue\_score} are highly linearly correlated.
+
+\hypertarget{company-type-vs.-the-remaining}{%
+\subsubsection{Company type vs.~the remaining}\label{company-type-vs.-the-remaining}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Company type vs Work from home setup}
+\FunctionTok{table}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{company\_type, burnout\_train}\SpecialCharTok{$}\NormalTok{wfh\_setup\_available)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          
+##             No  Yes
+##   Product 2764 3254
+##   Service 5165 6118
+\end{verbatim}
+
+No notable trend.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-31-1.pdf}
+
+No trend here either.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-32-1.pdf}
+
+The same verdict as above.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-33-1.pdf}
+
+Once again there is no notable difference in distribution.
+
+\hypertarget{work-from-home-setup-vs.-the-remaining}{%
+\subsubsection{Work from home setup vs.~the remaining}\label{work-from-home-setup-vs.-the-remaining}}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-34-1.pdf}
+
+A work from home setup is way more often available for employees with a lower designation (\(\leq 2\)).
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-35-1.pdf}
+
+The same structure as in the previous comparison is visible here again. Employees with a lower amount of resources allocated to them have more often a work from home setup available. This could be due to the fewer responsibilities they have in the business.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-36-1.pdf}
+
+Again this is of course very similar to the main effect of the \texttt{wfh\_setup\_available} variable as the outcome and the feature \texttt{mental\_fatigue\_score} are highly linearly correlated.
+
+\hypertarget{designation-vs-the-remaining}{%
+\subsubsection{Designation vs the remaining}\label{designation-vs-the-remaining}}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-37-1.pdf}
+
+Here a strong quite linear relationship is visible. This is sensible as often more resource responsibility is given to employees with high designation.
+
+The last two relationships will be omitted here as both for the variable \texttt{designation} as well as for \texttt{resource\_allocation} the comparison with \texttt{mental\_fatigue\_score} will be very similar to the main effect of the two variables. This comes again from the high correlation of the latter with the outcome.
+
+Overall some stronger and mainly less strong relationships between the predictors could be detected. Not like in ordinary least squares regression for gradient tree boosting no decorrelation and normalization of the features is needed.
+
+\hypertarget{some-feature-engineering}{%
+\subsection{Some feature engineering}\label{some-feature-engineering}}
+
+The only variable that allows for some reasonable feature engineering is the date of joining predictor. One can try to extract some underlying patterns and see if an effect on the outcome is visible.
+
+First extract the day of the week:
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-38-1.pdf}
+
+No main effect is visible here. So try the month next.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-39-1.pdf}
+
+Again no main effect is visible.
+
+Nevertheless one can include those two variables into the model because as mentioned before tree-based models actually perform a feature selection at each split. So including these just comes only at a small computational cost. This minimal pre-processing that is needed when dealing with tree-based models is actually one of its biggest strengths. It is very robust against any kind of weird selection of features. This is one of the reasons beside the strong predictive power for the heavy use of such models in data mining applications.\citep{elements}
+
+\hypertarget{create-the-recipe}{%
+\subsection{Create the recipe}\label{create-the-recipe}}
+
+A recipe is an object that defines a series of steps for data pre-processing and feature engineering.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\#\# recipe for xgboost (nominal variables must be dummy variables)}
+\CommentTok{\# define outcome, predictors and training data set}
+\NormalTok{burnout\_rec\_boost }\OtherTok{\textless{}{-}} \FunctionTok{recipe}\NormalTok{(burn\_rate }\SpecialCharTok{\textasciitilde{}}\NormalTok{ date\_of\_joining }\SpecialCharTok{+}\NormalTok{ gender }\SpecialCharTok{+}
+\NormalTok{                            company\_type }\SpecialCharTok{+}\NormalTok{ wfh\_setup\_available }\SpecialCharTok{+}
+\NormalTok{                            designation }\SpecialCharTok{+}\NormalTok{ resource\_allocation }\SpecialCharTok{+}
+\NormalTok{                            mental\_fatigue\_score,}
+                            \AttributeTok{data =}\NormalTok{ burnout\_train) }\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\# extract the date features day of the week and month}
+  \FunctionTok{step\_date}\NormalTok{(date\_of\_joining, }\AttributeTok{features =} \FunctionTok{c}\NormalTok{(}\StringTok{"dow"}\NormalTok{, }\StringTok{"month"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\# dummify all nominal features}
+  \FunctionTok{step\_dummy}\NormalTok{(}\FunctionTok{all\_nominal}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\# encode the date as integers}
+  \FunctionTok{step\_mutate}\NormalTok{(}\AttributeTok{date\_of\_joining =} \FunctionTok{as.integer}\NormalTok{(date\_of\_joining))}
+
+\DocumentationTok{\#\#\# recipe for a random forest model for comparison (no dummy encoding needed)}
+\CommentTok{\# same as above without dummification}
+\NormalTok{burnout\_rec\_rf }\OtherTok{\textless{}{-}} \FunctionTok{recipe}\NormalTok{(burn\_rate }\SpecialCharTok{\textasciitilde{}}\NormalTok{ date\_of\_joining }\SpecialCharTok{+}\NormalTok{ gender }\SpecialCharTok{+}
+\NormalTok{                         company\_type }\SpecialCharTok{+}\NormalTok{ wfh\_setup\_available }\SpecialCharTok{+}
+\NormalTok{                         designation }\SpecialCharTok{+}\NormalTok{ resource\_allocation }\SpecialCharTok{+}
+\NormalTok{                         mental\_fatigue\_score,}
+                         \AttributeTok{data =}\NormalTok{ burnout\_train) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{step\_date}\NormalTok{(date\_of\_joining, }\AttributeTok{features =} \FunctionTok{c}\NormalTok{(}\StringTok{"dow"}\NormalTok{, }\StringTok{"month"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{step\_mutate}\NormalTok{(}\AttributeTok{date\_of\_joining =} \FunctionTok{as.integer}\NormalTok{(date\_of\_joining))}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{insurence-data}{%
+\section{Insurence data}\label{insurence-data}}
+
+The insurance data set is part of the book \emph{Machine Learning with R} by Brett Lantz. It can be downloaded here:
+\url{https://raw.githubusercontent.com/stedy/Machine-Learning-with-R-datasets/master/insurance.csv}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# load the data}
+\NormalTok{insurance\_data }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"\_data/insurance.csv"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{train-test-split-1}{%
+\subsection{Train-test split}\label{train-test-split-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{2}\NormalTok{)}
+\NormalTok{ins\_split }\OtherTok{\textless{}{-}}\NormalTok{ rsample}\SpecialCharTok{::}\FunctionTok{initial\_split}\NormalTok{(insurance\_data, }\AttributeTok{prop =} \FloatTok{0.80}\NormalTok{)}
+\NormalTok{ins\_train }\OtherTok{\textless{}{-}}\NormalTok{ rsample}\SpecialCharTok{::}\FunctionTok{training}\NormalTok{(ins\_split)}
+\NormalTok{ins\_test  }\OtherTok{\textless{}{-}}\NormalTok{ rsample}\SpecialCharTok{::}\FunctionTok{testing}\NormalTok{(ins\_split)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{a-general-overview}{%
+\subsection{A general overview}\label{a-general-overview}}
+
+A general visualization to detect missing values.
+
+\includegraphics{boosting_methods_files/figure-latex/visdatIns-1.pdf}
+So there are no missing values!
+
+\hypertarget{what-about-the-outcome}{%
+\subsection{What about the outcome?}\label{what-about-the-outcome}}
+
+\texttt{charges}: Individual medical costs billed by health insurance.
+
+The five point summary below shows that the no invalid values i.e.~negative ones are in the data.
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    1122    4703    9433   13128   16436   63770
+\end{verbatim}
+
+Now the distribution of the outcome.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-42-1.pdf}
+Not like the \texttt{burn\_rate} previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting \texttt{log\_charges} outcome variable is shown below.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-43-1.pdf}
+
+Although such a transformation of the outcome variable is not needed for tree-based modeling it can make the job of the algorithm somewhat easier.
+
+\hypertarget{distribution-and-main-effects-of-the-predictors-1}{%
+\subsection{Distribution and main effects of the predictors}\label{distribution-and-main-effects-of-the-predictors-1}}
+
+\hypertarget{age}{%
+\subsubsection{Age}\label{age}}
+
+\texttt{age}: The age of the insurance contractor. This is naturally a continuous variable.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-44-1.pdf}
+
+A wide range of ages is covered. Notably there is a peak at roughly 18 which means that many fresh adults were observed in this data set.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-45-1.pdf}
+
+There seems to be a strong main effect although it does not seem to be linear. The general trend is that older contractors generally accumulate more medical costs. This is very intuitive.
+
+\hypertarget{sex}{%
+\subsubsection{Sex}\label{sex}}
+
+\texttt{sex}: The insurance contractors gender. Here either female or male. This means it is a binary variable and will be treated as such.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(}\FunctionTok{as.factor}\NormalTok{(ins\_train}\SpecialCharTok{$}\NormalTok{sex))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## female   male 
+##    534    537
+\end{verbatim}
+
+The classes are very well balanced. Now the main effect.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-47-1.pdf}
+
+No notable difference can be detected here.
+
+\hypertarget{body-mass-index}{%
+\subsubsection{Body mass index}\label{body-mass-index}}
+
+\texttt{bmi}: The body mass index is providing an understanding of the body composition. It is a ratio composed out of the weight which is divided by the height \(\frac{kg}{m^2}\). Ideally the ratio is between 18.5 and 24.9. The variable is obviously a continuous variable.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-48-1.pdf}
+
+The distribution is bell-shaped and symmetrical roughly around a bmi of 30 which is above the ideal range. Actually only a small amount of the data falls into the normal range here. Moreover the right tail is heavier than the left one. Now a look at the main effect of the variable.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-49-1.pdf}
+
+With some fantasy one can grasp some non-linear patterns on the right side of the plot but beside that no strong main effect is visible here.
+
+\hypertarget{number-of-children}{%
+\subsubsection{Number of children}\label{number-of-children}}
+
+\texttt{children}: The number of children or dependents covered by the health insurance.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# unique values of the feature}
+\FunctionTok{unique}\NormalTok{(ins\_train}\SpecialCharTok{$}\NormalTok{children)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0 1 3 2 5 4
+\end{verbatim}
+
+This could be treated as categorical but as there is a natural ordering it will be encoded by the integers so the treatment is like the one of a continuous feature.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-51-1.pdf}
+
+As one would also think the more children the lower the number of observed values. Especially the numbers greater than 3 are not well represented. If encoded by one-hot-encoding one would have to think about removing these then near-zero-variance variables. But as they will be encoded in a continuous way this is no problem at all. A look at the main effects can now strengthen or weaken this hypothesis of a natural ordering.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-52-1.pdf}
+
+This plot is quite similar to the main effect plot for the \texttt{age} feature. As most likely (will be checked later) the age is positively correlated with the number of children one can observe a rise of the minimal observed charges towards a greater amount of children. The upper two boxplots are built with just a few observations so they should not be interpreted in great detail. Overall there seems to be some kind of main effect.
+
+\hypertarget{smoking}{%
+\subsubsection{Smoking}\label{smoking}}
+
+\texttt{smoker}: Is the contractor smoking? Of course a binary variable.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(}\FunctionTok{as.factor}\NormalTok{(ins\_train}\SpecialCharTok{$}\NormalTok{smoker))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  no yes 
+## 859 212
+\end{verbatim}
+
+The classes are not balanced but the class of the smokers is still represented with a good amount of observations. Now a look at the main effect.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-54-1.pdf}
+
+This main effect is as drastic as it is intuitive. Smoking seems to definitely increases the charges. This means that this variable has probably a lot of predictive power.
+
+\hypertarget{region}{%
+\subsubsection{Region}\label{region}}
+
+\texttt{region}: The beneficiary's residential area in the US. Either northeast, southeast, southwest or northwest. This definitely is a categorical variable.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-55-1.pdf}
+
+The four regions are balanced. Now to the main effect.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-56-1.pdf}
+
+No important main effect is detectable from this plot.
+
+\hypertarget{relationships-between-the-predictors-1}{%
+\subsection{Relationships between the predictors}\label{relationships-between-the-predictors-1}}
+
+\hypertarget{age-vs-the-others}{%
+\subsubsection{Age vs the others}\label{age-vs-the-others}}
+
+First the continuous one: \texttt{bmi}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-57-1.pdf}
+
+No relationship detectable. The pearson correlation is with 0.109 also low.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-59-1.pdf}
+
+The most interesting take away from these four plots is that the hypothesis about the age of the contractors with children seem to be okish except for the ones with more than 3 children. But again this counterintuitive behavior could also be due to the few samples. At this point one might think about encoding the children variable as a categorical but in the following it will be left continuous.
+
+\hypertarget{sex-vs-the-remaining}{%
+\subsubsection{Sex vs the remaining}\label{sex-vs-the-remaining}}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-60-1.pdf}
+
+Not a huge difference.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-61-1.pdf}
+
+Also quite balanced.
+
+Contingency table for the binary variable \texttt{smoker}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# sex vs smoker}
+\FunctionTok{table}\NormalTok{(ins\_train}\SpecialCharTok{$}\NormalTok{sex, ins\_train}\SpecialCharTok{$}\NormalTok{smoker)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##         
+##           no yes
+##   female 450  84
+##   male   409 128
+\end{verbatim}
+
+Slightly more men smoke but the difference is smallish.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-63-1.pdf}
+
+No notable differences.
+
+\hypertarget{bmi-vs-the-remaining}{%
+\subsubsection{BMI vs the remaining}\label{bmi-vs-the-remaining}}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-64-1.pdf}
+
+The most notable fact here is that southeast of the US seems to be a little more overweight than the rest.
+
+\hypertarget{children-vs-the-remaining}{%
+\subsubsection{Children vs the remaining}\label{children-vs-the-remaining}}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-65-1.pdf}
+
+In relative terms actually the contractors with three children smoke the most but the other levels seem quite balanced.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-66-1.pdf}
+
+Here no trend is visible.
+
+\hypertarget{smoker-vs-region}{%
+\subsubsection{Smoker vs Region}\label{smoker-vs-region}}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-67-1.pdf}
+
+So the southeast is not only the most overweight region but also the one with the most smokers in relative terms.
+
+This concludes the tour of the pairwise relationships. Besides a crystal clear understanding of the data one sees that there is not much room left for feature engineering. Thus one can go on and define the recipe.
+
+\hypertarget{create-the-recipe-1}{%
+\subsection{Create the recipe}\label{create-the-recipe-1}}
+
+Transformations on the outcome variable are not done within a recipe thus this will be done now before hand by adding a new feature i.e.~\texttt{log10\_charges} to the train and test data set.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# add the log transformed outcome variable to the data}
+\NormalTok{ins\_train}\SpecialCharTok{$}\NormalTok{log10\_charges }\OtherTok{\textless{}{-}} \FunctionTok{log10}\NormalTok{(ins\_train}\SpecialCharTok{$}\NormalTok{charges)}
+\NormalTok{ins\_test}\SpecialCharTok{$}\NormalTok{log10\_charges }\OtherTok{\textless{}{-}} \FunctionTok{log10}\NormalTok{(ins\_test}\SpecialCharTok{$}\NormalTok{charges)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\#\# recipe for xgboost (nominal variables must be dummy variables)}
+\CommentTok{\# define outcome, predictors and training data set}
+\NormalTok{burnout\_rec\_boost }\OtherTok{\textless{}{-}} \FunctionTok{recipe}\NormalTok{(log10\_charges }\SpecialCharTok{\textasciitilde{}}\NormalTok{ age }\SpecialCharTok{+}\NormalTok{ sex }\SpecialCharTok{+}
+\NormalTok{                            bmi }\SpecialCharTok{+}\NormalTok{ children }\SpecialCharTok{+}
+\NormalTok{                            smoker }\SpecialCharTok{+}\NormalTok{ region,}
+                            \AttributeTok{data =}\NormalTok{ ins\_train) }\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\# dummify all nominal features (sex, smoker, region)}
+  \FunctionTok{step\_dummy}\NormalTok{(}\FunctionTok{all\_nominal}\NormalTok{())}
+
+\DocumentationTok{\#\#\# recipe for a random forest model for comparison (no dummy encoding needed)}
+\CommentTok{\# same as above without dummification}
+\NormalTok{burnout\_rec\_rf }\OtherTok{\textless{}{-}} \FunctionTok{recipe}\NormalTok{(log10\_charges }\SpecialCharTok{\textasciitilde{}}\NormalTok{ age }\SpecialCharTok{+}\NormalTok{ sex }\SpecialCharTok{+}
+\NormalTok{                         bmi }\SpecialCharTok{+}\NormalTok{ children }\SpecialCharTok{+}
+\NormalTok{                         smoker }\SpecialCharTok{+}\NormalTok{ region,}
+                         \AttributeTok{data =}\NormalTok{ ins\_train)}
+\end{Highlighting}
+\end{Shaded}
+
+Having now all the recipes ready one can proceed with modeling. Finally!
 
 \hypertarget{modeling}{%
 \chapter{Let's boost the models}\label{modeling}}
 
-boooooooooooooooooooooost them (gif here?)
-
-Cite additional model packages.\citep[\citet{ranger_package}]{xgboost_package}
+For modeling two additional packages are required.\citep[\citet{ranger_package}]{xgboost_package}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -589,6 +1270,52 @@ Cite additional model packages.\citep[\citet{ranger_package}]{xgboost_package}
 \FunctionTok{library}\NormalTok{(ranger)}
 \end{Highlighting}
 \end{Shaded}
+
+First one has to set a metric for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the \(L_1\) norm of performance metrics.
+
+The first thing is to set up some trivial benchmark models.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# the trivial intercept only model:}
+\NormalTok{predict\_trivial\_mean }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(new\_data) \{}
+  \FunctionTok{rep}\NormalTok{(}\FunctionTok{mean}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{burn\_rate), }\FunctionTok{nrow}\NormalTok{(new\_data))}
+\NormalTok{\}}
+
+\CommentTok{\# the trivial scoring of mental fatigue score (if missing intercept model)}
+\NormalTok{predict\_trivial\_mfs }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(new\_data) \{}
+\NormalTok{  pred }\OtherTok{\textless{}{-}}\NormalTok{ new\_data[[}\StringTok{"mental\_fatigue\_score"}\NormalTok{]] }\SpecialCharTok{/} \DecValTok{10}
+\NormalTok{  pred[}\FunctionTok{is.na}\NormalTok{(pred)] }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{burn\_rate)}
+\NormalTok{  pred}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Evaluate the performance of the two models on the training data. In the end of this section they will be applied to the test data set alongside the other models.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# intercept only model}
+\FunctionTok{mae\_vec}\NormalTok{(}\AttributeTok{truth =}\NormalTok{ burnout\_train}\SpecialCharTok{$}\NormalTok{burn\_rate,}
+        \AttributeTok{estimate =} \FunctionTok{predict\_trivial\_mean}\NormalTok{(burnout\_train))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.1596372
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# trivial mixed model}
+\FunctionTok{mae\_vec}\NormalTok{(}\AttributeTok{truth =}\NormalTok{ burnout\_train}\SpecialCharTok{$}\NormalTok{burn\_rate,}
+        \AttributeTok{estimate =} \FunctionTok{predict\_trivial\_mfs}\NormalTok{(burnout\_train))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.1262089
+\end{verbatim}
 
 To do
 
