@@ -11,6 +11,19 @@ library(viridisLite)
 library(patchwork) # composing of ggplots
 ```
 
+Before the fun can begin a quick outline of the steps performed on each data set. 
+
+* A general overview of the classes of the features and a visualization to detect any missing values.
+* The distribution and the main effect on the outcome variable of each feature.
+* The pairwise relationships of the predictors.
+* Optionally some feature engineering.
+* Using the gained knowledge to fix all pre-processing and feature engineering steps by using a `recipes::recipe`.
+
+If one is mainly interested in the models themselves one can just have a look at the recipes and skip the rest of this section. 
+
+Some might ask why no interactions of predictors are covered in this EDA. If one would use a standard OLS, lasso or ridge regression it would be very important to have a look at them but as the focus here is on tree-based gradient boosting one already includes interactions if one is not restrictive to regression stumps. So let's start with the first data set!
+
+
 ## Burnout data
 
 The data is from the machine learning challenge *HackerEarth Machine Learning Challenge: Are your employees burning out?*. And can be downloaded here: <https://www.kaggle.com/blurredmachine/are-your-employees-burning-out?select=train.csv>
@@ -30,6 +43,8 @@ burnout_data <- burnout_data[!is.na(burnout_data$burn_rate),]
 ```
 
 ### Train-test split
+
+To not allow information leakage the train-test split is performed at the very start of the whole analysis.
 
 ```{r traintest}
 set.seed(2)
@@ -60,7 +75,7 @@ knitr::kable(
 )
 ```
 
-A general visualization to detect missing values.
+A general visualization of the whole datas set to detect missing values below.
 
 ```{r visdat, echo=FALSE}
 visdat::vis_dat(burnout_train)
@@ -70,7 +85,7 @@ visdat::vis_dat(burnout_train)
 # percentage of missing values in the training data set
 mean(rowSums(is.na(burnout_train)) > 0)
 ```
-As we know that XGBoost can handle missing values we do not have to be concerned. Although one can think about imputation. But more on that later.
+As we know that XGBoost can handle missing values we do not have to be concerned. Although one could of course think about imputation or even removal.
 
 ### What about the outcome variable?
 
@@ -578,7 +593,8 @@ table(burnout_train$company_type, burnout_train$wfh_setup_available)
 No notable trend.
 
 ```{r, echo=FALSE}
-burnout_train %>%
+comp_type_plot_list <- list()
+comp_type_plot_list$des <- burnout_train %>%
   group_by(designation, company_type) %>%
   summarise(count = n(), .groups = "drop") %>%
   group_by(company_type) %>%
@@ -593,12 +609,8 @@ burnout_train %>%
        fill = "Company type", y = "relative frequency",
        x = "level of designation") +
   theme(plot.title = ggtext::element_markdown(size = 11))
-```
 
-No trend here either.
-
-```{r, echo=FALSE}
-burnout_train %>%
+comp_type_plot_list$ress <- burnout_train %>%
   group_by(resource_allocation, company_type) %>%
   summarise(count = n(), .groups = "drop") %>%
   group_by(company_type) %>%
@@ -613,27 +625,29 @@ burnout_train %>%
        fill = "Company type", y = "relative frequency",
        x = "Resource allocation") +
   theme(plot.title = ggtext::element_markdown(size = 11))
-```
 
-The same verdict as above.
-
-```{r, echo=FALSE}
-ggplot(burnout_train, 
+comp_type_plot_list$mfs <- ggplot(burnout_train, 
        aes(x = as.factor(company_type),
        y = mental_fatigue_score,
        col = as.factor(company_type))) +
   geom_jitter(alpha = 0.05, na.rm = TRUE) +
   geom_boxplot(size = 0.8, col = "black", fill = NA, na.rm = TRUE) +
-  labs(x = "", y = "Mental fatigue score", col = "",
+  labs(x = "", y = "Mental fatigue score", col = "Company type",
        title = "**Mental fatigue score** vs **Company type**") +
   scale_color_viridis_d(option = "C") +
   coord_flip() +
   theme_light() +
   theme(legend.position = "None",
         plot.title = ggtext::element_markdown(size = 11))
+
+(comp_type_plot_list$des | comp_type_plot_list$ress) /
+  comp_type_plot_list$mfs + plot_layout(guides = 'collect')
+
+remove(comp_type_plot_list)
 ```
 
-Once again there is no notable difference in distribution.
+No trend here either.
+
 
 
 #### Work from home setup vs. the remaining
@@ -721,12 +735,12 @@ Here a strong quite linear relationship is visible. This is sensible as often mo
 
 The last two relationships will be omitted here as both for the variable `designation` as well as for `resource_allocation` the comparison with  `mental_fatigue_score` will be very similar to the main effect of the two variables. This comes again from the high correlation of the latter with the outcome.
 
-Overall some stronger and mainly less strong relationships between the predictors could be detected. Not like in ordinary least squares regression for gradient tree boosting no decorrelation and normalization of the features is needed. 
+Overall some stronger and mainly less strong relationships between the predictors could be detected. Not like in ordinary least squares regression for gradient tree boosting no decorrelation and normalization of the features is needed. But before one fixes the pre-processing one can try to extract some more information from some features through some feature engineering.
 
 
 ### Some feature engineering
 
-The only variable that allows for some reasonable feature engineering is the date of joining predictor. One can try to extract some underlying patterns and see if an effect on the outcome is visible.
+The only variable that allows for reasonable feature engineering is the date of joining predictor. One can try to extract some underlying patterns and see if an effect on the outcome is visible.
 
 First extract the day of the week:
 
@@ -782,7 +796,7 @@ burnout_train %>%
 
 Again no main effect is visible.
 
-Nevertheless one can include those two variables into the model because as mentioned before tree-based models actually perform a feature selection at each split. So including these just comes only at a small computational cost. This minimal pre-processing that is needed when dealing with tree-based models is actually one of its biggest strengths. It is very robust against any kind of weird selection of features. This is one of the reasons beside the strong predictive power for the heavy use of such models in data mining applications.[@elements]
+Nevertheless one can include those two variables into the model because as mentioned before tree-based models actually perform a feature selection at each split. So including these just comes at a small computational cost. This minimal pre-processing that is needed when dealing with tree-based models is actually one of its biggest strengths. It is very robust against any kind of weird selection of features with different scales for example. This is one of the reasons, beside the strong predictive power, for the heavy use of such models in data mining applications.[@elements]
 
 ### Create the recipe
 
@@ -843,11 +857,12 @@ remove(ins_split)
 
 ### A general overview
 
-A general visualization to detect missing values.
+A general visualization of the whole data set in order to detect missing values.
 
 ```{r visdatIns, echo=FALSE}
 visdat::vis_dat(ins_train)
 ```
+
 So there are no missing values!
 
 ### What about the outcome?
@@ -885,6 +900,7 @@ charges_hist / charges_box
 remove(charges_box)
 remove(charges_hist)
 ```
+
 Not like the `burn_rate` previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting `log_charges` outcome variable is shown below. 
 
 
@@ -1239,8 +1255,10 @@ The most interesting take away from these four plots is that the hypothesis abou
 
 #### Sex vs the remaining
 
+
 ```{r, echo=FALSE}
-ggplot(ins_train, 
+sex_plot_list <- list()
+sex_plot_list$bmi <- ggplot(ins_train, 
        aes(x = as.factor(sex),
        y = bmi,
        col = as.factor(sex))) +
@@ -1254,12 +1272,8 @@ ggplot(ins_train,
   theme_light() +
   theme(legend.position = "None",
         plot.title = ggtext::element_markdown(size = 11))
-```
 
-Not a huge difference.
-
-```{r, echo=FALSE}
-ins_train %>%
+sex_plot_list$child <- ins_train %>%
   group_by(children, sex) %>%
   summarise(count = n(), .groups = "drop") %>%
   ggplot(aes(x = factor(children), y = count,
@@ -1268,13 +1282,30 @@ ins_train %>%
   coord_flip() +
   scale_fill_viridis_d(option = "C") +
   theme_light() +
-  labs(title = "**Sex** vs **Children**",
+  labs(title = "**Sex** vs **Children**", fill = "",
        x = "# children/ dependents") +
   theme(plot.title = ggtext::element_markdown(size = 11))
+
+sex_plot_list$region <- ins_train %>%
+  group_by(region, sex) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = factor(region), y = count,
+             fill = sex)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  coord_flip() +
+  scale_fill_viridis_d(option = "C") +
+  theme_light() +
+  labs(title = "**Sex** vs **Region**", fill = "",
+       x = "Region") +
+  theme(plot.title = ggtext::element_markdown(size = 11))
+
+(sex_plot_list$region | sex_plot_list$child) / 
+  sex_plot_list$bmi + plot_layout(guides = "collect")
+
+remove(sex_plot_list)
 ```
 
-
-Also quite balanced. 
+No notable differences. 
 
 Contingency table for the binary variable `smoker`:
 
@@ -1285,22 +1316,6 @@ table(ins_train$sex, ins_train$smoker)
 
 Slightly more men smoke but the difference is smallish.
 
-```{r, echo=FALSE}
-ins_train %>%
-  group_by(region, sex) %>%
-  summarise(count = n(), .groups = "drop") %>%
-  ggplot(aes(x = factor(region), y = count,
-             fill = sex)) +
-  geom_bar(position = "dodge", stat = "identity") +
-  coord_flip() +
-  scale_fill_viridis_d(option = "C") +
-  theme_light() +
-  labs(title = "**Sex** vs **Region**",
-       x = "Region") +
-  theme(plot.title = ggtext::element_markdown(size = 11))
-```
-
-No notable differences.
 
 #### BMI vs the remaining
 
@@ -1399,7 +1414,7 @@ This concludes the tour of the pairwise relationships. Of course such an in deta
 
 ### Create the recipe
 
-Transformations on the outcome variable are not done within a recipe thus this will be done now before hand by adding a new feature i.e. `log10_charges` to the train and test data set.
+Transformations on the outcome variable are not good practice within a recipe thus this will be done now before hand by adding a new feature i.e. `log10_charges` to the train and test data set.
 
 ```{r}
 # add the log transformed outcome variable to the data

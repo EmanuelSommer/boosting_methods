@@ -8,39 +8,20 @@ library(xgboost)
 library(ranger)
 ```
 
-First one has to set a metric for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the $L_1$ norm of performance metrics.
+For parallel computation the `doParallel` package is used.[@doParallel_package]
 
-The first thing is to set up some trivial benchmark models.
+```{r registerCLuster, eval=FALSE}
+library(doParallel)
 
-```{r}
-# the trivial intercept only model:
-predict_trivial_mean <- function(new_data) {
-  rep(mean(burnout_train$burn_rate), nrow(new_data))
-}
+# Create a cluster object and then register: 
+cl <- makePSOCKcluster(2)
+registerDoParallel(cl)
 
-# the trivial scoring of mental fatigue score (if missing intercept model)
-predict_trivial_mfs <- function(new_data) {
-  pred <- new_data[["mental_fatigue_score"]] / 10
-  pred[is.na(pred)] <- mean(burnout_train$burn_rate)
-  pred
-}
+# Put at the end:
+stopCluster(cl)
 ```
 
-Evaluate the performance of the two models on the training data. In the end of this section they will be applied to the test data set alongside the other models.
-
-```{r}
-# intercept only model
-mae_vec(truth = burnout_train$burn_rate,
-        estimate = predict_trivial_mean(burnout_train))
-```
-```{r}
-# trivial mixed model
-mae_vec(truth = burnout_train$burn_rate,
-        estimate = predict_trivial_mfs(burnout_train))
-```
-
-
-
+ADJUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUST
 
 To do
 
@@ -58,51 +39,120 @@ To do
 
 7.  save final model
 
-cite [@doParallel_package]
+ADJUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUST
 
-```{r registerCLuster, eval=FALSE}
-library(doParallel)
 
-# Create a cluster object and then register: 
-cl <- makePSOCKcluster(2)
-registerDoParallel(cl)
+## Burnout data
 
-# Put at the end:
-stopCluster(cl)
+**Final metrics to be determined!!**
+
+First one has to set a metric for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the $L_1$ norm of performance metrics.
+
+The first thing is to set up some trivial benchmark models.
+
+```{r}
+# the trivial intercept only model:
+bout_predict_trivial_mean <- function(new_data) {
+  rep(mean(burnout_train$burn_rate), nrow(new_data))
+}
+
+# the trivial scoring of mental fatigue score (if missing intercept model)
+bout_predict_trivial_mfs <- function(new_data) {
+  pred <- new_data[["mental_fatigue_score"]] / 10
+  pred[is.na(pred)] <- mean(burnout_train$burn_rate)
+  pred
+}
 ```
 
-for 2. set engine specific arguments in the set_engine() function use tune() for parameters that should be tuned (optional tune("id_name"))
+Evaluate the performance of the two models on the training data. In the end of this section they will be applied to the test data set alongside the other models.
 
-```{r modelSpec}
+```{r}
+# intercept only model
+mae_vec(truth = burnout_train$burn_rate,
+        estimate = bout_predict_trivial_mean(burnout_train))
+```
+```{r}
+# trivial mixed model
+mae_vec(truth = burnout_train$burn_rate,
+        estimate = bout_predict_trivial_mfs(burnout_train))
+```
+
+
+
+
+```{r modelSpecburn}
 # Models:
-lm_model <- linear_reg() %>% 
-  set_engine("lm")
 
-rf_model <- rand_forest(trees = 1000) %>% 
+# Random forest model for comparison
+bout_rf_model <- rand_forest(trees = tune(),
+                             mtry = tune()) %>% 
   set_engine("ranger") %>% 
   set_mode("regression")
 
-boost_model <- boost_tree() %>%
+bout_boost_model <- boost_tree(trees = tune(),
+                               learn_rate = tune(),
+                               loss_reduction = tune(),
+                               tree_depth = tune(),
+                               mtry = tune(),
+                               sample_size = tune(),
+                               stop_iter = 10) %>%
   set_engine("xgboost") %>% 
   set_mode("regression")
 ```
 
-```{r workflowSpec}
+```{r workflowSpecburn}
 # Workflows:
 
-# lm_wflow <- 
-#   workflow() %>% 
-#   add_model(lm_model) %>% 
-#   add_recipe()
+bout_rf_wflow <-
+  workflow() %>%
+  add_model(bout_rf_model) %>%
+  add_recipe(burnout_rec_rf)
+
+bout_boost_wflow <-
+  workflow() %>%
+  add_model(bout_boost_model) %>%
+  add_recipe(burnout_rec_boost)
 ```
 
-for 3.
+
 
 ```{r resamplingObjects}
 # Create Resampling objects
-# set.seed(2)
-# ames_folds <- vfold_cv(ames_train, v = 10)
+set.seed(2)
+burnout_folds <- vfold_cv(burnout_train, v = 10)
 ```
+
+```{r}
+# Have a look at the hyperparameters that have to be tuned and finalize them
+bout_rf_params <- bout_rf_wflow %>%
+  parameters()
+
+bout_rf_params 
+```
+
+This shows that the mtry hyperparameter has to be adjusted depending on the data. Moreover with the `dials::update` function one can manually set the ranges that should be used for tuning.
+
+```{r}
+# default range for tuning is 1 up to 2000 for the trees argument
+# set the lower bound of the range to 200. Then finalize the
+# parameters using the training data.
+bout_rf_params <- bout_rf_params %>%
+  update(trees = trees(c(200, 2000))) %>%
+  finalize(burnout_train)
+bout_rf_params
+bout_rf_params %>% pull_dials_object("mtry")
+```
+
+Now this parameter object is ready for tuning and the same steps have to be performed on the boosting workflow.
+
+```{r}
+bout_boost_params <- bout_boost_wflow %>%
+  parameters()
+
+bout_boost_params 
+```
+
+
 
 for fitting resampling objects without tuning:
 
