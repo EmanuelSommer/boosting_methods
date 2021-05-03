@@ -405,6 +405,26 @@ burnout_test %>%
   )
 ```
 
+### Variable Importance
+
+```{r}
+final_bout_boost_wflow %>%
+  pull_workflow_fit() %>%
+  vip::vip() + 
+  theme_light() 
+```
+
+
+
+Some to dos and questions:
+
+* cv also the test set? then visualize with error bands
+* else visualize vs trivial model?
+* variable importance
+
+cite vip package
+
+## Insurance data
 
 
 
