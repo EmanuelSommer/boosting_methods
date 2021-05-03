@@ -3,22 +3,21 @@
 
 For modeling two additional packages are required.[@xgboost_package, @ranger_package]
 
-```{r loadModelPackages}
+```{r loadModelPackages, message=FALSE, warning=FALSE}
 library(xgboost)
 library(ranger)
 ```
 
 For parallel computation the `doParallel` package is used.[@doParallel_package]
 
-```{r registerCLuster, eval=FALSE}
+```{r registerCLuster, eval=TRUE, warning=FALSE, message=FALSE}
 library(doParallel)
 
 # Create a cluster object and then register: 
 cl <- makePSOCKcluster(2)
 registerDoParallel(cl)
 
-# Put at the end:
-stopCluster(cl)
+
 ```
 
 ADJUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUST
@@ -117,9 +116,9 @@ bout_boost_wflow <-
 
 
 ```{r resamplingObjects}
-# Create Resampling objects
+# Create Resampling object
 set.seed(2)
-burnout_folds <- vfold_cv(burnout_train, v = 10)
+burnout_folds <- vfold_cv(burnout_train, v = 5)
 ```
 
 ```{r}
@@ -134,13 +133,14 @@ This shows that the mtry hyperparameter has to be adjusted depending on the data
 
 ```{r}
 # default range for tuning is 1 up to 2000 for the trees argument
-# set the lower bound of the range to 200. Then finalize the
+# set the lower bound of the range to 100. Then finalize the
 # parameters using the training data.
 bout_rf_params <- bout_rf_params %>%
-  update(trees = trees(c(200, 2000))) %>%
+  update(trees = trees(c(100, 2000))) %>%
   finalize(burnout_train)
 bout_rf_params
 bout_rf_params %>% pull_dials_object("mtry")
+bout_rf_params %>% pull_dials_object("trees")
 ```
 
 Now this parameter object is ready for tuning and the same steps have to be performed on the boosting workflow.
@@ -152,102 +152,262 @@ bout_boost_params <- bout_boost_wflow %>%
 bout_boost_params 
 ```
 
-
-
-for fitting resampling objects without tuning:
-
-```{r fitResamplingWithoutTuning}
-# set.seed(2)
-# rf_res <- rf_wflow %>% 
-#   fit_resamples(resamples = ames_folds)
-# # collect the metrics during resampling with
-# collect_metrics()
+```{r}
+# first a look at the default ranges
+trees()
+tree_depth()
+learn_rate()
+loss_reduction()
+sample_size()
 ```
 
-for 4. and following
+So `sample_size` must also be finalized. Again the lower bound on the number of trees will be raised to 100. The other scales are really sensible and will be left as is.
 
 ```{r}
-# show the parameters to be tuned with the range
-# dials::parameters()
-# get and modify the parameters to be tuned with:
-# name()
-# wflow_param %>% pull_dials_object("threshold")
-# parameters(ames_rec) %>% 
-#  update(threshold = threshold(c(0.8, 1.0)))
+bout_boost_params <- bout_boost_params %>%
+  update(trees = trees(c(100, 2000))) %>%
+  finalize(burnout_train)
 
-# finalize for data dependent params
-# updated_param <- 
-#   workflow() %>% 
-#   add_model(rf_spec) %>% 
-#   add_recipe(pca_rec) %>% 
-#   parameters() %>% 
-#   finalize(ames_train)
+bout_boost_params
+bout_boost_params %>%
+  pull_dials_object("sample_size")
+bout_boost_params %>%
+  pull_dials_object("mtry")
+```
+Now also this parameter object is ready to be used.
+
+
+```{r}
+# define a metrics set used for evaluation of the hyperparameters
+regr_metrics <- metric_set(mae, rmse)
 ```
 
-grids: grid_regular(levels = c(hidden_units = 3, penalty = 2, epochs = 2)) space filling: grid_latin_hypercube(size = 15, original = FALSE) then tune_grid() function instead of fit_resamples
 
-```{r tuneGrids, eval=FALSE}
-roc_res <- metric_set(roc_auc)
-set.seed(99)
-mlp_reg_tune <-
-  mlp_wflow %>%
-  tune_grid(
-    cell_folds,
-    grid = mlp_param %>% grid_regular(levels = 3),
-    metrics = roc_res
-  )
+```{r tuneRFburnout, cache=TRUE, eval=FALSE}
 
-autoplot(mlp_reg_tune) + theme(legend.position = "top")
 
-show_best(mlp_reg_tune)
+# took roughly 30 minutes
+system.time({
+  set.seed(2)
+  bout_rf_tune <- bout_rf_wflow %>%
+    tune_grid(
+      resamples =  burnout_folds,
+      grid = bout_rf_params %>%
+        grid_latin_hypercube(size = 30, original = FALSE),
+      metrics = regr_metrics
+    )
+})
 
-# for spacefilling
-mlp_sfd_tune <-
-  mlp_wflow %>%
-  tune_grid(
-    cell_folds,
-    grid = 20,
-    # Pass in the parameter object to use the appropriate range: 
-    param_info = mlp_param,
-    metrics = roc_res
-  )
+# visualization of the tuning results (snapshot of the output below)
+autoplot(bout_rf_tune) + theme_light()
+# this functions shows the best combinations wrt the mae metric of all the
+# combinations in the grid
+show_best(bout_rf_tune, metric = "mae")
 
-select_best()
 ```
 
-```{r finalizeWorkflow, eval=FALSE}
-logistic_param <- 
-  tibble(
-    num_comp = 0,
-    epochs = 125,
-    hidden_units = 1,
-    penalty = 1
-  )
 
-final_mlp_wflow <- 
-  mlp_wflow %>% 
-  finalize_workflow(logistic_param)
-
-final_mlp_fit <- 
-  final_mlp_wflow %>% 
-  fit(cells)
+```{r rfburntuneplot,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Result of a spacefilling grid search for the random forest model."}
+knitr::include_graphics("_pictures/rf_burn_tune_plot.png")
 ```
 
-Racing:
+The visualization alongside the best performing results suggest a value of `mtry`of 3 and 1000 `trees` should suffice. Thus one can finalize and fit this model.
 
-```{r racingTune, eval=FALSE}
-library(finetune) # if used to be cited
+```{r}
+final_bout_rf_wflow <- 
+  bout_rf_wflow %>% 
+  finalize_workflow(tibble(
+    trees = 1000,
+    mtry = 3
+  )) %>%
+  fit(burnout_train)
+```
 
-set.seed(99)
-mlp_sfd_race <-
-  mlp_wflow %>%
-  tune_race_anova(
-    cell_folds,
-    grid = 20,
-    param_info = mlp_param,
-    metrics = roc_res,
-    control = control_race(verbose_elim = TRUE)
+
+
+
+```{r}
+# tuning grid just for the #trees
+first_grid_boost_burn <- crossing(
+  trees = seq(250, 2000, 250),
+  mtry = 9,
+  tree_depth = 6,
+  loss_reduction = 0.000001,
+  learn_rate = 0.01,
+  sample_size = 1
+)
+```
+
+
+
+```{r tuneBoostBurnfirst, eval=FALSE, cache=TRUE}
+# first tune mainly the number of trees to kind of detect a number of
+# trees that is large enough then tune the tree specific arguments
+# if one tunes all at the same time the grid grows to large
+
+# took roughly 1 minute
+system.time({
+  set.seed(2)
+  bout_boost_tune_first <- bout_boost_wflow %>%
+    tune_grid(
+      resamples =  burnout_folds,
+      grid = first_grid_boost_burn,
+      metrics = regr_metrics
+    )
+})
+
+# plot output is shown in the figure below
+autoplot(bout_boost_tune_first) + theme_light()
+show_best(bout_boost_tune_first)
+```
+
+```{r boostburntuneplot1,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Result of the first grid search for the XGBoost model."}
+knitr::include_graphics("_pictures/burn_boost_tune_first.png")
+```
+
+
+So 1500 trees should suffice here.
+
+```{r}
+# fix the number of trees by redefining the boosted model with a 
+# fixed number of trees.
+bout_boost_model <- boost_tree(trees = 1500,
+                               learn_rate = tune(),
+                               loss_reduction = tune(),
+                               tree_depth = tune(),
+                               mtry = tune(),
+                               sample_size = tune(),
+                               stop_iter = 10) %>%
+  set_engine("xgboost") %>% 
+  set_mode("regression")
+
+# update the workflow
+bout_boost_wflow <-
+  bout_boost_wflow %>%
+  update_model(bout_boost_model)
+
+bout_boost_params <- bout_boost_wflow %>%
+  parameters() %>%
+  finalize(burnout_train)
+
+# reduced hyperparameter space
+bout_boost_params
+```
+
+
+Now perform the major grid search over all the other hyperparameters.
+
+```{r tuneBoostBurnsecond, eval=FALSE, cache=TRUE}
+# now tune all the remaining hyperparameters with a large space filling grid
+
+# took roughly 1.5 hours
+system.time({
+  set.seed(2)
+  bout_boost_tune_second <- bout_boost_wflow %>%
+    tune_grid(
+      resamples = burnout_folds,
+      grid = bout_boost_params %>%
+        grid_latin_hypercube(
+          size = 200),
+      metrics = regr_metrics
+    )
+})
+
+show_best(bout_boost_tune_second, metric = "mae")
+```
+
+
+Refine the grid i.e. the parameter space according to the results of the last grid search.
+
+```{r tuneBoostBurnthird, eval=FALSE, cache=TRUE}
+# now tune all the remaining hyperparameters with a refined space filling grid
+
+# took roughly 2 hours
+system.time({
+  set.seed(2)
+  bout_boost_tune_third <- bout_boost_wflow %>%
+    tune_grid(
+      resamples = burnout_folds,
+      grid = bout_boost_params %>%
+        update(
+          mtry = mtry(c(5,9)),
+          tree_depth = tree_depth(c(4,5)),
+          learn_rate = learn_rate(c(-1.7, -1.3)),
+          loss_reduction = loss_reduction(c(-8,-3)),
+          sample_size = sample_prop(c(0.4, 0.9))
+        ) %>%
+        grid_latin_hypercube(
+          size = 200),
+      metrics = regr_metrics
+    )
+})
+
+show_best(bout_boost_tune_third, metric = "mae")
+
+``` 
+
+With this final grid search one is ready to finalize the model.
+
+```{r}
+final_bout_boost_wflow <- 
+  bout_boost_wflow %>% 
+  finalize_workflow(tibble(
+    mtry = 9,
+    tree_depth = 4,
+    learn_rate = 0.02,
+    loss_reduction = 0.0000003,
+    sample_size = 0.8
+  )) %>%
+  fit(burnout_train)
+```
+
+
+
+
+
+```{r}
+# stop cluster
+stopCluster(cl)
+```
+
+
+```{r}
+# calculate the mae an the rmse for both models (random forest and xgboost)
+burnout_test %>%
+  mutate(rf_pred = predict(final_bout_rf_wflow,
+                           new_data = .)[[".pred"]],
+         boost_pred = predict(final_bout_boost_wflow,
+                              new_data = .)[[".pred"]]) %>%
+  mutate(
+    rf_pred = case_when(
+      rf_pred < 0 ~ 0,
+      rf_pred > 1 ~ 1,
+      TRUE ~ rf_pred
+      ),
+    boost_pred = case_when(
+      boost_pred < 0 ~ 0,
+      boost_pred > 1 ~ 1,
+      TRUE ~ boost_pred
+    )
+  ) %>%
+  select(burn_rate, rf_pred, boost_pred) %>%
+  pivot_longer(-burn_rate, names_to = "model") %>%
+  group_by(model) %>%
+  summarise(
+    mae = mae_vec(
+      truth = burn_rate,
+      estimate = value
+    ),
+    rmse = rmse_vec(
+      truth = burn_rate,
+      estimate = value
+    )
   )
 ```
 
-Here no iterative search as big parameter space, could be done after grid search or for single parameters. (If then Simulated Annealing)
+
+
+
+
+
+

@@ -818,12 +818,16 @@ burnout_rec_boost <- recipe(burn_rate ~ date_of_joining + gender +
   step_mutate(date_of_joining = as.integer(date_of_joining))
 
 ### recipe for a random forest model for comparison (no dummy encoding needed)
-# same as above without dummification
+# same as above without dummification but here the na's have to be
+# imputed (here via knn)
 burnout_rec_rf <- recipe(burn_rate ~ date_of_joining + gender +
                          company_type + wfh_setup_available +
                          designation + resource_allocation +
                          mental_fatigue_score,
                          data = burnout_train) %>%
+  step_string2factor(all_nominal()) %>%
+  step_knnimpute(resource_allocation, neighbors = 5) %>%
+  step_knnimpute(mental_fatigue_score, neighbors = 5) %>%
   step_date(date_of_joining, features = c("dow", "month")) %>%
   step_mutate(date_of_joining = as.integer(date_of_joining))
 ```
@@ -1426,7 +1430,7 @@ ins_test$log10_charges <- log10(ins_test$charges)
 ```{r}
 ### recipe for xgboost (nominal variables must be dummy variables)
 # define outcome, predictors and training data set
-burnout_rec_boost <- recipe(log10_charges ~ age + sex +
+ins_rec_boost <- recipe(log10_charges ~ age + sex +
                             bmi + children +
                             smoker + region,
                             data = ins_train) %>%
@@ -1434,8 +1438,8 @@ burnout_rec_boost <- recipe(log10_charges ~ age + sex +
   step_dummy(all_nominal())
 
 ### recipe for a random forest model for comparison (no dummy encoding needed)
-# same as above without dummification
-burnout_rec_rf <- recipe(log10_charges ~ age + sex +
+# same as above without dummification 
+ins_rec_rf <- recipe(log10_charges ~ age + sex +
                          bmi + children +
                          smoker + region,
                          data = ins_train)
