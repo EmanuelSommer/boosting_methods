@@ -1,6 +1,6 @@
 # Explore the data {#eda}
 
-Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork; @visdat; @lubridate] The most important ones will be loaded below.
+Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork; @visdat; @lubridate, @latexplots] The most important ones will be loaded below.
 
 ```{r load_packages, message=FALSE, warning=FALSE}
 library(tidyverse) # general data handling tools
@@ -98,7 +98,7 @@ summary(burnout_train$burn_rate)
 ```
 Now the distribution of the outcome.
 
-```{r , echo=FALSE}
+```{r , echo=FALSE, warning=FALSE, message=FALSE}
 burn_rate_box <- ggplot(burnout_train, aes(x = 1, y = burn_rate)) +
   geom_jitter(alpha = 0.05, col = plasma(1)) +
   geom_boxplot(col = "black", size = .8, fill = NA) +
@@ -110,9 +110,30 @@ burn_rate_box <- ggplot(burnout_train, aes(x = 1, y = burn_rate)) +
 
 
 burn_rate_hist <- ggplot(burnout_train, aes(x = burn_rate)) +
-  geom_histogram(fill = plasma(1), binwidth = 0.05) +
+  geom_histogram(aes(y = ..density..),
+                 fill = plasma(1), binwidth = 0.05) +
+  stat_function(fun = dnorm, args = 
+                  list(
+                    mean = mean(burnout_train$burn_rate),
+                    sd = sd(burnout_train$burn_rate)),
+                col = plasma(3)[2],
+                size = 1
+    ) +
+  annotate("text",
+           x = 0.9, y = 1.6,
+           label = latex2exp::TeX("$N(\\hat{\\mu}, \\hat{\\sigma}^2)$") ,
+           col = plasma(3)[2], size = 5) +
   labs(x = "", y = "", subtitle = "binwidth = 0.05",
        title = "Outcome variable: **Burn Rate**") +
+  geom_line(
+    data = data.frame(
+      x = c(0.75, 0.9),
+      y = c(0.8, 1.3)
+    ),
+    aes(x = x, y = y),
+    inherit.aes = FALSE,
+    col = plasma(3)[2],
+    size = .5) +
   theme_light() +
   theme(axis.ticks.y = element_blank(),
         axis.text.y = element_blank(),
@@ -123,7 +144,7 @@ remove(burn_rate_box)
 remove(burn_rate_hist)
 ```
 
-The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region $[0,1]$ is covered quite well. 
+The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region $[0,1]$ is covered quite well. Actually by overlaying a normal distribution with the sample mean $\hat{\mu}$ and the sample standard deviation $\hat{\sigma}^2$ as the parameters one can clearly see that the outcome almost perfectly follows a normal distribution. One could further fit a Q-Q-plot to visualize the normality but this will be omitted here as the normality of the outcome is not required for the here covered boosting model.
 
 
 ### Distribution and main effects of the predictors
@@ -471,6 +492,8 @@ sum(is.na(burnout_train$mental_fatigue_score))
 
 ### Relationships between the predictors
 
+An exploration of the relationships between the predictors could also be done by having a look at a correlation and scatterplot matrix. This approach is much quicker than looking at each pairwise relationship individually but also not as precise as the one presented here. Especially for a lot of features such a matrix can get too big to grasp the subtle details. If this is necessary depends on the use case. A very good option if one wants an initial overview is the function `GGally::ggpairs`. So in the following each pairwise relationship will be covered.
+
 #### Date of joining vs. the others
 
 ```{r ggpairs, echo=FALSE, message=FALSE, warning=FALSE, out.width='90%'}
@@ -738,6 +761,8 @@ The last two relationships will be omitted here as both for the variable `design
 Overall some stronger and mainly less strong relationships between the predictors could be detected. Not like in ordinary least squares regression for gradient tree boosting no decorrelation and normalization of the features is needed. But before one fixes the pre-processing one can try to extract some more information from some features through some feature engineering.
 
 
+
+
 ### Some feature engineering
 
 The only variable that allows for reasonable feature engineering is the date of joining predictor. One can try to extract some underlying patterns and see if an effect on the outcome is visible.
@@ -831,6 +856,28 @@ burnout_rec_rf <- recipe(burn_rate ~ date_of_joining + gender +
   step_date(date_of_joining, features = c("dow", "month")) %>%
   step_mutate(date_of_joining = as.integer(date_of_joining))
 ```
+
+
+```{r, eval=FALSE, include=FALSE}
+bake(prep(burnout_rec_boost), new_data = NULL) %>%
+  select(!starts_with("date_of_joining_")) %>%
+  visdat::gather_cor() %>%
+  ggplot(aes(x = factor(row_1),
+             y = factor(row_2),
+             fill = value,
+             label = as.character(round(value, 2)))) +
+  geom_tile() +
+  geom_text() +
+  scale_fill_viridis_c(option = "C") +
+  labs(x = "",
+       y = "", fill = "",
+       title = "Pearson correlation matrix") +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1,
+                                   vjust = 1),
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
 
 
 ## Insurence data

@@ -47,7 +47,7 @@ ADJUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUST
 
 First one has to set a metric for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the $L_1$ norm of performance metrics.
 
-The first thing is to set up some trivial benchmark models.
+The first thing is to set up some trivial baseline models.
 
 ```{r}
 # the trivial intercept only model:
@@ -97,6 +97,9 @@ bout_boost_model <- boost_tree(trees = tune(),
                                stop_iter = 10) %>%
   set_engine("xgboost") %>% 
   set_mode("regression")
+
+bout_lm_model <- linear_reg() %>%
+  set_engine("lm")
 ```
 
 ```{r workflowSpecburn}
@@ -111,6 +114,21 @@ bout_boost_wflow <-
   workflow() %>%
   add_model(bout_boost_model) %>%
   add_recipe(burnout_rec_boost)
+
+bout_lm_wflow <- 
+  workflow() %>%
+  add_model(bout_lm_model) %>%
+  add_recipe(burnout_rec_boost)
+```
+
+The linear model can directly be fitted:
+
+```{r}
+bout_lm_wflow_fitted <- bout_lm_wflow %>%
+  fit(burnout_train)
+
+# summary of the fitted basic linear model
+summary(pull_workflow_fit(bout_lm_wflow_fitted)$fit)
 ```
 
 
@@ -373,24 +391,34 @@ stopCluster(cl)
 
 ```{r}
 # calculate the mae an the rmse for both models (random forest and xgboost)
-burnout_test %>%
+bout_test_perf <- burnout_test %>%
   mutate(rf_pred = predict(final_bout_rf_wflow,
                            new_data = .)[[".pred"]],
          boost_pred = predict(final_bout_boost_wflow,
-                              new_data = .)[[".pred"]]) %>%
-  mutate(
-    rf_pred = case_when(
-      rf_pred < 0 ~ 0,
-      rf_pred > 1 ~ 1,
-      TRUE ~ rf_pred
-      ),
-    boost_pred = case_when(
-      boost_pred < 0 ~ 0,
-      boost_pred > 1 ~ 1,
-      TRUE ~ boost_pred
-    )
-  ) %>%
-  select(burn_rate, rf_pred, boost_pred) %>%
+                              new_data = .)[[".pred"]],
+         intercept_pred = bout_predict_trivial_mean(.),
+         mfs_scored_pred = bout_predict_trivial_mfs(.)) %>%
+  mutate(across(ends_with("pred"), function(col) {
+    case_when(
+      col < 0 ~ 0,
+      col > 1 ~ 1,
+      TRUE ~ col
+      )
+  })) %>%
+  # mutate(
+  #   rf_pred = case_when(
+  #     rf_pred < 0 ~ 0,
+  #     rf_pred > 1 ~ 1,
+  #     TRUE ~ rf_pred
+  #     ),
+  #   boost_pred = case_when(
+  #     boost_pred < 0 ~ 0,
+  #     boost_pred > 1 ~ 1,
+  #     TRUE ~ boost_pred
+  #   )
+  # ) %>%
+  select(burn_rate, rf_pred, boost_pred, 
+         intercept_pred, mfs_scored_pred) %>%
   pivot_longer(-burn_rate, names_to = "model") %>%
   group_by(model) %>%
   summarise(
@@ -402,7 +430,30 @@ burnout_test %>%
       truth = burn_rate,
       estimate = value
     )
-  )
+  ) %>%
+  arrange(mae)
+
+knitr::kable(bout_test_perf)
+
+bout_test_perf %>%
+  pivot_longer(-model) %>%
+  mutate(model = as.factor(model),
+         model = fct_recode(model, 
+                             "XGBoost" = "boost_pred",
+                            "Random Forest" = "rf_pred",
+                            "Baseline scaled" = "mfs_scored_pred",
+                            "Intercept only" = "intercept_pred"),
+         model = fct_reorder(model,-value)) %>%
+  ggplot(aes(x = value, y = model, col = name)) +
+  geom_point(shape = 16, size = 3) +
+  geom_segment(aes(y = model, yend = model, 
+                   x = 0, xend = value),
+               size = 1) +
+  scale_color_viridis_d(option = "C") +
+  labs(x = "",y = "", title = "Performance on the test data") +
+  theme_light() +
+  theme(legend.position = "None") +
+  facet_wrap(~name)
 ```
 
 ### Variable Importance
