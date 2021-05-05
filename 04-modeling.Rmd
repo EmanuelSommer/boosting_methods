@@ -1,14 +1,18 @@
 # Let's boost the models {#modeling}
 
+Beside the XGBoost model also a random forest model will be fitted here for comparison. 
 
-For modeling two additional packages are required.[@xgboost_package, @ranger_package]
+For the modeling three additional packages are required.[@xgboost_package, @ranger_package, @vipPack]
 
 ```{r loadModelPackages, message=FALSE, warning=FALSE}
-library(xgboost)
-library(ranger)
+library(xgboost) # for the xgboost model
+library(ranger) # for the random forest model
+# + the vip package but it will not be loaded into
+# the namespace
 ```
 
-For parallel computation the `doParallel` package is used.[@doParallel_package]
+For parallel computations the `doParallel` package is used.[@doParallel_package]
+This is most useful for the tuning part.
 
 ```{r registerCLuster, eval=TRUE, warning=FALSE, message=FALSE}
 library(doParallel)
@@ -20,11 +24,15 @@ registerDoParallel(cl)
 
 ```
 
+First one has to set a **metric** for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the $L_1$ norm of performance metrics. Besides also the root mean squared error (RSME) will be covered but the optimization and tuning will focus on the more robust MAE.
+
+
+
 ADJUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUST
 
 To do
 
-1.  register parallel backend
+1.  register parallel backend DONE
 
 2.  create models and workflows
 
@@ -43,11 +51,9 @@ ADJUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUST
 
 ## Burnout data
 
-**Final metrics to be determined!!**
+### Baseline models
 
-First one has to set a metric for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the $L_1$ norm of performance metrics.
-
-The first thing is to set up some trivial baseline models.
+The first thing is to set up the trivial **baseline models**.
 
 ```{r}
 # the trivial intercept only model:
@@ -57,27 +63,19 @@ bout_predict_trivial_mean <- function(new_data) {
 
 # the trivial scoring of mental fatigue score (if missing intercept model)
 bout_predict_trivial_mfs <- function(new_data) {
-  pred <- new_data[["mental_fatigue_score"]] / 10
+  # these two scoring parameters are correspondint to the 
+  # simple linear regression model containing only one predictor
+  # i.e. mfs
+  pred <- new_data[["mental_fatigue_score"]] * 0.097 - 0.1
   pred[is.na(pred)] <- mean(burnout_train$burn_rate)
   pred
 }
+
 ```
 
-Evaluate the performance of the two models on the training data. In the end of this section they will be applied to the test data set alongside the other models.
+The predictions of these baseline models on the test data set will be compared with the predictions of the tree-based models that will be constructed.
 
-```{r}
-# intercept only model
-mae_vec(truth = burnout_train$burn_rate,
-        estimate = bout_predict_trivial_mean(burnout_train))
-```
-```{r}
-# trivial mixed model
-mae_vec(truth = burnout_train$burn_rate,
-        estimate = bout_predict_trivial_mfs(burnout_train))
-```
-
-
-
+### Model specification
 
 ```{r modelSpecburn}
 # Models:
@@ -97,13 +95,10 @@ bout_boost_model <- boost_tree(trees = tune(),
                                stop_iter = 10) %>%
   set_engine("xgboost") %>% 
   set_mode("regression")
-
-bout_lm_model <- linear_reg() %>%
-  set_engine("lm")
 ```
 
 ```{r workflowSpecburn}
-# Workflows:
+# Workflows: model + recipe
 
 bout_rf_wflow <-
   workflow() %>%
@@ -114,30 +109,21 @@ bout_boost_wflow <-
   workflow() %>%
   add_model(bout_boost_model) %>%
   add_recipe(burnout_rec_boost)
-
-bout_lm_wflow <- 
-  workflow() %>%
-  add_model(bout_lm_model) %>%
-  add_recipe(burnout_rec_boost)
-```
-
-The linear model can directly be fitted:
-
-```{r}
-bout_lm_wflow_fitted <- bout_lm_wflow %>%
-  fit(burnout_train)
-
-# summary of the fitted basic linear model
-summary(pull_workflow_fit(bout_lm_wflow_fitted)$fit)
 ```
 
 
+
+### Tuning
+
+For the hyperparameter tuning one needs validation sets to mointor the models on unseen data. To do this 5-fold cross validation (CV) is used here.
 
 ```{r resamplingObjects}
 # Create Resampling object
 set.seed(2)
 burnout_folds <- vfold_cv(burnout_train, v = 5)
 ```
+
+Now adjust or check the hyperparameter ranges that the tuning will use. First the Random forest model.
 
 ```{r}
 # Have a look at the hyperparameters that have to be tuned and finalize them
@@ -200,10 +186,9 @@ Now also this parameter object is ready to be used.
 regr_metrics <- metric_set(mae, rmse)
 ```
 
+Here the actual tuning begins. Again the **random forest model** goes first.
 
 ```{r tuneRFburnout, cache=TRUE, eval=FALSE}
-
-
 # took roughly 30 minutes
 system.time({
   set.seed(2)
@@ -221,7 +206,6 @@ autoplot(bout_rf_tune) + theme_light()
 # this functions shows the best combinations wrt the mae metric of all the
 # combinations in the grid
 show_best(bout_rf_tune, metric = "mae")
-
 ```
 
 
@@ -229,7 +213,7 @@ show_best(bout_rf_tune, metric = "mae")
 knitr::include_graphics("_pictures/rf_burn_tune_plot.png")
 ```
 
-The visualization alongside the best performing results suggest a value of `mtry`of 3 and 1000 `trees` should suffice. Thus one can finalize and fit this model.
+The visualization alongside the best performing results suggest that a value of `mtry`of 3 and 1000 `trees` should suffice. Thus one can finalize and fit this model.
 
 ```{r}
 final_bout_rf_wflow <- 
@@ -241,8 +225,11 @@ final_bout_rf_wflow <-
   fit(burnout_train)
 ```
 
+Now the **boosting model**.
 
-
+First tune only the number of trees in order to detect a number of
+trees that is large enough. Then tune the tree specific arguments.
+If one tunes all parameters at the same time the grid grows to large.
 
 ```{r}
 # tuning grid just for the #trees
@@ -259,10 +246,6 @@ first_grid_boost_burn <- crossing(
 
 
 ```{r tuneBoostBurnfirst, eval=FALSE, cache=TRUE}
-# first tune mainly the number of trees to kind of detect a number of
-# trees that is large enough then tune the tree specific arguments
-# if one tunes all at the same time the grid grows to large
-
 # took roughly 1 minute
 system.time({
   set.seed(2)
@@ -282,7 +265,6 @@ show_best(bout_boost_tune_first)
 ```{r boostburntuneplot1,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Result of the first grid search for the XGBoost model."}
 knitr::include_graphics("_pictures/burn_boost_tune_first.png")
 ```
-
 
 So 1500 trees should suffice here.
 
@@ -366,6 +348,8 @@ show_best(bout_boost_tune_third, metric = "mae")
 
 With this final grid search one is ready to finalize the model.
 
+No column-subsampling will be applied, the maximum tree depth will be 4, the learning rate is small but not extremely small, the loss reduction regularization effect is obviously not needed here and the sample sized used for each tree is set to 0.8.
+
 ```{r}
 final_bout_boost_wflow <- 
   bout_boost_wflow %>% 
@@ -381,15 +365,29 @@ final_bout_boost_wflow <-
 
 
 
-
+From here one no computational intensive task will be performed so stop the cluster.
 
 ```{r}
 # stop cluster
 stopCluster(cl)
 ```
 
+### Evaluate and understand the model
+
+First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees.
 
 ```{r}
+final_bout_boost_wflow %>%
+  pull_workflow_fit() %>%
+  vip::vip() + 
+  theme_light() 
+```
+
+This shows that indeed the `mental_fatigue_score` is the most influential predictor followed by the `ressource_allocation` and `designation` features.
+Now the really interesting part is which model performed the best on the test data set. The results can be viewed below.
+
+
+```{r, echo=FALSE}
 # calculate the mae an the rmse for both models (random forest and xgboost)
 bout_test_perf <- burnout_test %>%
   mutate(rf_pred = predict(final_bout_rf_wflow,
@@ -405,18 +403,6 @@ bout_test_perf <- burnout_test %>%
       TRUE ~ col
       )
   })) %>%
-  # mutate(
-  #   rf_pred = case_when(
-  #     rf_pred < 0 ~ 0,
-  #     rf_pred > 1 ~ 1,
-  #     TRUE ~ rf_pred
-  #     ),
-  #   boost_pred = case_when(
-  #     boost_pred < 0 ~ 0,
-  #     boost_pred > 1 ~ 1,
-  #     TRUE ~ boost_pred
-  #   )
-  # ) %>%
   select(burn_rate, rf_pred, boost_pred, 
          intercept_pred, mfs_scored_pred) %>%
   pivot_longer(-burn_rate, names_to = "model") %>%
@@ -456,24 +442,9 @@ bout_test_perf %>%
   facet_wrap(~name)
 ```
 
-### Variable Importance
+It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low mae. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an $R^2$ of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor `mental_fatigue_score` should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions used XGBoost models. 
 
-```{r}
-final_bout_boost_wflow %>%
-  pull_workflow_fit() %>%
-  vip::vip() + 
-  theme_light() 
-```
-
-
-
-Some to dos and questions:
-
-* cv also the test set? then visualize with error bands
-* else visualize vs trivial model?
-* variable importance
-
-cite vip package
+this closes this 
 
 ## Insurance data
 
