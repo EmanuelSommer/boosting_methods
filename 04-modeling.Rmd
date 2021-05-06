@@ -1,6 +1,6 @@
 # Let's boost the models {#modeling}
 
-Beside the XGBoost model also a random forest model will be fitted here for comparison. 
+Beside the XGBoost model also a random forest model will be fitted here for comparison. The whole modeling approach and procedure is closely following the principles that are outlined in the great book *Tidy modeling with R* by Max Kuhn and Julia Silge.
 
 For the modeling three additional packages are required.[@xgboost_package, @ranger_package, @vipPack]
 
@@ -25,29 +25,6 @@ registerDoParallel(cl)
 ```
 
 First one has to set a **metric** for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the $L_1$ norm of performance metrics. Besides also the root mean squared error (RSME) will be covered but the optimization and tuning will focus on the more robust MAE.
-
-
-
-ADJUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUST
-
-To do
-
-1.  register parallel backend DONE
-
-2.  create models and workflows
-
-3.  create resampling objects
-
-4.  choose tuning method (racing/iterative or grid search)
-
-5.  tune models and select best ones
-
-6.  compare final models to test set
-
-7.  save final model
-
-ADJUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUST
-
 
 ## Burnout data
 
@@ -86,6 +63,7 @@ bout_rf_model <- rand_forest(trees = tune(),
   set_engine("ranger") %>% 
   set_mode("regression")
 
+# XGBoost model
 bout_boost_model <- boost_tree(trees = tune(),
                                learn_rate = tune(),
                                loss_reduction = tune(),
@@ -115,7 +93,7 @@ bout_boost_wflow <-
 
 ### Tuning
 
-For the hyperparameter tuning one needs validation sets to mointor the models on unseen data. To do this 5-fold cross validation (CV) is used here.
+For the hyperparameter tuning one needs validation sets to monitor the models on unseen data. To do this 5-fold cross validation (CV) is used here.
 
 ```{r resamplingObjects}
 # Create Resampling object
@@ -133,7 +111,7 @@ bout_rf_params <- bout_rf_wflow %>%
 bout_rf_params 
 ```
 
-This shows that the mtry hyperparameter has to be adjusted depending on the data. Moreover with the `dials::update` function one can manually set the ranges that should be used for tuning.
+This shows that the `mtry` hyperparameter has to be adjusted depending on the data. Moreover with the `dials::update` function one can manually set the ranges that should be used for tuning.
 
 ```{r}
 # default range for tuning is 1 up to 2000 for the trees argument
@@ -178,7 +156,8 @@ bout_boost_params %>%
 bout_boost_params %>%
   pull_dials_object("mtry")
 ```
-Now also this parameter object is ready to be used.
+
+Now also this parameter object is ready to be used. The next step is to define the metrics used for evaluation while tuning.
 
 
 ```{r}
@@ -186,7 +165,11 @@ Now also this parameter object is ready to be used.
 regr_metrics <- metric_set(mae, rmse)
 ```
 
-Here the actual tuning begins. Again the **random forest model** goes first.
+Now the actual tuning begins. The models will be tuned by a space filling grid search. As one has defined ranges for each parameter one can then use different algorithms to construct a grid of combinations of parameter values that tries to best fill the defined ranges by random sampling also in a high dimensional setting. In the following the function `tune::grid_latin_hypercube` is used for this. So basically one tries out all hyperparameter values for each fold and saves the performance of the performance metrics on the hold out fold. These metrics are then aggregated for each combination and with the resulting estimates of performance one can choose the final set of hyperparameters. The more hyperparameters the model has the more tuning rounds might needed to refine the grid. Besides the classical grid search there are also iterative methods for tuning. These are mainly good to tune a single hyperparameter at once and not for a bunch of them simultaneously. They will not be used in the following.
+
+The **random forest model** goes first with the tuning.
+
+Here there are as seen above only two hyperparameters to be tuned thus 30 combinations should suffice.
 
 ```{r tuneRFburnout, cache=TRUE, eval=FALSE}
 # took roughly 30 minutes
@@ -213,7 +196,7 @@ show_best(bout_rf_tune, metric = "mae")
 knitr::include_graphics("_pictures/rf_burn_tune_plot.png")
 ```
 
-The visualization alongside the best performing results suggest that a value of `mtry`of 3 and 1000 `trees` should suffice. Thus one can finalize and fit this model.
+The visualization alongside the best performing results suggest that a value of `mtry`of 3 and 1000 `trees` should give good results. Thus one can finalize and fit this model.
 
 ```{r}
 final_bout_rf_wflow <- 
@@ -228,8 +211,10 @@ final_bout_rf_wflow <-
 Now the **boosting model**.
 
 First tune only the number of trees in order to detect a number of
-trees that is large enough. Then tune the tree specific arguments.
-If one tunes all parameters at the same time the grid grows to large.
+trees that is 'large enough'. Then tune the tree specific arguments.
+If one tunes all parameters at the same time the grid grows to large. Moreover a tuning of the trees argument could encourage overfitting.
+
+The first tuning round:
 
 ```{r}
 # tuning grid just for the #trees
@@ -242,7 +227,6 @@ first_grid_boost_burn <- crossing(
   sample_size = 1
 )
 ```
-
 
 
 ```{r tuneBoostBurnfirst, eval=FALSE, cache=TRUE}
@@ -266,7 +250,7 @@ show_best(bout_boost_tune_first)
 knitr::include_graphics("_pictures/burn_boost_tune_first.png")
 ```
 
-So 1500 trees should suffice here.
+So 1500 trees should suffice here. Thus the workflow and model will be adjusted accordingly.
 
 ```{r}
 # fix the number of trees by redefining the boosted model with a 
@@ -295,7 +279,7 @@ bout_boost_params
 ```
 
 
-Now perform the major grid search over all the other hyperparameters.
+Now perform the first major grid search over all the other hyperparameters and the second one overall.
 
 ```{r tuneBoostBurnsecond, eval=FALSE, cache=TRUE}
 # now tune all the remaining hyperparameters with a large space filling grid
@@ -316,8 +300,7 @@ system.time({
 show_best(bout_boost_tune_second, metric = "mae")
 ```
 
-
-Refine the grid i.e. the parameter space according to the results of the last grid search.
+Now refine the grid i.e. the parameter space according to the results of the last grid search and perform a third one.
 
 ```{r tuneBoostBurnthird, eval=FALSE, cache=TRUE}
 # now tune all the remaining hyperparameters with a refined space filling grid
@@ -348,7 +331,7 @@ show_best(bout_boost_tune_third, metric = "mae")
 
 With this final grid search one is ready to finalize the model.
 
-No column-subsampling will be applied, the maximum tree depth will be 4, the learning rate is small but not extremely small, the loss reduction regularization effect is obviously not needed here and the sample sized used for each tree is set to 0.8.
+The results of the three grid searches suggest that no column-subsampling should be applied, the maximum tree depth should be 4, the learning rate should be small but not extremely small ($\sim 0.02$), the loss reduction regularization effect is not needed here (very small) and the sample size for each tree should be set to 0.8.
 
 ```{r}
 final_bout_boost_wflow <- 
@@ -363,9 +346,7 @@ final_bout_boost_wflow <-
   fit(burnout_train)
 ```
 
-
-
-From here one no computational intensive task will be performed so stop the cluster.
+From here one no computational intensive task will be performed so one stops the cluster.
 
 ```{r}
 # stop cluster
@@ -376,18 +357,20 @@ stopCluster(cl)
 
 First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees.
 
-```{r}
+```{r, echo=FALSE}
 final_bout_boost_wflow %>%
   pull_workflow_fit() %>%
   vip::vip() + 
-  theme_light() 
+  theme_light() +
+  labs(title = "Variable importance of the XGBoost model")
 ```
 
-This shows that indeed the `mental_fatigue_score` is the most influential predictor followed by the `ressource_allocation` and `designation` features.
-Now the really interesting part is which model performed the best on the test data set. The results can be viewed below.
+This shows that indeed the `mental_fatigue_score` is the most influential predictor by far followed by the `ressource_allocation` and `designation` features. These results are not at all surprising as the EDA exactly came to these conclusions. Especially the very few appearances of the features connected to `company_type` and `date_of_joining` are most likely just some minor overfitting.
+
+Now the really interesting part is which model performed the best on the test data set. The results can be viewed below in tabular and grapical form.
 
 
-```{r, echo=FALSE}
+```{r perfBurn, echo=FALSE}
 # calculate the mae an the rmse for both models (random forest and xgboost)
 bout_test_perf <- burnout_test %>%
   mutate(rf_pred = predict(final_bout_rf_wflow,
@@ -419,8 +402,14 @@ bout_test_perf <- burnout_test %>%
   ) %>%
   arrange(mae)
 
-knitr::kable(bout_test_perf)
+knitr::kable(bout_test_perf, digits = 4,
+             booktabs = TRUE,
+             caption = "Performance on the test data")
 
+
+```
+
+```{r, echo=FALSE}
 bout_test_perf %>%
   pivot_longer(-model) %>%
   mutate(model = as.factor(model),
@@ -442,9 +431,10 @@ bout_test_perf %>%
   facet_wrap(~name)
 ```
 
-It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low mae. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an $R^2$ of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor `mental_fatigue_score` should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions used XGBoost models. 
 
-this closes this 
+It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low mae. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an $R^2$ of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor `mental_fatigue_score` should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions there used XGBoost models. 
+
+This finishes the analysis of the burnout data set. But no worries there is still one data set and boosting model left to explore namely the insurance data set.
 
 ## Insurance data
 

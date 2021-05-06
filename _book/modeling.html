@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-05-05" />
+<meta name="date" content="2021-05-06" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -183,7 +183,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li class="chapter" data-level="5.1" data-path="modeling.html"><a href="modeling.html#burnout-data-1"><i class="fa fa-check"></i><b>5.1</b> Burnout data</a>
 <ul>
-<li class="chapter" data-level="5.1.1" data-path="modeling.html"><a href="modeling.html#variable-importance"><i class="fa fa-check"></i><b>5.1.1</b> Variable Importance</a></li>
+<li class="chapter" data-level="5.1.1" data-path="modeling.html"><a href="modeling.html#baseline-models"><i class="fa fa-check"></i><b>5.1.1</b> Baseline models</a></li>
+<li class="chapter" data-level="5.1.2" data-path="modeling.html"><a href="modeling.html#model-specification"><i class="fa fa-check"></i><b>5.1.2</b> Model specification</a></li>
+<li class="chapter" data-level="5.1.3" data-path="modeling.html"><a href="modeling.html#tuning"><i class="fa fa-check"></i><b>5.1.3</b> Tuning</a></li>
+<li class="chapter" data-level="5.1.4" data-path="modeling.html"><a href="modeling.html#evaluate-and-understand-the-model"><i class="fa fa-check"></i><b>5.1.4</b> Evaluate and understand the model</a></li>
 </ul></li>
 <li class="chapter" data-level="5.2" data-path="modeling.html"><a href="modeling.html#insurance-data"><i class="fa fa-check"></i><b>5.2</b> Insurance data</a></li>
 </ul></li>
@@ -208,32 +211,25 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
             <section class="normal" id="section-">
 <div id="modeling" class="section level1" number="5">
 <h1><span class="header-section-number">Chapter 5</span> Let’s boost the models</h1>
-<p>For modeling two additional packages are required.<span class="citation">[<a href="references.html#ref-ranger_package" role="doc-biblioref">15</a>]</span></p>
-<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="modeling.html#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)</span>
-<span id="cb41-2"><a href="modeling.html#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger)</span></code></pre></div>
-<p>For parallel computation the <code>doParallel</code> package is used.<span class="citation">[<a href="references.html#ref-doParallel_package" role="doc-biblioref">16</a>]</span></p>
+<p>Beside the XGBoost model also a random forest model will be fitted here for comparison. The whole modeling approach and procedure is closely following the principles that are outlined in the great book <em>Tidy modeling with R</em> by Max Kuhn and Julia Silge.</p>
+<p>For the modeling three additional packages are required.<span class="citation">[<a href="references.html#ref-vipPack" role="doc-biblioref">16</a>]</span></p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="modeling.html#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost) <span class="co"># for the xgboost model</span></span>
+<span id="cb41-2"><a href="modeling.html#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger) <span class="co"># for the random forest model</span></span>
+<span id="cb41-3"><a href="modeling.html#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="co"># + the vip package but it will not be loaded into</span></span>
+<span id="cb41-4"><a href="modeling.html#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="co"># the namespace</span></span></code></pre></div>
+<p>For parallel computations the <code>doParallel</code> package is used.<span class="citation">[<a href="references.html#ref-doParallel_package" role="doc-biblioref">17</a>]</span>
+This is most useful for the tuning part.</p>
 <div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="modeling.html#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(doParallel)</span>
 <span id="cb42-2"><a href="modeling.html#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb42-3"><a href="modeling.html#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a cluster object and then register: </span></span>
 <span id="cb42-4"><a href="modeling.html#cb42-4" aria-hidden="true" tabindex="-1"></a>cl <span class="ot">&lt;-</span> <span class="fu">makePSOCKcluster</span>(<span class="dv">2</span>)</span>
 <span id="cb42-5"><a href="modeling.html#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="fu">registerDoParallel</span>(cl)</span></code></pre></div>
-<p>ADJUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUST</p>
-<p>To do</p>
-<ol style="list-style-type: decimal">
-<li><p>register parallel backend</p></li>
-<li><p>create models and workflows</p></li>
-<li><p>create resampling objects</p></li>
-<li><p>choose tuning method (racing/iterative or grid search)</p></li>
-<li><p>tune models and select best ones</p></li>
-<li><p>compare final models to test set</p></li>
-<li><p>save final model</p></li>
-</ol>
-<p>ADJUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUST</p>
+<p>First one has to set a <strong>metric</strong> for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the <span class="math inline">\(L_1\)</span> norm of performance metrics. Besides also the root mean squared error (RSME) will be covered but the optimization and tuning will focus on the more robust MAE.</p>
 <div id="burnout-data-1" class="section level2" number="5.1">
 <h2><span class="header-section-number">5.1</span> Burnout data</h2>
-<p><strong>Final metrics to be determined!!</strong></p>
-<p>First one has to set a metric for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the <span class="math inline">\(L_1\)</span> norm of performance metrics.</p>
-<p>The first thing is to set up some trivial baseline models.</p>
+<div id="baseline-models" class="section level3" number="5.1.1">
+<h3><span class="header-section-number">5.1.1</span> Baseline models</h3>
+<p>The first thing is to set up the trivial <strong>baseline models</strong>.</p>
 <div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="modeling.html#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the trivial intercept only model:</span></span>
 <span id="cb43-2"><a href="modeling.html#cb43-2" aria-hidden="true" tabindex="-1"></a>bout_predict_trivial_mean <span class="ot">&lt;-</span> <span class="cf">function</span>(new_data) {</span>
 <span id="cb43-3"><a href="modeling.html#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rep</span>(<span class="fu">mean</span>(burnout_train<span class="sc">$</span>burn_rate), <span class="fu">nrow</span>(new_data))</span>
@@ -241,55 +237,58 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb43-5"><a href="modeling.html#cb43-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb43-6"><a href="modeling.html#cb43-6" aria-hidden="true" tabindex="-1"></a><span class="co"># the trivial scoring of mental fatigue score (if missing intercept model)</span></span>
 <span id="cb43-7"><a href="modeling.html#cb43-7" aria-hidden="true" tabindex="-1"></a>bout_predict_trivial_mfs <span class="ot">&lt;-</span> <span class="cf">function</span>(new_data) {</span>
-<span id="cb43-8"><a href="modeling.html#cb43-8" aria-hidden="true" tabindex="-1"></a>  pred <span class="ot">&lt;-</span> new_data[[<span class="st">&quot;mental_fatigue_score&quot;</span>]] <span class="sc">/</span> <span class="dv">10</span></span>
-<span id="cb43-9"><a href="modeling.html#cb43-9" aria-hidden="true" tabindex="-1"></a>  pred[<span class="fu">is.na</span>(pred)] <span class="ot">&lt;-</span> <span class="fu">mean</span>(burnout_train<span class="sc">$</span>burn_rate)</span>
-<span id="cb43-10"><a href="modeling.html#cb43-10" aria-hidden="true" tabindex="-1"></a>  pred</span>
-<span id="cb43-11"><a href="modeling.html#cb43-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>Evaluate the performance of the two models on the training data. In the end of this section they will be applied to the test data set alongside the other models.</p>
-<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="modeling.html#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># intercept only model</span></span>
-<span id="cb44-2"><a href="modeling.html#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mae_vec</span>(<span class="at">truth =</span> burnout_train<span class="sc">$</span>burn_rate,</span>
-<span id="cb44-3"><a href="modeling.html#cb44-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">estimate =</span> <span class="fu">bout_predict_trivial_mean</span>(burnout_train))</span></code></pre></div>
-<pre><code>## [1] 0.1596372</code></pre>
-<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="modeling.html#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># trivial mixed model</span></span>
-<span id="cb46-2"><a href="modeling.html#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mae_vec</span>(<span class="at">truth =</span> burnout_train<span class="sc">$</span>burn_rate,</span>
-<span id="cb46-3"><a href="modeling.html#cb46-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">estimate =</span> <span class="fu">bout_predict_trivial_mfs</span>(burnout_train))</span></code></pre></div>
-<pre><code>## [1] 0.1262089</code></pre>
-<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="modeling.html#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Models:</span></span>
-<span id="cb48-2"><a href="modeling.html#cb48-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb48-3"><a href="modeling.html#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Random forest model for comparison</span></span>
-<span id="cb48-4"><a href="modeling.html#cb48-4" aria-hidden="true" tabindex="-1"></a>bout_rf_model <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">trees =</span> <span class="fu">tune</span>(),</span>
-<span id="cb48-5"><a href="modeling.html#cb48-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">mtry =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb48-6"><a href="modeling.html#cb48-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;ranger&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb48-7"><a href="modeling.html#cb48-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span>
-<span id="cb48-8"><a href="modeling.html#cb48-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb48-9"><a href="modeling.html#cb48-9" aria-hidden="true" tabindex="-1"></a>bout_boost_model <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(),</span>
-<span id="cb48-10"><a href="modeling.html#cb48-10" aria-hidden="true" tabindex="-1"></a>                               <span class="at">learn_rate =</span> <span class="fu">tune</span>(),</span>
-<span id="cb48-11"><a href="modeling.html#cb48-11" aria-hidden="true" tabindex="-1"></a>                               <span class="at">loss_reduction =</span> <span class="fu">tune</span>(),</span>
-<span id="cb48-12"><a href="modeling.html#cb48-12" aria-hidden="true" tabindex="-1"></a>                               <span class="at">tree_depth =</span> <span class="fu">tune</span>(),</span>
-<span id="cb48-13"><a href="modeling.html#cb48-13" aria-hidden="true" tabindex="-1"></a>                               <span class="at">mtry =</span> <span class="fu">tune</span>(),</span>
-<span id="cb48-14"><a href="modeling.html#cb48-14" aria-hidden="true" tabindex="-1"></a>                               <span class="at">sample_size =</span> <span class="fu">tune</span>(),</span>
-<span id="cb48-15"><a href="modeling.html#cb48-15" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stop_iter =</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb48-16"><a href="modeling.html#cb48-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;xgboost&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb48-17"><a href="modeling.html#cb48-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="modeling.html#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Workflows:</span></span>
-<span id="cb49-2"><a href="modeling.html#cb49-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb49-3"><a href="modeling.html#cb49-3" aria-hidden="true" tabindex="-1"></a>bout_rf_wflow <span class="ot">&lt;-</span></span>
-<span id="cb49-4"><a href="modeling.html#cb49-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb49-5"><a href="modeling.html#cb49-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(bout_rf_model) <span class="sc">%&gt;%</span></span>
-<span id="cb49-6"><a href="modeling.html#cb49-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(burnout_rec_rf)</span>
-<span id="cb49-7"><a href="modeling.html#cb49-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb49-8"><a href="modeling.html#cb49-8" aria-hidden="true" tabindex="-1"></a>bout_boost_wflow <span class="ot">&lt;-</span></span>
-<span id="cb49-9"><a href="modeling.html#cb49-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb49-10"><a href="modeling.html#cb49-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(bout_boost_model) <span class="sc">%&gt;%</span></span>
-<span id="cb49-11"><a href="modeling.html#cb49-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(burnout_rec_boost)</span></code></pre></div>
-<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="modeling.html#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create Resampling object</span></span>
-<span id="cb50-2"><a href="modeling.html#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
-<span id="cb50-3"><a href="modeling.html#cb50-3" aria-hidden="true" tabindex="-1"></a>burnout_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(burnout_train, <span class="at">v =</span> <span class="dv">5</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="modeling.html#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Have a look at the hyperparameters that have to be tuned and finalize them</span></span>
-<span id="cb51-2"><a href="modeling.html#cb51-2" aria-hidden="true" tabindex="-1"></a>bout_rf_params <span class="ot">&lt;-</span> bout_rf_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb51-3"><a href="modeling.html#cb51-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parameters</span>()</span>
-<span id="cb51-4"><a href="modeling.html#cb51-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb51-5"><a href="modeling.html#cb51-5" aria-hidden="true" tabindex="-1"></a>bout_rf_params </span></code></pre></div>
+<span id="cb43-8"><a href="modeling.html#cb43-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># these two scoring parameters are correspondint to the </span></span>
+<span id="cb43-9"><a href="modeling.html#cb43-9" aria-hidden="true" tabindex="-1"></a>  <span class="co"># simple linear regression model containing only one predictor</span></span>
+<span id="cb43-10"><a href="modeling.html#cb43-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># i.e. mfs</span></span>
+<span id="cb43-11"><a href="modeling.html#cb43-11" aria-hidden="true" tabindex="-1"></a>  pred <span class="ot">&lt;-</span> new_data[[<span class="st">&quot;mental_fatigue_score&quot;</span>]] <span class="sc">*</span> <span class="fl">0.097</span> <span class="sc">-</span> <span class="fl">0.1</span></span>
+<span id="cb43-12"><a href="modeling.html#cb43-12" aria-hidden="true" tabindex="-1"></a>  pred[<span class="fu">is.na</span>(pred)] <span class="ot">&lt;-</span> <span class="fu">mean</span>(burnout_train<span class="sc">$</span>burn_rate)</span>
+<span id="cb43-13"><a href="modeling.html#cb43-13" aria-hidden="true" tabindex="-1"></a>  pred</span>
+<span id="cb43-14"><a href="modeling.html#cb43-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>The predictions of these baseline models on the test data set will be compared with the predictions of the tree-based models that will be constructed.</p>
+</div>
+<div id="model-specification" class="section level3" number="5.1.2">
+<h3><span class="header-section-number">5.1.2</span> Model specification</h3>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="modeling.html#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Models:</span></span>
+<span id="cb44-2"><a href="modeling.html#cb44-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-3"><a href="modeling.html#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Random forest model for comparison</span></span>
+<span id="cb44-4"><a href="modeling.html#cb44-4" aria-hidden="true" tabindex="-1"></a>bout_rf_model <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">trees =</span> <span class="fu">tune</span>(),</span>
+<span id="cb44-5"><a href="modeling.html#cb44-5" aria-hidden="true" tabindex="-1"></a>                             <span class="at">mtry =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-6"><a href="modeling.html#cb44-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;ranger&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-7"><a href="modeling.html#cb44-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span>
+<span id="cb44-8"><a href="modeling.html#cb44-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-9"><a href="modeling.html#cb44-9" aria-hidden="true" tabindex="-1"></a>bout_boost_model <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(),</span>
+<span id="cb44-10"><a href="modeling.html#cb44-10" aria-hidden="true" tabindex="-1"></a>                               <span class="at">learn_rate =</span> <span class="fu">tune</span>(),</span>
+<span id="cb44-11"><a href="modeling.html#cb44-11" aria-hidden="true" tabindex="-1"></a>                               <span class="at">loss_reduction =</span> <span class="fu">tune</span>(),</span>
+<span id="cb44-12"><a href="modeling.html#cb44-12" aria-hidden="true" tabindex="-1"></a>                               <span class="at">tree_depth =</span> <span class="fu">tune</span>(),</span>
+<span id="cb44-13"><a href="modeling.html#cb44-13" aria-hidden="true" tabindex="-1"></a>                               <span class="at">mtry =</span> <span class="fu">tune</span>(),</span>
+<span id="cb44-14"><a href="modeling.html#cb44-14" aria-hidden="true" tabindex="-1"></a>                               <span class="at">sample_size =</span> <span class="fu">tune</span>(),</span>
+<span id="cb44-15"><a href="modeling.html#cb44-15" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stop_iter =</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb44-16"><a href="modeling.html#cb44-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;xgboost&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-17"><a href="modeling.html#cb44-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="modeling.html#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Workflows: model + recipe</span></span>
+<span id="cb45-2"><a href="modeling.html#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="modeling.html#cb45-3" aria-hidden="true" tabindex="-1"></a>bout_rf_wflow <span class="ot">&lt;-</span></span>
+<span id="cb45-4"><a href="modeling.html#cb45-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb45-5"><a href="modeling.html#cb45-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(bout_rf_model) <span class="sc">%&gt;%</span></span>
+<span id="cb45-6"><a href="modeling.html#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(burnout_rec_rf)</span>
+<span id="cb45-7"><a href="modeling.html#cb45-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-8"><a href="modeling.html#cb45-8" aria-hidden="true" tabindex="-1"></a>bout_boost_wflow <span class="ot">&lt;-</span></span>
+<span id="cb45-9"><a href="modeling.html#cb45-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb45-10"><a href="modeling.html#cb45-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(bout_boost_model) <span class="sc">%&gt;%</span></span>
+<span id="cb45-11"><a href="modeling.html#cb45-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(burnout_rec_boost)</span></code></pre></div>
+</div>
+<div id="tuning" class="section level3" number="5.1.3">
+<h3><span class="header-section-number">5.1.3</span> Tuning</h3>
+<p>For the hyperparameter tuning one needs validation sets to monitor the models on unseen data. To do this 5-fold cross validation (CV) is used here.</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="modeling.html#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create Resampling object</span></span>
+<span id="cb46-2"><a href="modeling.html#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb46-3"><a href="modeling.html#cb46-3" aria-hidden="true" tabindex="-1"></a>burnout_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(burnout_train, <span class="at">v =</span> <span class="dv">5</span>)</span></code></pre></div>
+<p>Now adjust or check the hyperparameter ranges that the tuning will use. First the Random forest model.</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="modeling.html#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Have a look at the hyperparameters that have to be tuned and finalize them</span></span>
+<span id="cb47-2"><a href="modeling.html#cb47-2" aria-hidden="true" tabindex="-1"></a>bout_rf_params <span class="ot">&lt;-</span> bout_rf_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb47-3"><a href="modeling.html#cb47-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parameters</span>()</span>
+<span id="cb47-4"><a href="modeling.html#cb47-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-5"><a href="modeling.html#cb47-5" aria-hidden="true" tabindex="-1"></a>bout_rf_params </span></code></pre></div>
 <pre><code>## Collection of 2 parameters for tuning
 ## 
 ##  identifier  type    object
@@ -300,30 +299,30 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ##    # Randomly Selected Predictors (&#39;mtry&#39;)
 ## 
 ## See `?dials::finalize` or `?dials::update.parameters` for more information.</code></pre>
-<p>This shows that the mtry hyperparameter has to be adjusted depending on the data. Moreover with the <code>dials::update</code> function one can manually set the ranges that should be used for tuning.</p>
-<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="modeling.html#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># default range for tuning is 1 up to 2000 for the trees argument</span></span>
-<span id="cb53-2"><a href="modeling.html#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="co"># set the lower bound of the range to 100. Then finalize the</span></span>
-<span id="cb53-3"><a href="modeling.html#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="co"># parameters using the training data.</span></span>
-<span id="cb53-4"><a href="modeling.html#cb53-4" aria-hidden="true" tabindex="-1"></a>bout_rf_params <span class="ot">&lt;-</span> bout_rf_params <span class="sc">%&gt;%</span></span>
-<span id="cb53-5"><a href="modeling.html#cb53-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update</span>(<span class="at">trees =</span> <span class="fu">trees</span>(<span class="fu">c</span>(<span class="dv">100</span>, <span class="dv">2000</span>))) <span class="sc">%&gt;%</span></span>
-<span id="cb53-6"><a href="modeling.html#cb53-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize</span>(burnout_train)</span>
-<span id="cb53-7"><a href="modeling.html#cb53-7" aria-hidden="true" tabindex="-1"></a>bout_rf_params</span></code></pre></div>
+<p>This shows that the <code>mtry</code> hyperparameter has to be adjusted depending on the data. Moreover with the <code>dials::update</code> function one can manually set the ranges that should be used for tuning.</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="modeling.html#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># default range for tuning is 1 up to 2000 for the trees argument</span></span>
+<span id="cb49-2"><a href="modeling.html#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="co"># set the lower bound of the range to 100. Then finalize the</span></span>
+<span id="cb49-3"><a href="modeling.html#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="co"># parameters using the training data.</span></span>
+<span id="cb49-4"><a href="modeling.html#cb49-4" aria-hidden="true" tabindex="-1"></a>bout_rf_params <span class="ot">&lt;-</span> bout_rf_params <span class="sc">%&gt;%</span></span>
+<span id="cb49-5"><a href="modeling.html#cb49-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update</span>(<span class="at">trees =</span> <span class="fu">trees</span>(<span class="fu">c</span>(<span class="dv">100</span>, <span class="dv">2000</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb49-6"><a href="modeling.html#cb49-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize</span>(burnout_train)</span>
+<span id="cb49-7"><a href="modeling.html#cb49-7" aria-hidden="true" tabindex="-1"></a>bout_rf_params</span></code></pre></div>
 <pre><code>## Collection of 2 parameters for tuning
 ## 
 ##  identifier  type    object
 ##        mtry  mtry nparam[+]
 ##       trees trees nparam[+]</code></pre>
-<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="modeling.html#cb55-1" aria-hidden="true" tabindex="-1"></a>bout_rf_params <span class="sc">%&gt;%</span> <span class="fu">pull_dials_object</span>(<span class="st">&quot;mtry&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="modeling.html#cb51-1" aria-hidden="true" tabindex="-1"></a>bout_rf_params <span class="sc">%&gt;%</span> <span class="fu">pull_dials_object</span>(<span class="st">&quot;mtry&quot;</span>)</span></code></pre></div>
 <pre><code>## # Randomly Selected Predictors (quantitative)
 ## Range: [1, 9]</code></pre>
-<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="modeling.html#cb57-1" aria-hidden="true" tabindex="-1"></a>bout_rf_params <span class="sc">%&gt;%</span> <span class="fu">pull_dials_object</span>(<span class="st">&quot;trees&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="modeling.html#cb53-1" aria-hidden="true" tabindex="-1"></a>bout_rf_params <span class="sc">%&gt;%</span> <span class="fu">pull_dials_object</span>(<span class="st">&quot;trees&quot;</span>)</span></code></pre></div>
 <pre><code>## # Trees (quantitative)
 ## Range: [100, 2000]</code></pre>
 <p>Now this parameter object is ready for tuning and the same steps have to be performed on the boosting workflow.</p>
-<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="modeling.html#cb59-1" aria-hidden="true" tabindex="-1"></a>bout_boost_params <span class="ot">&lt;-</span> bout_boost_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb59-2"><a href="modeling.html#cb59-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parameters</span>()</span>
-<span id="cb59-3"><a href="modeling.html#cb59-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb59-4"><a href="modeling.html#cb59-4" aria-hidden="true" tabindex="-1"></a>bout_boost_params </span></code></pre></div>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="modeling.html#cb55-1" aria-hidden="true" tabindex="-1"></a>bout_boost_params <span class="ot">&lt;-</span> bout_boost_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb55-2"><a href="modeling.html#cb55-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parameters</span>()</span>
+<span id="cb55-3"><a href="modeling.html#cb55-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-4"><a href="modeling.html#cb55-4" aria-hidden="true" tabindex="-1"></a>bout_boost_params </span></code></pre></div>
 <pre><code>## Collection of 6 parameters for tuning
 ## 
 ##      identifier           type    object
@@ -338,30 +337,30 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ##    # Randomly Selected Predictors (&#39;mtry&#39;)
 ## 
 ## See `?dials::finalize` or `?dials::update.parameters` for more information.</code></pre>
-<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="modeling.html#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co"># first a look at the default ranges</span></span>
-<span id="cb61-2"><a href="modeling.html#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="fu">trees</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb57-1"><a href="modeling.html#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># first a look at the default ranges</span></span>
+<span id="cb57-2"><a href="modeling.html#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="fu">trees</span>()</span></code></pre></div>
 <pre><code>## # Trees (quantitative)
 ## Range: [1, 2000]</code></pre>
-<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="modeling.html#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tree_depth</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb59-1"><a href="modeling.html#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tree_depth</span>()</span></code></pre></div>
 <pre><code>## Tree Depth (quantitative)
 ## Range: [1, 15]</code></pre>
-<div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb65-1"><a href="modeling.html#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">learn_rate</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="modeling.html#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="fu">learn_rate</span>()</span></code></pre></div>
 <pre><code>## Learning Rate (quantitative)
 ## Transformer:  log-10 
 ## Range (transformed scale): [-10, -1]</code></pre>
-<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb67-1"><a href="modeling.html#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">loss_reduction</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="modeling.html#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="fu">loss_reduction</span>()</span></code></pre></div>
 <pre><code>## Minimum Loss Reduction (quantitative)
 ## Transformer:  log-10 
 ## Range (transformed scale): [-10, 1.5]</code></pre>
-<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb69-1"><a href="modeling.html#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sample_size</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb65-1"><a href="modeling.html#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sample_size</span>()</span></code></pre></div>
 <pre><code>## # Observations Sampled (quantitative)
 ## Range: [?, ?]</code></pre>
 <p>So <code>sample_size</code> must also be finalized. Again the lower bound on the number of trees will be raised to 100. The other scales are really sensible and will be left as is.</p>
-<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="modeling.html#cb71-1" aria-hidden="true" tabindex="-1"></a>bout_boost_params <span class="ot">&lt;-</span> bout_boost_params <span class="sc">%&gt;%</span></span>
-<span id="cb71-2"><a href="modeling.html#cb71-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update</span>(<span class="at">trees =</span> <span class="fu">trees</span>(<span class="fu">c</span>(<span class="dv">100</span>, <span class="dv">2000</span>))) <span class="sc">%&gt;%</span></span>
-<span id="cb71-3"><a href="modeling.html#cb71-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize</span>(burnout_train)</span>
-<span id="cb71-4"><a href="modeling.html#cb71-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb71-5"><a href="modeling.html#cb71-5" aria-hidden="true" tabindex="-1"></a>bout_boost_params</span></code></pre></div>
+<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb67-1"><a href="modeling.html#cb67-1" aria-hidden="true" tabindex="-1"></a>bout_boost_params <span class="ot">&lt;-</span> bout_boost_params <span class="sc">%&gt;%</span></span>
+<span id="cb67-2"><a href="modeling.html#cb67-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update</span>(<span class="at">trees =</span> <span class="fu">trees</span>(<span class="fu">c</span>(<span class="dv">100</span>, <span class="dv">2000</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb67-3"><a href="modeling.html#cb67-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize</span>(burnout_train)</span>
+<span id="cb67-4"><a href="modeling.html#cb67-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-5"><a href="modeling.html#cb67-5" aria-hidden="true" tabindex="-1"></a>bout_boost_params</span></code></pre></div>
 <pre><code>## Collection of 6 parameters for tuning
 ## 
 ##      identifier           type    object
@@ -371,105 +370,109 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ##      learn_rate     learn_rate nparam[+]
 ##  loss_reduction loss_reduction nparam[+]
 ##     sample_size    sample_size nparam[+]</code></pre>
-<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="modeling.html#cb73-1" aria-hidden="true" tabindex="-1"></a>bout_boost_params <span class="sc">%&gt;%</span></span>
-<span id="cb73-2"><a href="modeling.html#cb73-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull_dials_object</span>(<span class="st">&quot;sample_size&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb69-1"><a href="modeling.html#cb69-1" aria-hidden="true" tabindex="-1"></a>bout_boost_params <span class="sc">%&gt;%</span></span>
+<span id="cb69-2"><a href="modeling.html#cb69-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull_dials_object</span>(<span class="st">&quot;sample_size&quot;</span>)</span></code></pre></div>
 <pre><code>## Proportion Observations Sampled (quantitative)
 ## Range: [0.1, 1]</code></pre>
-<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb75-1"><a href="modeling.html#cb75-1" aria-hidden="true" tabindex="-1"></a>bout_boost_params <span class="sc">%&gt;%</span></span>
-<span id="cb75-2"><a href="modeling.html#cb75-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull_dials_object</span>(<span class="st">&quot;mtry&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb71-1"><a href="modeling.html#cb71-1" aria-hidden="true" tabindex="-1"></a>bout_boost_params <span class="sc">%&gt;%</span></span>
+<span id="cb71-2"><a href="modeling.html#cb71-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull_dials_object</span>(<span class="st">&quot;mtry&quot;</span>)</span></code></pre></div>
 <pre><code>## # Randomly Selected Predictors (quantitative)
 ## Range: [1, 9]</code></pre>
-<p>Now also this parameter object is ready to be used.</p>
-<div class="sourceCode" id="cb77"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb77-1"><a href="modeling.html#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="co"># define a metrics set used for evaluation of the hyperparameters</span></span>
-<span id="cb77-2"><a href="modeling.html#cb77-2" aria-hidden="true" tabindex="-1"></a>regr_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rmse)</span></code></pre></div>
-<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="modeling.html#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="co"># took roughly 30 minutes</span></span>
-<span id="cb78-2"><a href="modeling.html#cb78-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>({</span>
-<span id="cb78-3"><a href="modeling.html#cb78-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
-<span id="cb78-4"><a href="modeling.html#cb78-4" aria-hidden="true" tabindex="-1"></a>  bout_rf_tune <span class="ot">&lt;-</span> bout_rf_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb78-5"><a href="modeling.html#cb78-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tune_grid</span>(</span>
-<span id="cb78-6"><a href="modeling.html#cb78-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">resamples =</span>  burnout_folds,</span>
-<span id="cb78-7"><a href="modeling.html#cb78-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid =</span> bout_rf_params <span class="sc">%&gt;%</span></span>
-<span id="cb78-8"><a href="modeling.html#cb78-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">grid_latin_hypercube</span>(<span class="at">size =</span> <span class="dv">30</span>, <span class="at">original =</span> <span class="cn">FALSE</span>),</span>
-<span id="cb78-9"><a href="modeling.html#cb78-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">metrics =</span> regr_metrics</span>
-<span id="cb78-10"><a href="modeling.html#cb78-10" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb78-11"><a href="modeling.html#cb78-11" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb78-12"><a href="modeling.html#cb78-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb78-13"><a href="modeling.html#cb78-13" aria-hidden="true" tabindex="-1"></a><span class="co"># visualization of the tuning results (snapshot of the output below)</span></span>
-<span id="cb78-14"><a href="modeling.html#cb78-14" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(bout_rf_tune) <span class="sc">+</span> <span class="fu">theme_light</span>()</span>
-<span id="cb78-15"><a href="modeling.html#cb78-15" aria-hidden="true" tabindex="-1"></a><span class="co"># this functions shows the best combinations wrt the mae metric of all the</span></span>
-<span id="cb78-16"><a href="modeling.html#cb78-16" aria-hidden="true" tabindex="-1"></a><span class="co"># combinations in the grid</span></span>
-<span id="cb78-17"><a href="modeling.html#cb78-17" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(bout_rf_tune, <span class="at">metric =</span> <span class="st">&quot;mae&quot;</span>)</span></code></pre></div>
+<p>Now also this parameter object is ready to be used. The next step is to define the metrics used for evaluation while tuning.</p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="modeling.html#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="co"># define a metrics set used for evaluation of the hyperparameters</span></span>
+<span id="cb73-2"><a href="modeling.html#cb73-2" aria-hidden="true" tabindex="-1"></a>regr_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rmse)</span></code></pre></div>
+<p>Now the actual tuning begins. The models will be tuned by a space filling grid search. As one has defined ranges for each parameter one can then use different algorithms to construct a grid of combinations of parameter values that tries to best fill the defined ranges by random sampling also in a high dimensional setting. In the following the function <code>tune::grid_latin_hypercube</code> is used for this. So basically one tries out all hyperparameter values for each fold and saves the performance of the performance metrics on the hold out fold. These metrics are then aggregated for each combination and with the resulting estimates of performance one can choose the final set of hyperparameters. The more hyperparameters the model has the more tuning rounds might needed to refine the grid. Besides the classical grid search there are also iterative methods for tuning. These are mainly good to tune a single hyperparameter at once and not for a bunch of them simultaneously. They will not be used in the following.</p>
+<p>The <strong>random forest model</strong> goes first with the tuning.</p>
+<p>Here there are as seen above only two hyperparameters to be tuned thus 30 combinations should suffice.</p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb74-1"><a href="modeling.html#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="co"># took roughly 30 minutes</span></span>
+<span id="cb74-2"><a href="modeling.html#cb74-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>({</span>
+<span id="cb74-3"><a href="modeling.html#cb74-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb74-4"><a href="modeling.html#cb74-4" aria-hidden="true" tabindex="-1"></a>  bout_rf_tune <span class="ot">&lt;-</span> bout_rf_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb74-5"><a href="modeling.html#cb74-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tune_grid</span>(</span>
+<span id="cb74-6"><a href="modeling.html#cb74-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">resamples =</span>  burnout_folds,</span>
+<span id="cb74-7"><a href="modeling.html#cb74-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid =</span> bout_rf_params <span class="sc">%&gt;%</span></span>
+<span id="cb74-8"><a href="modeling.html#cb74-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">grid_latin_hypercube</span>(<span class="at">size =</span> <span class="dv">30</span>, <span class="at">original =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb74-9"><a href="modeling.html#cb74-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">metrics =</span> regr_metrics</span>
+<span id="cb74-10"><a href="modeling.html#cb74-10" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb74-11"><a href="modeling.html#cb74-11" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb74-12"><a href="modeling.html#cb74-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb74-13"><a href="modeling.html#cb74-13" aria-hidden="true" tabindex="-1"></a><span class="co"># visualization of the tuning results (snapshot of the output below)</span></span>
+<span id="cb74-14"><a href="modeling.html#cb74-14" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(bout_rf_tune) <span class="sc">+</span> <span class="fu">theme_light</span>()</span>
+<span id="cb74-15"><a href="modeling.html#cb74-15" aria-hidden="true" tabindex="-1"></a><span class="co"># this functions shows the best combinations wrt the mae metric of all the</span></span>
+<span id="cb74-16"><a href="modeling.html#cb74-16" aria-hidden="true" tabindex="-1"></a><span class="co"># combinations in the grid</span></span>
+<span id="cb74-17"><a href="modeling.html#cb74-17" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(bout_rf_tune, <span class="at">metric =</span> <span class="st">&quot;mae&quot;</span>)</span></code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:rfburntuneplot"></span>
 <img src="_pictures/rf_burn_tune_plot.png" alt="Result of a spacefilling grid search for the random forest model." width="70%" />
 <p class="caption">
 Figure 5.1: Result of a spacefilling grid search for the random forest model.
 </p>
 </div>
-<p>The visualization alongside the best performing results suggest a value of <code>mtry</code>of 3 and 1000 <code>trees</code> should suffice. Thus one can finalize and fit this model.</p>
-<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb79-1"><a href="modeling.html#cb79-1" aria-hidden="true" tabindex="-1"></a>final_bout_rf_wflow <span class="ot">&lt;-</span> </span>
-<span id="cb79-2"><a href="modeling.html#cb79-2" aria-hidden="true" tabindex="-1"></a>  bout_rf_wflow <span class="sc">%&gt;%</span> </span>
-<span id="cb79-3"><a href="modeling.html#cb79-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(<span class="fu">tibble</span>(</span>
-<span id="cb79-4"><a href="modeling.html#cb79-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">trees =</span> <span class="dv">1000</span>,</span>
-<span id="cb79-5"><a href="modeling.html#cb79-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">mtry =</span> <span class="dv">3</span></span>
-<span id="cb79-6"><a href="modeling.html#cb79-6" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
-<span id="cb79-7"><a href="modeling.html#cb79-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(burnout_train)</span></code></pre></div>
-<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="modeling.html#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tuning grid just for the #trees</span></span>
-<span id="cb80-2"><a href="modeling.html#cb80-2" aria-hidden="true" tabindex="-1"></a>first_grid_boost_burn <span class="ot">&lt;-</span> <span class="fu">crossing</span>(</span>
-<span id="cb80-3"><a href="modeling.html#cb80-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">trees =</span> <span class="fu">seq</span>(<span class="dv">250</span>, <span class="dv">2000</span>, <span class="dv">250</span>),</span>
-<span id="cb80-4"><a href="modeling.html#cb80-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">mtry =</span> <span class="dv">9</span>,</span>
-<span id="cb80-5"><a href="modeling.html#cb80-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">tree_depth =</span> <span class="dv">6</span>,</span>
-<span id="cb80-6"><a href="modeling.html#cb80-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">loss_reduction =</span> <span class="fl">0.000001</span>,</span>
-<span id="cb80-7"><a href="modeling.html#cb80-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">learn_rate =</span> <span class="fl">0.01</span>,</span>
-<span id="cb80-8"><a href="modeling.html#cb80-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">sample_size =</span> <span class="dv">1</span></span>
-<span id="cb80-9"><a href="modeling.html#cb80-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
-<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="modeling.html#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="co"># first tune mainly the number of trees to kind of detect a number of</span></span>
-<span id="cb81-2"><a href="modeling.html#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="co"># trees that is large enough then tune the tree specific arguments</span></span>
-<span id="cb81-3"><a href="modeling.html#cb81-3" aria-hidden="true" tabindex="-1"></a><span class="co"># if one tunes all at the same time the grid grows to large</span></span>
-<span id="cb81-4"><a href="modeling.html#cb81-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb81-5"><a href="modeling.html#cb81-5" aria-hidden="true" tabindex="-1"></a><span class="co"># took roughly 1 minute</span></span>
-<span id="cb81-6"><a href="modeling.html#cb81-6" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>({</span>
-<span id="cb81-7"><a href="modeling.html#cb81-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
-<span id="cb81-8"><a href="modeling.html#cb81-8" aria-hidden="true" tabindex="-1"></a>  bout_boost_tune_first <span class="ot">&lt;-</span> bout_boost_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb81-9"><a href="modeling.html#cb81-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tune_grid</span>(</span>
-<span id="cb81-10"><a href="modeling.html#cb81-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">resamples =</span>  burnout_folds,</span>
-<span id="cb81-11"><a href="modeling.html#cb81-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid =</span> first_grid_boost_burn,</span>
-<span id="cb81-12"><a href="modeling.html#cb81-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">metrics =</span> regr_metrics</span>
-<span id="cb81-13"><a href="modeling.html#cb81-13" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb81-14"><a href="modeling.html#cb81-14" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb81-15"><a href="modeling.html#cb81-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb81-16"><a href="modeling.html#cb81-16" aria-hidden="true" tabindex="-1"></a><span class="co"># plot output is shown in the figure below</span></span>
-<span id="cb81-17"><a href="modeling.html#cb81-17" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(bout_boost_tune_first) <span class="sc">+</span> <span class="fu">theme_light</span>()</span>
-<span id="cb81-18"><a href="modeling.html#cb81-18" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(bout_boost_tune_first)</span></code></pre></div>
+<p>The visualization alongside the best performing results suggest that a value of <code>mtry</code>of 3 and 1000 <code>trees</code> should give good results. Thus one can finalize and fit this model.</p>
+<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb75-1"><a href="modeling.html#cb75-1" aria-hidden="true" tabindex="-1"></a>final_bout_rf_wflow <span class="ot">&lt;-</span> </span>
+<span id="cb75-2"><a href="modeling.html#cb75-2" aria-hidden="true" tabindex="-1"></a>  bout_rf_wflow <span class="sc">%&gt;%</span> </span>
+<span id="cb75-3"><a href="modeling.html#cb75-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(<span class="fu">tibble</span>(</span>
+<span id="cb75-4"><a href="modeling.html#cb75-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">trees =</span> <span class="dv">1000</span>,</span>
+<span id="cb75-5"><a href="modeling.html#cb75-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">mtry =</span> <span class="dv">3</span></span>
+<span id="cb75-6"><a href="modeling.html#cb75-6" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb75-7"><a href="modeling.html#cb75-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(burnout_train)</span></code></pre></div>
+<p>Now the <strong>boosting model</strong>.</p>
+<p>First tune only the number of trees in order to detect a number of
+trees that is ‘large enough.’ Then tune the tree specific arguments.
+If one tunes all parameters at the same time the grid grows to large. Moreover a tuning of the trees argument could encourage overfitting.</p>
+<p>The first tuning round:</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb76-1"><a href="modeling.html#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tuning grid just for the #trees</span></span>
+<span id="cb76-2"><a href="modeling.html#cb76-2" aria-hidden="true" tabindex="-1"></a>first_grid_boost_burn <span class="ot">&lt;-</span> <span class="fu">crossing</span>(</span>
+<span id="cb76-3"><a href="modeling.html#cb76-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">trees =</span> <span class="fu">seq</span>(<span class="dv">250</span>, <span class="dv">2000</span>, <span class="dv">250</span>),</span>
+<span id="cb76-4"><a href="modeling.html#cb76-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">mtry =</span> <span class="dv">9</span>,</span>
+<span id="cb76-5"><a href="modeling.html#cb76-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">tree_depth =</span> <span class="dv">6</span>,</span>
+<span id="cb76-6"><a href="modeling.html#cb76-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">loss_reduction =</span> <span class="fl">0.000001</span>,</span>
+<span id="cb76-7"><a href="modeling.html#cb76-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">learn_rate =</span> <span class="fl">0.01</span>,</span>
+<span id="cb76-8"><a href="modeling.html#cb76-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">sample_size =</span> <span class="dv">1</span></span>
+<span id="cb76-9"><a href="modeling.html#cb76-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb77"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb77-1"><a href="modeling.html#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="co"># took roughly 1 minute</span></span>
+<span id="cb77-2"><a href="modeling.html#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>({</span>
+<span id="cb77-3"><a href="modeling.html#cb77-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb77-4"><a href="modeling.html#cb77-4" aria-hidden="true" tabindex="-1"></a>  bout_boost_tune_first <span class="ot">&lt;-</span> bout_boost_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb77-5"><a href="modeling.html#cb77-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tune_grid</span>(</span>
+<span id="cb77-6"><a href="modeling.html#cb77-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">resamples =</span>  burnout_folds,</span>
+<span id="cb77-7"><a href="modeling.html#cb77-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid =</span> first_grid_boost_burn,</span>
+<span id="cb77-8"><a href="modeling.html#cb77-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">metrics =</span> regr_metrics</span>
+<span id="cb77-9"><a href="modeling.html#cb77-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb77-10"><a href="modeling.html#cb77-10" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb77-11"><a href="modeling.html#cb77-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb77-12"><a href="modeling.html#cb77-12" aria-hidden="true" tabindex="-1"></a><span class="co"># plot output is shown in the figure below</span></span>
+<span id="cb77-13"><a href="modeling.html#cb77-13" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(bout_boost_tune_first) <span class="sc">+</span> <span class="fu">theme_light</span>()</span>
+<span id="cb77-14"><a href="modeling.html#cb77-14" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(bout_boost_tune_first)</span></code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:boostburntuneplot1"></span>
 <img src="_pictures/burn_boost_tune_first.png" alt="Result of the first grid search for the XGBoost model." width="70%" />
 <p class="caption">
 Figure 5.2: Result of the first grid search for the XGBoost model.
 </p>
 </div>
-<p>So 1500 trees should suffice here.</p>
-<div class="sourceCode" id="cb82"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb82-1"><a href="modeling.html#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="co"># fix the number of trees by redefining the boosted model with a </span></span>
-<span id="cb82-2"><a href="modeling.html#cb82-2" aria-hidden="true" tabindex="-1"></a><span class="co"># fixed number of trees.</span></span>
-<span id="cb82-3"><a href="modeling.html#cb82-3" aria-hidden="true" tabindex="-1"></a>bout_boost_model <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="dv">1500</span>,</span>
-<span id="cb82-4"><a href="modeling.html#cb82-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">learn_rate =</span> <span class="fu">tune</span>(),</span>
-<span id="cb82-5"><a href="modeling.html#cb82-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">loss_reduction =</span> <span class="fu">tune</span>(),</span>
-<span id="cb82-6"><a href="modeling.html#cb82-6" aria-hidden="true" tabindex="-1"></a>                               <span class="at">tree_depth =</span> <span class="fu">tune</span>(),</span>
-<span id="cb82-7"><a href="modeling.html#cb82-7" aria-hidden="true" tabindex="-1"></a>                               <span class="at">mtry =</span> <span class="fu">tune</span>(),</span>
-<span id="cb82-8"><a href="modeling.html#cb82-8" aria-hidden="true" tabindex="-1"></a>                               <span class="at">sample_size =</span> <span class="fu">tune</span>(),</span>
-<span id="cb82-9"><a href="modeling.html#cb82-9" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stop_iter =</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb82-10"><a href="modeling.html#cb82-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;xgboost&quot;</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb82-11"><a href="modeling.html#cb82-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span>
-<span id="cb82-12"><a href="modeling.html#cb82-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb82-13"><a href="modeling.html#cb82-13" aria-hidden="true" tabindex="-1"></a><span class="co"># update the workflow</span></span>
-<span id="cb82-14"><a href="modeling.html#cb82-14" aria-hidden="true" tabindex="-1"></a>bout_boost_wflow <span class="ot">&lt;-</span></span>
-<span id="cb82-15"><a href="modeling.html#cb82-15" aria-hidden="true" tabindex="-1"></a>  bout_boost_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb82-16"><a href="modeling.html#cb82-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update_model</span>(bout_boost_model)</span>
-<span id="cb82-17"><a href="modeling.html#cb82-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb82-18"><a href="modeling.html#cb82-18" aria-hidden="true" tabindex="-1"></a>bout_boost_params <span class="ot">&lt;-</span> bout_boost_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb82-19"><a href="modeling.html#cb82-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parameters</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb82-20"><a href="modeling.html#cb82-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize</span>(burnout_train)</span>
-<span id="cb82-21"><a href="modeling.html#cb82-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb82-22"><a href="modeling.html#cb82-22" aria-hidden="true" tabindex="-1"></a><span class="co"># reduced hyperparameter space</span></span>
-<span id="cb82-23"><a href="modeling.html#cb82-23" aria-hidden="true" tabindex="-1"></a>bout_boost_params</span></code></pre></div>
+<p>So 1500 trees should suffice here. Thus the workflow and model will be adjusted accordingly.</p>
+<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="modeling.html#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="co"># fix the number of trees by redefining the boosted model with a </span></span>
+<span id="cb78-2"><a href="modeling.html#cb78-2" aria-hidden="true" tabindex="-1"></a><span class="co"># fixed number of trees.</span></span>
+<span id="cb78-3"><a href="modeling.html#cb78-3" aria-hidden="true" tabindex="-1"></a>bout_boost_model <span class="ot">&lt;-</span> <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="dv">1500</span>,</span>
+<span id="cb78-4"><a href="modeling.html#cb78-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">learn_rate =</span> <span class="fu">tune</span>(),</span>
+<span id="cb78-5"><a href="modeling.html#cb78-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">loss_reduction =</span> <span class="fu">tune</span>(),</span>
+<span id="cb78-6"><a href="modeling.html#cb78-6" aria-hidden="true" tabindex="-1"></a>                               <span class="at">tree_depth =</span> <span class="fu">tune</span>(),</span>
+<span id="cb78-7"><a href="modeling.html#cb78-7" aria-hidden="true" tabindex="-1"></a>                               <span class="at">mtry =</span> <span class="fu">tune</span>(),</span>
+<span id="cb78-8"><a href="modeling.html#cb78-8" aria-hidden="true" tabindex="-1"></a>                               <span class="at">sample_size =</span> <span class="fu">tune</span>(),</span>
+<span id="cb78-9"><a href="modeling.html#cb78-9" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stop_iter =</span> <span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb78-10"><a href="modeling.html#cb78-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;xgboost&quot;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb78-11"><a href="modeling.html#cb78-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;regression&quot;</span>)</span>
+<span id="cb78-12"><a href="modeling.html#cb78-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb78-13"><a href="modeling.html#cb78-13" aria-hidden="true" tabindex="-1"></a><span class="co"># update the workflow</span></span>
+<span id="cb78-14"><a href="modeling.html#cb78-14" aria-hidden="true" tabindex="-1"></a>bout_boost_wflow <span class="ot">&lt;-</span></span>
+<span id="cb78-15"><a href="modeling.html#cb78-15" aria-hidden="true" tabindex="-1"></a>  bout_boost_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb78-16"><a href="modeling.html#cb78-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update_model</span>(bout_boost_model)</span>
+<span id="cb78-17"><a href="modeling.html#cb78-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb78-18"><a href="modeling.html#cb78-18" aria-hidden="true" tabindex="-1"></a>bout_boost_params <span class="ot">&lt;-</span> bout_boost_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb78-19"><a href="modeling.html#cb78-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parameters</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb78-20"><a href="modeling.html#cb78-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize</span>(burnout_train)</span>
+<span id="cb78-21"><a href="modeling.html#cb78-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb78-22"><a href="modeling.html#cb78-22" aria-hidden="true" tabindex="-1"></a><span class="co"># reduced hyperparameter space</span></span>
+<span id="cb78-23"><a href="modeling.html#cb78-23" aria-hidden="true" tabindex="-1"></a>bout_boost_params</span></code></pre></div>
 <pre><code>## Collection of 5 parameters for tuning
 ## 
 ##      identifier           type    object
@@ -478,110 +481,103 @@ Figure 5.2: Result of the first grid search for the XGBoost model.
 ##      learn_rate     learn_rate nparam[+]
 ##  loss_reduction loss_reduction nparam[+]
 ##     sample_size    sample_size nparam[+]</code></pre>
-<p>Now perform the major grid search over all the other hyperparameters.</p>
-<div class="sourceCode" id="cb84"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb84-1"><a href="modeling.html#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="co"># now tune all the remaining hyperparameters with a large space filling grid</span></span>
-<span id="cb84-2"><a href="modeling.html#cb84-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb84-3"><a href="modeling.html#cb84-3" aria-hidden="true" tabindex="-1"></a><span class="co"># took roughly 1.5 hours</span></span>
-<span id="cb84-4"><a href="modeling.html#cb84-4" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>({</span>
-<span id="cb84-5"><a href="modeling.html#cb84-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
-<span id="cb84-6"><a href="modeling.html#cb84-6" aria-hidden="true" tabindex="-1"></a>  bout_boost_tune_second <span class="ot">&lt;-</span> bout_boost_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb84-7"><a href="modeling.html#cb84-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tune_grid</span>(</span>
-<span id="cb84-8"><a href="modeling.html#cb84-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">resamples =</span> burnout_folds,</span>
-<span id="cb84-9"><a href="modeling.html#cb84-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid =</span> bout_boost_params <span class="sc">%&gt;%</span></span>
-<span id="cb84-10"><a href="modeling.html#cb84-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">grid_latin_hypercube</span>(</span>
-<span id="cb84-11"><a href="modeling.html#cb84-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">size =</span> <span class="dv">200</span>),</span>
-<span id="cb84-12"><a href="modeling.html#cb84-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">metrics =</span> regr_metrics</span>
-<span id="cb84-13"><a href="modeling.html#cb84-13" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb84-14"><a href="modeling.html#cb84-14" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb84-15"><a href="modeling.html#cb84-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb84-16"><a href="modeling.html#cb84-16" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(bout_boost_tune_second, <span class="at">metric =</span> <span class="st">&quot;mae&quot;</span>)</span></code></pre></div>
-<p>Refine the grid i.e. the parameter space according to the results of the last grid search.</p>
-<div class="sourceCode" id="cb85"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb85-1"><a href="modeling.html#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="co"># now tune all the remaining hyperparameters with a refined space filling grid</span></span>
-<span id="cb85-2"><a href="modeling.html#cb85-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb85-3"><a href="modeling.html#cb85-3" aria-hidden="true" tabindex="-1"></a><span class="co"># took roughly 2 hours</span></span>
-<span id="cb85-4"><a href="modeling.html#cb85-4" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>({</span>
-<span id="cb85-5"><a href="modeling.html#cb85-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
-<span id="cb85-6"><a href="modeling.html#cb85-6" aria-hidden="true" tabindex="-1"></a>  bout_boost_tune_third <span class="ot">&lt;-</span> bout_boost_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb85-7"><a href="modeling.html#cb85-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tune_grid</span>(</span>
-<span id="cb85-8"><a href="modeling.html#cb85-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">resamples =</span> burnout_folds,</span>
-<span id="cb85-9"><a href="modeling.html#cb85-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid =</span> bout_boost_params <span class="sc">%&gt;%</span></span>
-<span id="cb85-10"><a href="modeling.html#cb85-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">update</span>(</span>
-<span id="cb85-11"><a href="modeling.html#cb85-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">mtry =</span> <span class="fu">mtry</span>(<span class="fu">c</span>(<span class="dv">5</span>,<span class="dv">9</span>)),</span>
-<span id="cb85-12"><a href="modeling.html#cb85-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">tree_depth =</span> <span class="fu">tree_depth</span>(<span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">5</span>)),</span>
-<span id="cb85-13"><a href="modeling.html#cb85-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">learn_rate =</span> <span class="fu">learn_rate</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="fl">1.7</span>, <span class="sc">-</span><span class="fl">1.3</span>)),</span>
-<span id="cb85-14"><a href="modeling.html#cb85-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">loss_reduction =</span> <span class="fu">loss_reduction</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">8</span>,<span class="sc">-</span><span class="dv">3</span>)),</span>
-<span id="cb85-15"><a href="modeling.html#cb85-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">sample_size =</span> <span class="fu">sample_prop</span>(<span class="fu">c</span>(<span class="fl">0.4</span>, <span class="fl">0.9</span>))</span>
-<span id="cb85-16"><a href="modeling.html#cb85-16" aria-hidden="true" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span></span>
-<span id="cb85-17"><a href="modeling.html#cb85-17" aria-hidden="true" tabindex="-1"></a>        <span class="fu">grid_latin_hypercube</span>(</span>
-<span id="cb85-18"><a href="modeling.html#cb85-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">size =</span> <span class="dv">200</span>),</span>
-<span id="cb85-19"><a href="modeling.html#cb85-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">metrics =</span> regr_metrics</span>
-<span id="cb85-20"><a href="modeling.html#cb85-20" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb85-21"><a href="modeling.html#cb85-21" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb85-22"><a href="modeling.html#cb85-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb85-23"><a href="modeling.html#cb85-23" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(bout_boost_tune_third, <span class="at">metric =</span> <span class="st">&quot;mae&quot;</span>)</span></code></pre></div>
+<p>Now perform the first major grid search over all the other hyperparameters and the second one overall.</p>
+<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="modeling.html#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="co"># now tune all the remaining hyperparameters with a large space filling grid</span></span>
+<span id="cb80-2"><a href="modeling.html#cb80-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-3"><a href="modeling.html#cb80-3" aria-hidden="true" tabindex="-1"></a><span class="co"># took roughly 1.5 hours</span></span>
+<span id="cb80-4"><a href="modeling.html#cb80-4" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>({</span>
+<span id="cb80-5"><a href="modeling.html#cb80-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb80-6"><a href="modeling.html#cb80-6" aria-hidden="true" tabindex="-1"></a>  bout_boost_tune_second <span class="ot">&lt;-</span> bout_boost_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb80-7"><a href="modeling.html#cb80-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tune_grid</span>(</span>
+<span id="cb80-8"><a href="modeling.html#cb80-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">resamples =</span> burnout_folds,</span>
+<span id="cb80-9"><a href="modeling.html#cb80-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid =</span> bout_boost_params <span class="sc">%&gt;%</span></span>
+<span id="cb80-10"><a href="modeling.html#cb80-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">grid_latin_hypercube</span>(</span>
+<span id="cb80-11"><a href="modeling.html#cb80-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">size =</span> <span class="dv">200</span>),</span>
+<span id="cb80-12"><a href="modeling.html#cb80-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">metrics =</span> regr_metrics</span>
+<span id="cb80-13"><a href="modeling.html#cb80-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb80-14"><a href="modeling.html#cb80-14" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb80-15"><a href="modeling.html#cb80-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb80-16"><a href="modeling.html#cb80-16" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(bout_boost_tune_second, <span class="at">metric =</span> <span class="st">&quot;mae&quot;</span>)</span></code></pre></div>
+<p>Now refine the grid i.e. the parameter space according to the results of the last grid search and perform a third one.</p>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="modeling.html#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="co"># now tune all the remaining hyperparameters with a refined space filling grid</span></span>
+<span id="cb81-2"><a href="modeling.html#cb81-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-3"><a href="modeling.html#cb81-3" aria-hidden="true" tabindex="-1"></a><span class="co"># took roughly 2 hours</span></span>
+<span id="cb81-4"><a href="modeling.html#cb81-4" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>({</span>
+<span id="cb81-5"><a href="modeling.html#cb81-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb81-6"><a href="modeling.html#cb81-6" aria-hidden="true" tabindex="-1"></a>  bout_boost_tune_third <span class="ot">&lt;-</span> bout_boost_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb81-7"><a href="modeling.html#cb81-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tune_grid</span>(</span>
+<span id="cb81-8"><a href="modeling.html#cb81-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">resamples =</span> burnout_folds,</span>
+<span id="cb81-9"><a href="modeling.html#cb81-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">grid =</span> bout_boost_params <span class="sc">%&gt;%</span></span>
+<span id="cb81-10"><a href="modeling.html#cb81-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">update</span>(</span>
+<span id="cb81-11"><a href="modeling.html#cb81-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">mtry =</span> <span class="fu">mtry</span>(<span class="fu">c</span>(<span class="dv">5</span>,<span class="dv">9</span>)),</span>
+<span id="cb81-12"><a href="modeling.html#cb81-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">tree_depth =</span> <span class="fu">tree_depth</span>(<span class="fu">c</span>(<span class="dv">4</span>,<span class="dv">5</span>)),</span>
+<span id="cb81-13"><a href="modeling.html#cb81-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">learn_rate =</span> <span class="fu">learn_rate</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="fl">1.7</span>, <span class="sc">-</span><span class="fl">1.3</span>)),</span>
+<span id="cb81-14"><a href="modeling.html#cb81-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">loss_reduction =</span> <span class="fu">loss_reduction</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">8</span>,<span class="sc">-</span><span class="dv">3</span>)),</span>
+<span id="cb81-15"><a href="modeling.html#cb81-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">sample_size =</span> <span class="fu">sample_prop</span>(<span class="fu">c</span>(<span class="fl">0.4</span>, <span class="fl">0.9</span>))</span>
+<span id="cb81-16"><a href="modeling.html#cb81-16" aria-hidden="true" tabindex="-1"></a>        ) <span class="sc">%&gt;%</span></span>
+<span id="cb81-17"><a href="modeling.html#cb81-17" aria-hidden="true" tabindex="-1"></a>        <span class="fu">grid_latin_hypercube</span>(</span>
+<span id="cb81-18"><a href="modeling.html#cb81-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">size =</span> <span class="dv">200</span>),</span>
+<span id="cb81-19"><a href="modeling.html#cb81-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">metrics =</span> regr_metrics</span>
+<span id="cb81-20"><a href="modeling.html#cb81-20" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb81-21"><a href="modeling.html#cb81-21" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb81-22"><a href="modeling.html#cb81-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-23"><a href="modeling.html#cb81-23" aria-hidden="true" tabindex="-1"></a><span class="fu">show_best</span>(bout_boost_tune_third, <span class="at">metric =</span> <span class="st">&quot;mae&quot;</span>)</span></code></pre></div>
 <p>With this final grid search one is ready to finalize the model.</p>
-<div class="sourceCode" id="cb86"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb86-1"><a href="modeling.html#cb86-1" aria-hidden="true" tabindex="-1"></a>final_bout_boost_wflow <span class="ot">&lt;-</span> </span>
-<span id="cb86-2"><a href="modeling.html#cb86-2" aria-hidden="true" tabindex="-1"></a>  bout_boost_wflow <span class="sc">%&gt;%</span> </span>
-<span id="cb86-3"><a href="modeling.html#cb86-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(<span class="fu">tibble</span>(</span>
-<span id="cb86-4"><a href="modeling.html#cb86-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mtry =</span> <span class="dv">9</span>,</span>
-<span id="cb86-5"><a href="modeling.html#cb86-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">tree_depth =</span> <span class="dv">4</span>,</span>
-<span id="cb86-6"><a href="modeling.html#cb86-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">learn_rate =</span> <span class="fl">0.02</span>,</span>
-<span id="cb86-7"><a href="modeling.html#cb86-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">loss_reduction =</span> <span class="fl">0.0000003</span>,</span>
-<span id="cb86-8"><a href="modeling.html#cb86-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">sample_size =</span> <span class="fl">0.8</span></span>
-<span id="cb86-9"><a href="modeling.html#cb86-9" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
-<span id="cb86-10"><a href="modeling.html#cb86-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(burnout_train)</span></code></pre></div>
-<div class="sourceCode" id="cb87"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb87-1"><a href="modeling.html#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="co"># stop cluster</span></span>
-<span id="cb87-2"><a href="modeling.html#cb87-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stopCluster</span>(cl)</span></code></pre></div>
-<div class="sourceCode" id="cb88"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb88-1"><a href="modeling.html#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate the mae an the rmse for both models (random forest and xgboost)</span></span>
-<span id="cb88-2"><a href="modeling.html#cb88-2" aria-hidden="true" tabindex="-1"></a>burnout_test <span class="sc">%&gt;%</span></span>
-<span id="cb88-3"><a href="modeling.html#cb88-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rf_pred =</span> <span class="fu">predict</span>(final_bout_rf_wflow,</span>
-<span id="cb88-4"><a href="modeling.html#cb88-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">new_data =</span> .)[[<span class="st">&quot;.pred&quot;</span>]],</span>
-<span id="cb88-5"><a href="modeling.html#cb88-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">boost_pred =</span> <span class="fu">predict</span>(final_bout_boost_wflow,</span>
-<span id="cb88-6"><a href="modeling.html#cb88-6" aria-hidden="true" tabindex="-1"></a>                              <span class="at">new_data =</span> .)[[<span class="st">&quot;.pred&quot;</span>]]) <span class="sc">%&gt;%</span></span>
-<span id="cb88-7"><a href="modeling.html#cb88-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb88-8"><a href="modeling.html#cb88-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">rf_pred =</span> <span class="fu">case_when</span>(</span>
-<span id="cb88-9"><a href="modeling.html#cb88-9" aria-hidden="true" tabindex="-1"></a>      rf_pred <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
-<span id="cb88-10"><a href="modeling.html#cb88-10" aria-hidden="true" tabindex="-1"></a>      rf_pred <span class="sc">&gt;</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
-<span id="cb88-11"><a href="modeling.html#cb88-11" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> rf_pred</span>
-<span id="cb88-12"><a href="modeling.html#cb88-12" aria-hidden="true" tabindex="-1"></a>      ),</span>
-<span id="cb88-13"><a href="modeling.html#cb88-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">boost_pred =</span> <span class="fu">case_when</span>(</span>
-<span id="cb88-14"><a href="modeling.html#cb88-14" aria-hidden="true" tabindex="-1"></a>      boost_pred <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
-<span id="cb88-15"><a href="modeling.html#cb88-15" aria-hidden="true" tabindex="-1"></a>      boost_pred <span class="sc">&gt;</span> <span class="dv">1</span> <span class="sc">~</span> <span class="dv">1</span>,</span>
-<span id="cb88-16"><a href="modeling.html#cb88-16" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> boost_pred</span>
-<span id="cb88-17"><a href="modeling.html#cb88-17" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb88-18"><a href="modeling.html#cb88-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb88-19"><a href="modeling.html#cb88-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(burn_rate, rf_pred, boost_pred) <span class="sc">%&gt;%</span></span>
-<span id="cb88-20"><a href="modeling.html#cb88-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="sc">-</span>burn_rate, <span class="at">names_to =</span> <span class="st">&quot;model&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb88-21"><a href="modeling.html#cb88-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(model) <span class="sc">%&gt;%</span></span>
-<span id="cb88-22"><a href="modeling.html#cb88-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb88-23"><a href="modeling.html#cb88-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">mae =</span> <span class="fu">mae_vec</span>(</span>
-<span id="cb88-24"><a href="modeling.html#cb88-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">truth =</span> burn_rate,</span>
-<span id="cb88-25"><a href="modeling.html#cb88-25" aria-hidden="true" tabindex="-1"></a>      <span class="at">estimate =</span> value</span>
-<span id="cb88-26"><a href="modeling.html#cb88-26" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb88-27"><a href="modeling.html#cb88-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">rmse =</span> <span class="fu">rmse_vec</span>(</span>
-<span id="cb88-28"><a href="modeling.html#cb88-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">truth =</span> burn_rate,</span>
-<span id="cb88-29"><a href="modeling.html#cb88-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">estimate =</span> value</span>
-<span id="cb88-30"><a href="modeling.html#cb88-30" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb88-31"><a href="modeling.html#cb88-31" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div>
-<pre><code>## # A tibble: 2 x 3
-##   model         mae   rmse
-##   &lt;chr&gt;       &lt;dbl&gt;  &lt;dbl&gt;
-## 1 boost_pred 0.0470 0.0599
-## 2 rf_pred    0.0473 0.0608</code></pre>
-<div id="variable-importance" class="section level3" number="5.1.1">
-<h3><span class="header-section-number">5.1.1</span> Variable Importance</h3>
-<div class="sourceCode" id="cb90"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb90-1"><a href="modeling.html#cb90-1" aria-hidden="true" tabindex="-1"></a>final_bout_boost_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb90-2"><a href="modeling.html#cb90-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull_workflow_fit</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb90-3"><a href="modeling.html#cb90-3" aria-hidden="true" tabindex="-1"></a>  vip<span class="sc">::</span><span class="fu">vip</span>() <span class="sc">+</span> </span>
-<span id="cb90-4"><a href="modeling.html#cb90-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_light</span>() </span></code></pre></div>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-101-1.png" width="672" /></p>
-<p>Some to dos and questions:</p>
-<ul>
-<li>cv also the test set? then visualize with error bands</li>
-<li>else visualize vs trivial model?</li>
-<li>variable importance</li>
-</ul>
-<p>cite vip package</p>
+<p>The results of the three grid searches suggest that no column-subsampling should be applied, the maximum tree depth should be 4, the learning rate should be small but not extremely small (<span class="math inline">\(\sim 0.02\)</span>), the loss reduction regularization effect is not needed here (very small) and the sample size for each tree should be set to 0.8.</p>
+<div class="sourceCode" id="cb82"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb82-1"><a href="modeling.html#cb82-1" aria-hidden="true" tabindex="-1"></a>final_bout_boost_wflow <span class="ot">&lt;-</span> </span>
+<span id="cb82-2"><a href="modeling.html#cb82-2" aria-hidden="true" tabindex="-1"></a>  bout_boost_wflow <span class="sc">%&gt;%</span> </span>
+<span id="cb82-3"><a href="modeling.html#cb82-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(<span class="fu">tibble</span>(</span>
+<span id="cb82-4"><a href="modeling.html#cb82-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mtry =</span> <span class="dv">9</span>,</span>
+<span id="cb82-5"><a href="modeling.html#cb82-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">tree_depth =</span> <span class="dv">4</span>,</span>
+<span id="cb82-6"><a href="modeling.html#cb82-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">learn_rate =</span> <span class="fl">0.02</span>,</span>
+<span id="cb82-7"><a href="modeling.html#cb82-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">loss_reduction =</span> <span class="fl">0.0000003</span>,</span>
+<span id="cb82-8"><a href="modeling.html#cb82-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">sample_size =</span> <span class="fl">0.8</span></span>
+<span id="cb82-9"><a href="modeling.html#cb82-9" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">%&gt;%</span></span>
+<span id="cb82-10"><a href="modeling.html#cb82-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(burnout_train)</span></code></pre></div>
+<p>From here one no computational intensive task will be performed so one stops the cluster.</p>
+<div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb83-1"><a href="modeling.html#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="co"># stop cluster</span></span>
+<span id="cb83-2"><a href="modeling.html#cb83-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stopCluster</span>(cl)</span></code></pre></div>
+</div>
+<div id="evaluate-and-understand-the-model" class="section level3" number="5.1.4">
+<h3><span class="header-section-number">5.1.4</span> Evaluate and understand the model</h3>
+<p>First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-104-1.png" width="672" /></p>
+<p>This shows that indeed the <code>mental_fatigue_score</code> is the most influential predictor by far followed by the <code>ressource_allocation</code> and <code>designation</code> features. These results are not at all surprising as the EDA exactly came to these conclusions. Especially the very few appearances of the features connected to <code>company_type</code> and <code>date_of_joining</code> are most likely just some minor overfitting.</p>
+<p>Now the really interesting part is which model performed the best on the test data set. The results can be viewed below.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">model</th>
+<th align="right">mae</th>
+<th align="right">rmse</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">boost_pred</td>
+<td align="right">0.0470</td>
+<td align="right">0.0599</td>
+</tr>
+<tr class="even">
+<td align="left">rf_pred</td>
+<td align="right">0.0473</td>
+<td align="right">0.0608</td>
+</tr>
+<tr class="odd">
+<td align="left">mfs_scored_pred</td>
+<td align="right">0.0624</td>
+<td align="right">0.0851</td>
+</tr>
+<tr class="even">
+<td align="left">intercept_pred</td>
+<td align="right">0.1591</td>
+<td align="right">0.1986</td>
+</tr>
+</tbody>
+</table>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-105-1.png" width="672" /></p>
+<p>It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low mae. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an <span class="math inline">\(R^2\)</span> of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor <code>mental_fatigue_score</code> should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions there used XGBoost models.</p>
+<p>This finishes the analysis of the burnout data set. But no worries there is still one data set and boosting model left to explore namely the insurance data set.</p>
 </div>
 </div>
 <div id="insurance-data" class="section level2" number="5.2">

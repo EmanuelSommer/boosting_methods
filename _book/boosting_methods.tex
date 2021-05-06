@@ -138,7 +138,7 @@
 
 \title{Boosting methods: Theory and application in R}
 \author{Emanuel Sommer}
-\date{2021-04-30}
+\date{2021-05-06}
 
 \begin{document}
 \maketitle
@@ -514,7 +514,7 @@ This closes the chapter on the theory of boosting methods with a focus on tree-b
 \hypertarget{eda}{%
 \chapter{Explore the data}\label{eda}}
 
-Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.\citetext{\citealp{tidyverse}; \citealp{tidymodels}; \citealp{viridis}; \citealp{ggtext}; \citealp[ ]{viridisLite}; \citealp{patchwork}; \citealp{visdat}; \citealp{lubridate}} The most important ones will be loaded below.
+Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.\citetext{\citealp{tidyverse}; \citealp{tidymodels}; \citealp{viridis}; \citealp{ggtext}; \citealp[ ]{viridisLite}; \citealp{patchwork}; \citealp{visdat}; \citealp[\citet{latexplots}]{lubridate}} The most important ones will be loaded below.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -526,6 +526,26 @@ Before one starts with the actual modeling it is crucial to get to know the data
 \FunctionTok{library}\NormalTok{(patchwork) }\CommentTok{\# composing of ggplots}
 \end{Highlighting}
 \end{Shaded}
+
+Before the fun can begin a quick outline of the steps performed on each data set.
+
+\begin{itemize}
+\tightlist
+\item
+  A general overview of the classes of the features and a visualization to detect any missing values.
+\item
+  The distribution and the main effect on the outcome variable of each feature.
+\item
+  The pairwise relationships of the predictors.
+\item
+  Optionally some feature engineering.
+\item
+  Using the gained knowledge to fix all pre-processing and feature engineering steps by using a \texttt{recipes::recipe}.
+\end{itemize}
+
+If one is mainly interested in the models themselves one can just have a look at the recipes and skip the rest of this section.
+
+Some might ask why no interactions of predictors are covered in this EDA. If one would use a standard OLS, lasso or ridge regression it would be very important to have a look at them but as the focus here is on tree-based gradient boosting one already includes interactions if one is not restrictive to regression stumps. So let's start with the first data set!
 
 \hypertarget{burnout-data}{%
 \section{Burnout data}\label{burnout-data}}
@@ -550,6 +570,8 @@ The data is from the machine learning challenge \emph{HackerEarth Machine Learni
 
 \hypertarget{train-test-split}{%
 \subsection{Train-test split}\label{train-test-split}}
+
+To not allow information leakage the train-test split is performed at the very start of the whole analysis.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -593,7 +615,7 @@ burn\_rate & numeric\\
 \hline
 \end{tabular}
 
-A general visualization to detect missing values.
+A general visualization of the whole datas set to detect missing values below.
 
 \includegraphics{boosting_methods_files/figure-latex/visdat-1.pdf}
 
@@ -608,7 +630,7 @@ A general visualization to detect missing values.
 ## [1] 0.1407433
 \end{verbatim}
 
-As we know that XGBoost can handle missing values we do not have to be concerned. Although one can think about imputation. But more on that later.
+As we know that XGBoost can handle missing values we do not have to be concerned. Although one could of course think about imputation or even removal.
 
 \hypertarget{what-about-the-outcome-variable}{%
 \subsection{What about the outcome variable?}\label{what-about-the-outcome-variable}}
@@ -626,7 +648,7 @@ Now the distribution of the outcome.
 
 \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-5-1.pdf}
 
-The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region \([0,1]\) is covered quite well.
+The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region \([0,1]\) is covered quite well. Actually by overlaying a normal distribution with the sample mean \(\hat{\mu}\) and the sample standard deviation \(\hat{\sigma}^2\) as the parameters one can clearly see that the outcome almost perfectly follows a normal distribution. One could further fit a Q-Q-plot to visualize the normality but this will be omitted here as the normality of the outcome is not required for the here covered boosting model.
 
 \hypertarget{distribution-and-main-effects-of-the-predictors}{%
 \subsection{Distribution and main effects of the predictors}\label{distribution-and-main-effects-of-the-predictors}}
@@ -815,6 +837,8 @@ This scatterplot shows drastic results! The mental fatigue score has an almost p
 \hypertarget{relationships-between-the-predictors}{%
 \subsection{Relationships between the predictors}\label{relationships-between-the-predictors}}
 
+An exploration of the relationships between the predictors could also be done by having a look at a correlation and scatterplot matrix. This approach is much quicker than looking at each pairwise relationship individually but also not as precise as the one presented here. Especially for a lot of features such a matrix can get too big to grasp the subtle details. If this is necessary depends on the use case. A very good option if one wants an initial overview is the function \texttt{GGally::ggpairs}. So in the following each pairwise relationship will be covered.
+
 \hypertarget{date-of-joining-vs.-the-others}{%
 \subsubsection{Date of joining vs.~the others}\label{date-of-joining-vs.-the-others}}
 
@@ -898,56 +922,48 @@ No notable trend.
 
 No trend here either.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-32-1.pdf}
-
-The same verdict as above.
-
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-33-1.pdf}
-
-Once again there is no notable difference in distribution.
-
 \hypertarget{work-from-home-setup-vs.-the-remaining}{%
 \subsubsection{Work from home setup vs.~the remaining}\label{work-from-home-setup-vs.-the-remaining}}
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-34-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-32-1.pdf}
 
 A work from home setup is way more often available for employees with a lower designation (\(\leq 2\)).
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-35-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-33-1.pdf}
 
 The same structure as in the previous comparison is visible here again. Employees with a lower amount of resources allocated to them have more often a work from home setup available. This could be due to the fewer responsibilities they have in the business.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-36-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-34-1.pdf}
 
 Again this is of course very similar to the main effect of the \texttt{wfh\_setup\_available} variable as the outcome and the feature \texttt{mental\_fatigue\_score} are highly linearly correlated.
 
 \hypertarget{designation-vs-the-remaining}{%
 \subsubsection{Designation vs the remaining}\label{designation-vs-the-remaining}}
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-37-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-35-1.pdf}
 
 Here a strong quite linear relationship is visible. This is sensible as often more resource responsibility is given to employees with high designation.
 
 The last two relationships will be omitted here as both for the variable \texttt{designation} as well as for \texttt{resource\_allocation} the comparison with \texttt{mental\_fatigue\_score} will be very similar to the main effect of the two variables. This comes again from the high correlation of the latter with the outcome.
 
-Overall some stronger and mainly less strong relationships between the predictors could be detected. Not like in ordinary least squares regression for gradient tree boosting no decorrelation and normalization of the features is needed.
+Overall some stronger and mainly less strong relationships between the predictors could be detected. Not like in ordinary least squares regression for gradient tree boosting no decorrelation and normalization of the features is needed. But before one fixes the pre-processing one can try to extract some more information from some features through some feature engineering.
 
 \hypertarget{some-feature-engineering}{%
 \subsection{Some feature engineering}\label{some-feature-engineering}}
 
-The only variable that allows for some reasonable feature engineering is the date of joining predictor. One can try to extract some underlying patterns and see if an effect on the outcome is visible.
+The only variable that allows for reasonable feature engineering is the date of joining predictor. One can try to extract some underlying patterns and see if an effect on the outcome is visible.
 
 First extract the day of the week:
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-38-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-36-1.pdf}
 
 No main effect is visible here. So try the month next.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-39-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-37-1.pdf}
 
 Again no main effect is visible.
 
-Nevertheless one can include those two variables into the model because as mentioned before tree-based models actually perform a feature selection at each split. So including these just comes only at a small computational cost. This minimal pre-processing that is needed when dealing with tree-based models is actually one of its biggest strengths. It is very robust against any kind of weird selection of features. This is one of the reasons beside the strong predictive power for the heavy use of such models in data mining applications.\citep{elements}
+Nevertheless one can include those two variables into the model because as mentioned before tree-based models actually perform a feature selection at each split. So including these just comes at a small computational cost. This minimal pre-processing that is needed when dealing with tree-based models is actually one of its biggest strengths. It is very robust against any kind of weird selection of features with different scales for example. This is one of the reasons, beside the strong predictive power, for the heavy use of such models in data mining applications.\citep{elements}
 
 \hypertarget{create-the-recipe}{%
 \subsection{Create the recipe}\label{create-the-recipe}}
@@ -971,12 +987,16 @@ A recipe is an object that defines a series of steps for data pre-processing and
   \FunctionTok{step\_mutate}\NormalTok{(}\AttributeTok{date\_of\_joining =} \FunctionTok{as.integer}\NormalTok{(date\_of\_joining))}
 
 \DocumentationTok{\#\#\# recipe for a random forest model for comparison (no dummy encoding needed)}
-\CommentTok{\# same as above without dummification}
+\CommentTok{\# same as above without dummification but here the na\textquotesingle{}s have to be}
+\CommentTok{\# imputed (here via knn)}
 \NormalTok{burnout\_rec\_rf }\OtherTok{\textless{}{-}} \FunctionTok{recipe}\NormalTok{(burn\_rate }\SpecialCharTok{\textasciitilde{}}\NormalTok{ date\_of\_joining }\SpecialCharTok{+}\NormalTok{ gender }\SpecialCharTok{+}
 \NormalTok{                         company\_type }\SpecialCharTok{+}\NormalTok{ wfh\_setup\_available }\SpecialCharTok{+}
 \NormalTok{                         designation }\SpecialCharTok{+}\NormalTok{ resource\_allocation }\SpecialCharTok{+}
 \NormalTok{                         mental\_fatigue\_score,}
                          \AttributeTok{data =}\NormalTok{ burnout\_train) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{step\_string2factor}\NormalTok{(}\FunctionTok{all\_nominal}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{step\_knnimpute}\NormalTok{(resource\_allocation, }\AttributeTok{neighbors =} \DecValTok{5}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{step\_knnimpute}\NormalTok{(mental\_fatigue\_score, }\AttributeTok{neighbors =} \DecValTok{5}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{step\_date}\NormalTok{(date\_of\_joining, }\AttributeTok{features =} \FunctionTok{c}\NormalTok{(}\StringTok{"dow"}\NormalTok{, }\StringTok{"month"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{step\_mutate}\NormalTok{(}\AttributeTok{date\_of\_joining =} \FunctionTok{as.integer}\NormalTok{(date\_of\_joining))}
 \end{Highlighting}
@@ -1010,9 +1030,10 @@ The insurance data set is part of the book \emph{Machine Learning with R} by Bre
 \hypertarget{a-general-overview}{%
 \subsection{A general overview}\label{a-general-overview}}
 
-A general visualization to detect missing values.
+A general visualization of the whole data set in order to detect missing values.
 
 \includegraphics{boosting_methods_files/figure-latex/visdatIns-1.pdf}
+
 So there are no missing values!
 
 \hypertarget{what-about-the-outcome}{%
@@ -1029,10 +1050,11 @@ The five point summary below shows that the no invalid values i.e.~negative ones
 
 Now the distribution of the outcome.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-42-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-41-1.pdf}
+
 Not like the \texttt{burn\_rate} previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting \texttt{log\_charges} outcome variable is shown below.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-43-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-42-1.pdf}
 
 Although such a transformation of the outcome variable is not needed for tree-based modeling it can make the job of the algorithm somewhat easier.
 
@@ -1044,11 +1066,11 @@ Although such a transformation of the outcome variable is not needed for tree-ba
 
 \texttt{age}: The age of the insurance contractor. This is naturally a continuous variable.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-44-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-43-1.pdf}
 
 A wide range of ages is covered. Notably there is a peak at roughly 18 which means that many fresh adults were observed in this data set.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-45-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-44-1.pdf}
 
 There seems to be a strong main effect although it does not seem to be linear. The general trend is that older contractors generally accumulate more medical costs. This is very intuitive.
 
@@ -1070,7 +1092,7 @@ There seems to be a strong main effect although it does not seem to be linear. T
 
 The classes are very well balanced. Now the main effect.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-47-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-46-1.pdf}
 
 No notable difference can be detected here.
 
@@ -1079,11 +1101,11 @@ No notable difference can be detected here.
 
 \texttt{bmi}: The body mass index is providing an understanding of the body composition. It is a ratio composed out of the weight which is divided by the height \(\frac{kg}{m^2}\). Ideally the ratio is between 18.5 and 24.9. The variable is obviously a continuous variable.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-48-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-47-1.pdf}
 
 The distribution is bell-shaped and symmetrical roughly around a bmi of 30 which is above the ideal range. Actually only a small amount of the data falls into the normal range here. Moreover the right tail is heavier than the left one. Now a look at the main effect of the variable.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-49-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-48-1.pdf}
 
 With some fantasy one can grasp some non-linear patterns on the right side of the plot but beside that no strong main effect is visible here.
 
@@ -1105,11 +1127,11 @@ With some fantasy one can grasp some non-linear patterns on the right side of th
 
 This could be treated as categorical but as there is a natural ordering it will be encoded by the integers so the treatment is like the one of a continuous feature.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-51-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-50-1.pdf}
 
 As one would also think the more children the lower the number of observed values. Especially the numbers greater than 3 are not well represented. If encoded by one-hot-encoding one would have to think about removing these then near-zero-variance variables. But as they will be encoded in a continuous way this is no problem at all. A look at the main effects can now strengthen or weaken this hypothesis of a natural ordering.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-52-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-51-1.pdf}
 
 This plot is quite similar to the main effect plot for the \texttt{age} feature. As most likely (will be checked later) the age is positively correlated with the number of children one can observe a rise of the minimal observed charges towards a greater amount of children. The upper two boxplots are built with just a few observations so they should not be interpreted in great detail. Overall there seems to be some kind of main effect.
 
@@ -1131,7 +1153,7 @@ This plot is quite similar to the main effect plot for the \texttt{age} feature.
 
 The classes are not balanced but the class of the smokers is still represented with a good amount of observations. Now a look at the main effect.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-54-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-53-1.pdf}
 
 This main effect is as drastic as it is intuitive. Smoking seems to definitely increases the charges. This means that this variable has probably a lot of predictive power.
 
@@ -1140,11 +1162,11 @@ This main effect is as drastic as it is intuitive. Smoking seems to definitely i
 
 \texttt{region}: The beneficiary's residential area in the US. Either northeast, southeast, southwest or northwest. This definitely is a categorical variable.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-55-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-54-1.pdf}
 
 The four regions are balanced. Now to the main effect.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-56-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-55-1.pdf}
 
 No important main effect is detectable from this plot.
 
@@ -1156,24 +1178,20 @@ No important main effect is detectable from this plot.
 
 First the continuous one: \texttt{bmi}
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-57-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-56-1.pdf}
 
 No relationship detectable. The pearson correlation is with 0.109 also low.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-59-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-58-1.pdf}
 
 The most interesting take away from these four plots is that the hypothesis about the age of the contractors with children seem to be okish except for the ones with more than 3 children. But again this counterintuitive behavior could also be due to the few samples. At this point one might think about encoding the children variable as a categorical but in the following it will be left continuous.
 
 \hypertarget{sex-vs-the-remaining}{%
 \subsubsection{Sex vs the remaining}\label{sex-vs-the-remaining}}
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-60-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-59-1.pdf}
 
-Not a huge difference.
-
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-61-1.pdf}
-
-Also quite balanced.
+No notable differences.
 
 Contingency table for the binary variable \texttt{smoker}:
 
@@ -1193,41 +1211,37 @@ Contingency table for the binary variable \texttt{smoker}:
 
 Slightly more men smoke but the difference is smallish.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-63-1.pdf}
-
-No notable differences.
-
 \hypertarget{bmi-vs-the-remaining}{%
 \subsubsection{BMI vs the remaining}\label{bmi-vs-the-remaining}}
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-64-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-61-1.pdf}
 
 The most notable fact here is that southeast of the US seems to be a little more overweight than the rest.
 
 \hypertarget{children-vs-the-remaining}{%
 \subsubsection{Children vs the remaining}\label{children-vs-the-remaining}}
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-65-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-62-1.pdf}
 
 In relative terms actually the contractors with three children smoke the most but the other levels seem quite balanced.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-66-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-63-1.pdf}
 
 Here no trend is visible.
 
 \hypertarget{smoker-vs-region}{%
 \subsubsection{Smoker vs Region}\label{smoker-vs-region}}
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-67-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-64-1.pdf}
 
 So the southeast is not only the most overweight region but also the one with the most smokers in relative terms.
 
-This concludes the tour of the pairwise relationships. Besides a crystal clear understanding of the data one sees that there is not much room left for feature engineering. Thus one can go on and define the recipe.
+This concludes the tour of the pairwise relationships. Of course such an in detail look at all pairwise relationships for both data sets was only possible because there are quite few predictors and is not always needed in this extend. Besides a crystal clear understanding of the data one sees that there is not much room left for feature engineering for the insurance data set. Thus one can go on and define the recipe.
 
 \hypertarget{create-the-recipe-1}{%
 \subsection{Create the recipe}\label{create-the-recipe-1}}
 
-Transformations on the outcome variable are not done within a recipe thus this will be done now before hand by adding a new feature i.e.~\texttt{log10\_charges} to the train and test data set.
+Transformations on the outcome variable are not good practice within a recipe thus this will be done now before hand by adding a new feature i.e.~\texttt{log10\_charges} to the train and test data set.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1241,7 +1255,7 @@ Transformations on the outcome variable are not done within a recipe thus this w
 \begin{Highlighting}[]
 \DocumentationTok{\#\#\# recipe for xgboost (nominal variables must be dummy variables)}
 \CommentTok{\# define outcome, predictors and training data set}
-\NormalTok{burnout\_rec\_boost }\OtherTok{\textless{}{-}} \FunctionTok{recipe}\NormalTok{(log10\_charges }\SpecialCharTok{\textasciitilde{}}\NormalTok{ age }\SpecialCharTok{+}\NormalTok{ sex }\SpecialCharTok{+}
+\NormalTok{ins\_rec\_boost }\OtherTok{\textless{}{-}} \FunctionTok{recipe}\NormalTok{(log10\_charges }\SpecialCharTok{\textasciitilde{}}\NormalTok{ age }\SpecialCharTok{+}\NormalTok{ sex }\SpecialCharTok{+}
 \NormalTok{                            bmi }\SpecialCharTok{+}\NormalTok{ children }\SpecialCharTok{+}
 \NormalTok{                            smoker }\SpecialCharTok{+}\NormalTok{ region,}
                             \AttributeTok{data =}\NormalTok{ ins\_train) }\SpecialCharTok{\%\textgreater{}\%}
@@ -1249,8 +1263,8 @@ Transformations on the outcome variable are not done within a recipe thus this w
   \FunctionTok{step\_dummy}\NormalTok{(}\FunctionTok{all\_nominal}\NormalTok{())}
 
 \DocumentationTok{\#\#\# recipe for a random forest model for comparison (no dummy encoding needed)}
-\CommentTok{\# same as above without dummification}
-\NormalTok{burnout\_rec\_rf }\OtherTok{\textless{}{-}} \FunctionTok{recipe}\NormalTok{(log10\_charges }\SpecialCharTok{\textasciitilde{}}\NormalTok{ age }\SpecialCharTok{+}\NormalTok{ sex }\SpecialCharTok{+}
+\CommentTok{\# same as above without dummification }
+\NormalTok{ins\_rec\_rf }\OtherTok{\textless{}{-}} \FunctionTok{recipe}\NormalTok{(log10\_charges }\SpecialCharTok{\textasciitilde{}}\NormalTok{ age }\SpecialCharTok{+}\NormalTok{ sex }\SpecialCharTok{+}
 \NormalTok{                         bmi }\SpecialCharTok{+}\NormalTok{ children }\SpecialCharTok{+}
 \NormalTok{                         smoker }\SpecialCharTok{+}\NormalTok{ region,}
                          \AttributeTok{data =}\NormalTok{ ins\_train)}
@@ -1262,82 +1276,21 @@ Having now all the recipes ready one can proceed with modeling. Finally!
 \hypertarget{modeling}{%
 \chapter{Let's boost the models}\label{modeling}}
 
-For modeling two additional packages are required.\citep[\citet{ranger_package}]{xgboost_package}
+Beside the XGBoost model also a random forest model will be fitted here for comparison. The whole modeling approach and procedure is closely following the principles that are outlined in the great book \emph{Tidy modeling with R} by Max Kuhn and Julia Silge.
+
+For the modeling three additional packages are required.\citep[\citet{ranger_package}, \citet{vipPack}]{xgboost_package}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{library}\NormalTok{(xgboost)}
-\FunctionTok{library}\NormalTok{(ranger)}
+\FunctionTok{library}\NormalTok{(xgboost) }\CommentTok{\# for the xgboost model}
+\FunctionTok{library}\NormalTok{(ranger) }\CommentTok{\# for the random forest model}
+\CommentTok{\# + the vip package but it will not be loaded into}
+\CommentTok{\# the namespace}
 \end{Highlighting}
 \end{Shaded}
 
-First one has to set a metric for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the \(L_1\) norm of performance metrics.
-
-The first thing is to set up some trivial benchmark models.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# the trivial intercept only model:}
-\NormalTok{predict\_trivial\_mean }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(new\_data) \{}
-  \FunctionTok{rep}\NormalTok{(}\FunctionTok{mean}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{burn\_rate), }\FunctionTok{nrow}\NormalTok{(new\_data))}
-\NormalTok{\}}
-
-\CommentTok{\# the trivial scoring of mental fatigue score (if missing intercept model)}
-\NormalTok{predict\_trivial\_mfs }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(new\_data) \{}
-\NormalTok{  pred }\OtherTok{\textless{}{-}}\NormalTok{ new\_data[[}\StringTok{"mental\_fatigue\_score"}\NormalTok{]] }\SpecialCharTok{/} \DecValTok{10}
-\NormalTok{  pred[}\FunctionTok{is.na}\NormalTok{(pred)] }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{burn\_rate)}
-\NormalTok{  pred}
-\NormalTok{\}}
-\end{Highlighting}
-\end{Shaded}
-
-Evaluate the performance of the two models on the training data. In the end of this section they will be applied to the test data set alongside the other models.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# intercept only model}
-\FunctionTok{mae\_vec}\NormalTok{(}\AttributeTok{truth =}\NormalTok{ burnout\_train}\SpecialCharTok{$}\NormalTok{burn\_rate,}
-        \AttributeTok{estimate =} \FunctionTok{predict\_trivial\_mean}\NormalTok{(burnout\_train))}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## [1] 0.1596372
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{\# trivial mixed model}
-\FunctionTok{mae\_vec}\NormalTok{(}\AttributeTok{truth =}\NormalTok{ burnout\_train}\SpecialCharTok{$}\NormalTok{burn\_rate,}
-        \AttributeTok{estimate =} \FunctionTok{predict\_trivial\_mfs}\NormalTok{(burnout\_train))}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## [1] 0.1262089
-\end{verbatim}
-
-To do
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  register parallel backend
-\item
-  create models and workflows
-\item
-  create resampling objects
-\item
-  choose tuning method (racing/iterative or grid search)
-\item
-  tune models and select best ones
-\item
-  compare final models to test set
-\item
-  save final model
-\end{enumerate}
-
-cite \citep{doParallel_package}
+For parallel computations the \texttt{doParallel} package is used.\citep{doParallel_package}
+This is most useful for the tuning part.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1346,25 +1299,60 @@ cite \citep{doParallel_package}
 \CommentTok{\# Create a cluster object and then register: }
 \NormalTok{cl }\OtherTok{\textless{}{-}} \FunctionTok{makePSOCKcluster}\NormalTok{(}\DecValTok{2}\NormalTok{)}
 \FunctionTok{registerDoParallel}\NormalTok{(cl)}
-
-\CommentTok{\# Put at the end:}
-\FunctionTok{stopCluster}\NormalTok{(cl)}
 \end{Highlighting}
 \end{Shaded}
 
-for 2. set engine specific arguments in the set\_engine() function use tune() for parameters that should be tuned (optional tune(``id\_name''))
+First one has to set a \textbf{metric} for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the \(L_1\) norm of performance metrics. Besides also the root mean squared error (RSME) will be covered but the optimization and tuning will focus on the more robust MAE.
+
+\hypertarget{burnout-data-1}{%
+\section{Burnout data}\label{burnout-data-1}}
+
+\hypertarget{baseline-models}{%
+\subsection{Baseline models}\label{baseline-models}}
+
+The first thing is to set up the trivial \textbf{baseline models}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# the trivial intercept only model:}
+\NormalTok{bout\_predict\_trivial\_mean }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(new\_data) \{}
+  \FunctionTok{rep}\NormalTok{(}\FunctionTok{mean}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{burn\_rate), }\FunctionTok{nrow}\NormalTok{(new\_data))}
+\NormalTok{\}}
+
+\CommentTok{\# the trivial scoring of mental fatigue score (if missing intercept model)}
+\NormalTok{bout\_predict\_trivial\_mfs }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(new\_data) \{}
+  \CommentTok{\# these two scoring parameters are correspondint to the }
+  \CommentTok{\# simple linear regression model containing only one predictor}
+  \CommentTok{\# i.e. mfs}
+\NormalTok{  pred }\OtherTok{\textless{}{-}}\NormalTok{ new\_data[[}\StringTok{"mental\_fatigue\_score"}\NormalTok{]] }\SpecialCharTok{*} \FloatTok{0.097} \SpecialCharTok{{-}} \FloatTok{0.1}
+\NormalTok{  pred[}\FunctionTok{is.na}\NormalTok{(pred)] }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(burnout\_train}\SpecialCharTok{$}\NormalTok{burn\_rate)}
+\NormalTok{  pred}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+The predictions of these baseline models on the test data set will be compared with the predictions of the tree-based models that will be constructed.
+
+\hypertarget{model-specification}{%
+\subsection{Model specification}\label{model-specification}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Models:}
-\NormalTok{lm\_model }\OtherTok{\textless{}{-}} \FunctionTok{linear\_reg}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%} 
-  \FunctionTok{set\_engine}\NormalTok{(}\StringTok{"lm"}\NormalTok{)}
 
-\NormalTok{rf\_model }\OtherTok{\textless{}{-}} \FunctionTok{rand\_forest}\NormalTok{(}\AttributeTok{trees =} \DecValTok{1000}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+\CommentTok{\# Random forest model for comparison}
+\NormalTok{bout\_rf\_model }\OtherTok{\textless{}{-}} \FunctionTok{rand\_forest}\NormalTok{(}\AttributeTok{trees =} \FunctionTok{tune}\NormalTok{(),}
+                             \AttributeTok{mtry =} \FunctionTok{tune}\NormalTok{()) }\SpecialCharTok{\%\textgreater{}\%} 
   \FunctionTok{set\_engine}\NormalTok{(}\StringTok{"ranger"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
   \FunctionTok{set\_mode}\NormalTok{(}\StringTok{"regression"}\NormalTok{)}
 
-\NormalTok{boost\_model }\OtherTok{\textless{}{-}} \FunctionTok{boost\_tree}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{bout\_boost\_model }\OtherTok{\textless{}{-}} \FunctionTok{boost\_tree}\NormalTok{(}\AttributeTok{trees =} \FunctionTok{tune}\NormalTok{(),}
+                               \AttributeTok{learn\_rate =} \FunctionTok{tune}\NormalTok{(),}
+                               \AttributeTok{loss\_reduction =} \FunctionTok{tune}\NormalTok{(),}
+                               \AttributeTok{tree\_depth =} \FunctionTok{tune}\NormalTok{(),}
+                               \AttributeTok{mtry =} \FunctionTok{tune}\NormalTok{(),}
+                               \AttributeTok{sample\_size =} \FunctionTok{tune}\NormalTok{(),}
+                               \AttributeTok{stop\_iter =} \DecValTok{10}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{set\_engine}\NormalTok{(}\StringTok{"xgboost"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
   \FunctionTok{set\_mode}\NormalTok{(}\StringTok{"regression"}\NormalTok{)}
 \end{Highlighting}
@@ -1372,132 +1360,501 @@ for 2. set engine specific arguments in the set\_engine() function use tune() fo
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Workflows:}
+\CommentTok{\# Workflows: model + recipe}
 
-\CommentTok{\# lm\_wflow \textless{}{-} }
-\CommentTok{\#   workflow() \%\textgreater{}\% }
-\CommentTok{\#   add\_model(lm\_model) \%\textgreater{}\% }
-\CommentTok{\#   add\_recipe()}
+\NormalTok{bout\_rf\_wflow }\OtherTok{\textless{}{-}}
+  \FunctionTok{workflow}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{add\_model}\NormalTok{(bout\_rf\_model) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{add\_recipe}\NormalTok{(burnout\_rec\_rf)}
+
+\NormalTok{bout\_boost\_wflow }\OtherTok{\textless{}{-}}
+  \FunctionTok{workflow}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{add\_model}\NormalTok{(bout\_boost\_model) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{add\_recipe}\NormalTok{(burnout\_rec\_boost)}
 \end{Highlighting}
 \end{Shaded}
 
-for 3.
+\hypertarget{tuning}{%
+\subsection{Tuning}\label{tuning}}
+
+For the hyperparameter tuning one needs validation sets to monitor the models on unseen data. To do this 5-fold cross validation (CV) is used here.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Create Resampling objects}
-\CommentTok{\# set.seed(2)}
-\CommentTok{\# ames\_folds \textless{}{-} vfold\_cv(ames\_train, v = 10)}
+\CommentTok{\# Create Resampling object}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{2}\NormalTok{)}
+\NormalTok{burnout\_folds }\OtherTok{\textless{}{-}} \FunctionTok{vfold\_cv}\NormalTok{(burnout\_train, }\AttributeTok{v =} \DecValTok{5}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-for fitting resampling objects without tuning:
+Now adjust or check the hyperparameter ranges that the tuning will use. First the Random forest model.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# set.seed(2)}
-\CommentTok{\# rf\_res \textless{}{-} rf\_wflow \%\textgreater{}\% }
-\CommentTok{\#   fit\_resamples(resamples = ames\_folds)}
-\CommentTok{\# \# collect the metrics during resampling with}
-\CommentTok{\# collect\_metrics()}
+\CommentTok{\# Have a look at the hyperparameters that have to be tuned and finalize them}
+\NormalTok{bout\_rf\_params }\OtherTok{\textless{}{-}}\NormalTok{ bout\_rf\_wflow }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{parameters}\NormalTok{()}
+
+\NormalTok{bout\_rf\_params }
 \end{Highlighting}
 \end{Shaded}
 
-for 4. and following
+\begin{verbatim}
+## Collection of 2 parameters for tuning
+## 
+##  identifier  type    object
+##        mtry  mtry nparam[?]
+##       trees trees nparam[+]
+## 
+## Model parameters needing finalization:
+##    # Randomly Selected Predictors ('mtry')
+## 
+## See `?dials::finalize` or `?dials::update.parameters` for more information.
+\end{verbatim}
+
+This shows that the \texttt{mtry} hyperparameter has to be adjusted depending on the data. Moreover with the \texttt{dials::update} function one can manually set the ranges that should be used for tuning.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# show the parameters to be tuned with the range}
-\CommentTok{\# dials::parameters()}
-\CommentTok{\# get and modify the parameters to be tuned with:}
-\CommentTok{\# name()}
-\CommentTok{\# wflow\_param \%\textgreater{}\% pull\_dials\_object("threshold")}
-\CommentTok{\# parameters(ames\_rec) \%\textgreater{}\% }
-\CommentTok{\#  update(threshold = threshold(c(0.8, 1.0)))}
-
-\CommentTok{\# finalize for data dependent params}
-\CommentTok{\# updated\_param \textless{}{-} }
-\CommentTok{\#   workflow() \%\textgreater{}\% }
-\CommentTok{\#   add\_model(rf\_spec) \%\textgreater{}\% }
-\CommentTok{\#   add\_recipe(pca\_rec) \%\textgreater{}\% }
-\CommentTok{\#   parameters() \%\textgreater{}\% }
-\CommentTok{\#   finalize(ames\_train)}
+\CommentTok{\# default range for tuning is 1 up to 2000 for the trees argument}
+\CommentTok{\# set the lower bound of the range to 100. Then finalize the}
+\CommentTok{\# parameters using the training data.}
+\NormalTok{bout\_rf\_params }\OtherTok{\textless{}{-}}\NormalTok{ bout\_rf\_params }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{update}\NormalTok{(}\AttributeTok{trees =} \FunctionTok{trees}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\DecValTok{100}\NormalTok{, }\DecValTok{2000}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{finalize}\NormalTok{(burnout\_train)}
+\NormalTok{bout\_rf\_params}
 \end{Highlighting}
 \end{Shaded}
 
-grids: grid\_regular(levels = c(hidden\_units = 3, penalty = 2, epochs = 2)) space filling: grid\_latin\_hypercube(size = 15, original = FALSE) then tune\_grid() function instead of fit\_resamples
+\begin{verbatim}
+## Collection of 2 parameters for tuning
+## 
+##  identifier  type    object
+##        mtry  mtry nparam[+]
+##       trees trees nparam[+]
+\end{verbatim}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{roc\_res }\OtherTok{\textless{}{-}} \FunctionTok{metric\_set}\NormalTok{(roc\_auc)}
-\FunctionTok{set.seed}\NormalTok{(}\DecValTok{99}\NormalTok{)}
-\NormalTok{mlp\_reg\_tune }\OtherTok{\textless{}{-}}
-\NormalTok{  mlp\_wflow }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{tune\_grid}\NormalTok{(}
-\NormalTok{    cell\_folds,}
-    \AttributeTok{grid =}\NormalTok{ mlp\_param }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{grid\_regular}\NormalTok{(}\AttributeTok{levels =} \DecValTok{3}\NormalTok{),}
-    \AttributeTok{metrics =}\NormalTok{ roc\_res}
-\NormalTok{  )}
+\NormalTok{bout\_rf\_params }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{pull\_dials\_object}\NormalTok{(}\StringTok{"mtry"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
 
-\FunctionTok{autoplot}\NormalTok{(mlp\_reg\_tune) }\SpecialCharTok{+} \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"top"}\NormalTok{)}
+\begin{verbatim}
+## # Randomly Selected Predictors (quantitative)
+## Range: [1, 9]
+\end{verbatim}
 
-\FunctionTok{show\_best}\NormalTok{(mlp\_reg\_tune)}
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{bout\_rf\_params }\SpecialCharTok{\%\textgreater{}\%} \FunctionTok{pull\_dials\_object}\NormalTok{(}\StringTok{"trees"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
 
-\CommentTok{\# for spacefilling}
-\NormalTok{mlp\_sfd\_tune }\OtherTok{\textless{}{-}}
-\NormalTok{  mlp\_wflow }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{tune\_grid}\NormalTok{(}
-\NormalTok{    cell\_folds,}
-    \AttributeTok{grid =} \DecValTok{20}\NormalTok{,}
-    \CommentTok{\# Pass in the parameter object to use the appropriate range: }
-    \AttributeTok{param\_info =}\NormalTok{ mlp\_param,}
-    \AttributeTok{metrics =}\NormalTok{ roc\_res}
-\NormalTok{  )}
+\begin{verbatim}
+## # Trees (quantitative)
+## Range: [100, 2000]
+\end{verbatim}
 
-\FunctionTok{select\_best}\NormalTok{()}
+Now this parameter object is ready for tuning and the same steps have to be performed on the boosting workflow.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{bout\_boost\_params }\OtherTok{\textless{}{-}}\NormalTok{ bout\_boost\_wflow }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{parameters}\NormalTok{()}
+
+\NormalTok{bout\_boost\_params }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Collection of 6 parameters for tuning
+## 
+##      identifier           type    object
+##            mtry           mtry nparam[?]
+##           trees          trees nparam[+]
+##      tree_depth     tree_depth nparam[+]
+##      learn_rate     learn_rate nparam[+]
+##  loss_reduction loss_reduction nparam[+]
+##     sample_size    sample_size nparam[+]
+## 
+## Model parameters needing finalization:
+##    # Randomly Selected Predictors ('mtry')
+## 
+## See `?dials::finalize` or `?dials::update.parameters` for more information.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# first a look at the default ranges}
+\FunctionTok{trees}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # Trees (quantitative)
+## Range: [1, 2000]
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{tree\_depth}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Tree Depth (quantitative)
+## Range: [1, 15]
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{learn\_rate}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Learning Rate (quantitative)
+## Transformer:  log-10 
+## Range (transformed scale): [-10, -1]
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{loss\_reduction}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Minimum Loss Reduction (quantitative)
+## Transformer:  log-10 
+## Range (transformed scale): [-10, 1.5]
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{sample\_size}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # Observations Sampled (quantitative)
+## Range: [?, ?]
+\end{verbatim}
+
+So \texttt{sample\_size} must also be finalized. Again the lower bound on the number of trees will be raised to 100. The other scales are really sensible and will be left as is.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{bout\_boost\_params }\OtherTok{\textless{}{-}}\NormalTok{ bout\_boost\_params }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{update}\NormalTok{(}\AttributeTok{trees =} \FunctionTok{trees}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\DecValTok{100}\NormalTok{, }\DecValTok{2000}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{finalize}\NormalTok{(burnout\_train)}
+
+\NormalTok{bout\_boost\_params}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Collection of 6 parameters for tuning
+## 
+##      identifier           type    object
+##            mtry           mtry nparam[+]
+##           trees          trees nparam[+]
+##      tree_depth     tree_depth nparam[+]
+##      learn_rate     learn_rate nparam[+]
+##  loss_reduction loss_reduction nparam[+]
+##     sample_size    sample_size nparam[+]
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{bout\_boost\_params }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pull\_dials\_object}\NormalTok{(}\StringTok{"sample\_size"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Proportion Observations Sampled (quantitative)
+## Range: [0.1, 1]
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{bout\_boost\_params }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pull\_dials\_object}\NormalTok{(}\StringTok{"mtry"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # Randomly Selected Predictors (quantitative)
+## Range: [1, 9]
+\end{verbatim}
+
+Now also this parameter object is ready to be used. The next step is to define the metrics used for evaluation while tuning.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# define a metrics set used for evaluation of the hyperparameters}
+\NormalTok{regr\_metrics }\OtherTok{\textless{}{-}} \FunctionTok{metric\_set}\NormalTok{(mae, rmse)}
+\end{Highlighting}
+\end{Shaded}
+
+Now the actual tuning begins. The models will be tuned by a space filling grid search. As one has defined ranges for each parameter one can then use different algorithms to construct a grid of combinations of parameter values that tries to best fill the defined ranges by random sampling also in a high dimensional setting. In the following the function \texttt{tune::grid\_latin\_hypercube} is used for this. So basically one tries out all hyperparameter values for each fold and saves the performance of the performance metrics on the hold out fold. These metrics are then aggregated for each combination and with the resulting estimates of performance one can choose the final set of hyperparameters. The more hyperparameters the model has the more tuning rounds might needed to refine the grid. Besides the classical grid search there are also iterative methods for tuning. These are mainly good to tune a single hyperparameter at once and not for a bunch of them simultaneously. They will not be used in the following.
+
+The \textbf{random forest model} goes first with the tuning.
+
+Here there are as seen above only two hyperparameters to be tuned thus 30 combinations should suffice.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# took roughly 30 minutes}
+\FunctionTok{system.time}\NormalTok{(\{}
+  \FunctionTok{set.seed}\NormalTok{(}\DecValTok{2}\NormalTok{)}
+\NormalTok{  bout\_rf\_tune }\OtherTok{\textless{}{-}}\NormalTok{ bout\_rf\_wflow }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{tune\_grid}\NormalTok{(}
+      \AttributeTok{resamples =}\NormalTok{  burnout\_folds,}
+      \AttributeTok{grid =}\NormalTok{ bout\_rf\_params }\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{grid\_latin\_hypercube}\NormalTok{(}\AttributeTok{size =} \DecValTok{30}\NormalTok{, }\AttributeTok{original =} \ConstantTok{FALSE}\NormalTok{),}
+      \AttributeTok{metrics =}\NormalTok{ regr\_metrics}
+\NormalTok{    )}
+\NormalTok{\})}
+
+\CommentTok{\# visualization of the tuning results (snapshot of the output below)}
+\FunctionTok{autoplot}\NormalTok{(bout\_rf\_tune) }\SpecialCharTok{+} \FunctionTok{theme\_light}\NormalTok{()}
+\CommentTok{\# this functions shows the best combinations wrt the mae metric of all the}
+\CommentTok{\# combinations in the grid}
+\FunctionTok{show\_best}\NormalTok{(bout\_rf\_tune, }\AttributeTok{metric =} \StringTok{"mae"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.7\linewidth]{_pictures/rf_burn_tune_plot} 
+
+}
+
+\caption{Result of a spacefilling grid search for the random forest model.}\label{fig:rfburntuneplot}
+\end{figure}
+
+The visualization alongside the best performing results suggest that a value of \texttt{mtry}of 3 and 1000 \texttt{trees} should give good results. Thus one can finalize and fit this model.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{final\_bout\_rf\_wflow }\OtherTok{\textless{}{-}} 
+\NormalTok{  bout\_rf\_wflow }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{finalize\_workflow}\NormalTok{(}\FunctionTok{tibble}\NormalTok{(}
+    \AttributeTok{trees =} \DecValTok{1000}\NormalTok{,}
+    \AttributeTok{mtry =} \DecValTok{3}
+\NormalTok{  )) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{fit}\NormalTok{(burnout\_train)}
+\end{Highlighting}
+\end{Shaded}
+
+Now the \textbf{boosting model}.
+
+First tune only the number of trees in order to detect a number of
+trees that is `large enough'. Then tune the tree specific arguments.
+If one tunes all parameters at the same time the grid grows to large. Moreover a tuning of the trees argument could encourage overfitting.
+
+The first tuning round:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# tuning grid just for the \#trees}
+\NormalTok{first\_grid\_boost\_burn }\OtherTok{\textless{}{-}} \FunctionTok{crossing}\NormalTok{(}
+  \AttributeTok{trees =} \FunctionTok{seq}\NormalTok{(}\DecValTok{250}\NormalTok{, }\DecValTok{2000}\NormalTok{, }\DecValTok{250}\NormalTok{),}
+  \AttributeTok{mtry =} \DecValTok{9}\NormalTok{,}
+  \AttributeTok{tree\_depth =} \DecValTok{6}\NormalTok{,}
+  \AttributeTok{loss\_reduction =} \FloatTok{0.000001}\NormalTok{,}
+  \AttributeTok{learn\_rate =} \FloatTok{0.01}\NormalTok{,}
+  \AttributeTok{sample\_size =} \DecValTok{1}
+\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{logistic\_param }\OtherTok{\textless{}{-}} 
-  \FunctionTok{tibble}\NormalTok{(}
-    \AttributeTok{num\_comp =} \DecValTok{0}\NormalTok{,}
-    \AttributeTok{epochs =} \DecValTok{125}\NormalTok{,}
-    \AttributeTok{hidden\_units =} \DecValTok{1}\NormalTok{,}
-    \AttributeTok{penalty =} \DecValTok{1}
-\NormalTok{  )}
+\CommentTok{\# took roughly 1 minute}
+\FunctionTok{system.time}\NormalTok{(\{}
+  \FunctionTok{set.seed}\NormalTok{(}\DecValTok{2}\NormalTok{)}
+\NormalTok{  bout\_boost\_tune\_first }\OtherTok{\textless{}{-}}\NormalTok{ bout\_boost\_wflow }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{tune\_grid}\NormalTok{(}
+      \AttributeTok{resamples =}\NormalTok{  burnout\_folds,}
+      \AttributeTok{grid =}\NormalTok{ first\_grid\_boost\_burn,}
+      \AttributeTok{metrics =}\NormalTok{ regr\_metrics}
+\NormalTok{    )}
+\NormalTok{\})}
 
-\NormalTok{final\_mlp\_wflow }\OtherTok{\textless{}{-}} 
-\NormalTok{  mlp\_wflow }\SpecialCharTok{\%\textgreater{}\%} 
-  \FunctionTok{finalize\_workflow}\NormalTok{(logistic\_param)}
-
-\NormalTok{final\_mlp\_fit }\OtherTok{\textless{}{-}} 
-\NormalTok{  final\_mlp\_wflow }\SpecialCharTok{\%\textgreater{}\%} 
-  \FunctionTok{fit}\NormalTok{(cells)}
+\CommentTok{\# plot output is shown in the figure below}
+\FunctionTok{autoplot}\NormalTok{(bout\_boost\_tune\_first) }\SpecialCharTok{+} \FunctionTok{theme\_light}\NormalTok{()}
+\FunctionTok{show\_best}\NormalTok{(bout\_boost\_tune\_first)}
 \end{Highlighting}
 \end{Shaded}
 
-Racing:
+\begin{figure}
+
+{\centering \includegraphics[width=0.7\linewidth]{_pictures/burn_boost_tune_first} 
+
+}
+
+\caption{Result of the first grid search for the XGBoost model.}\label{fig:boostburntuneplot1}
+\end{figure}
+
+So 1500 trees should suffice here. Thus the workflow and model will be adjusted accordingly.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{library}\NormalTok{(finetune) }\CommentTok{\# if used to be cited}
+\CommentTok{\# fix the number of trees by redefining the boosted model with a }
+\CommentTok{\# fixed number of trees.}
+\NormalTok{bout\_boost\_model }\OtherTok{\textless{}{-}} \FunctionTok{boost\_tree}\NormalTok{(}\AttributeTok{trees =} \DecValTok{1500}\NormalTok{,}
+                               \AttributeTok{learn\_rate =} \FunctionTok{tune}\NormalTok{(),}
+                               \AttributeTok{loss\_reduction =} \FunctionTok{tune}\NormalTok{(),}
+                               \AttributeTok{tree\_depth =} \FunctionTok{tune}\NormalTok{(),}
+                               \AttributeTok{mtry =} \FunctionTok{tune}\NormalTok{(),}
+                               \AttributeTok{sample\_size =} \FunctionTok{tune}\NormalTok{(),}
+                               \AttributeTok{stop\_iter =} \DecValTok{10}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{set\_engine}\NormalTok{(}\StringTok{"xgboost"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{set\_mode}\NormalTok{(}\StringTok{"regression"}\NormalTok{)}
 
-\FunctionTok{set.seed}\NormalTok{(}\DecValTok{99}\NormalTok{)}
-\NormalTok{mlp\_sfd\_race }\OtherTok{\textless{}{-}}
-\NormalTok{  mlp\_wflow }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{tune\_race\_anova}\NormalTok{(}
-\NormalTok{    cell\_folds,}
-    \AttributeTok{grid =} \DecValTok{20}\NormalTok{,}
-    \AttributeTok{param\_info =}\NormalTok{ mlp\_param,}
-    \AttributeTok{metrics =}\NormalTok{ roc\_res,}
-    \AttributeTok{control =} \FunctionTok{control\_race}\NormalTok{(}\AttributeTok{verbose\_elim =} \ConstantTok{TRUE}\NormalTok{)}
-\NormalTok{  )}
+\CommentTok{\# update the workflow}
+\NormalTok{bout\_boost\_wflow }\OtherTok{\textless{}{-}}
+\NormalTok{  bout\_boost\_wflow }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{update\_model}\NormalTok{(bout\_boost\_model)}
+
+\NormalTok{bout\_boost\_params }\OtherTok{\textless{}{-}}\NormalTok{ bout\_boost\_wflow }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{parameters}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{finalize}\NormalTok{(burnout\_train)}
+
+\CommentTok{\# reduced hyperparameter space}
+\NormalTok{bout\_boost\_params}
 \end{Highlighting}
 \end{Shaded}
 
-Here no iterative search as big parameter space, could be done after grid search or for single parameters. (If then Simulated Annealing)
+\begin{verbatim}
+## Collection of 5 parameters for tuning
+## 
+##      identifier           type    object
+##            mtry           mtry nparam[+]
+##      tree_depth     tree_depth nparam[+]
+##      learn_rate     learn_rate nparam[+]
+##  loss_reduction loss_reduction nparam[+]
+##     sample_size    sample_size nparam[+]
+\end{verbatim}
+
+Now perform the first major grid search over all the other hyperparameters and the second one overall.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# now tune all the remaining hyperparameters with a large space filling grid}
+
+\CommentTok{\# took roughly 1.5 hours}
+\FunctionTok{system.time}\NormalTok{(\{}
+  \FunctionTok{set.seed}\NormalTok{(}\DecValTok{2}\NormalTok{)}
+\NormalTok{  bout\_boost\_tune\_second }\OtherTok{\textless{}{-}}\NormalTok{ bout\_boost\_wflow }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{tune\_grid}\NormalTok{(}
+      \AttributeTok{resamples =}\NormalTok{ burnout\_folds,}
+      \AttributeTok{grid =}\NormalTok{ bout\_boost\_params }\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{grid\_latin\_hypercube}\NormalTok{(}
+          \AttributeTok{size =} \DecValTok{200}\NormalTok{),}
+      \AttributeTok{metrics =}\NormalTok{ regr\_metrics}
+\NormalTok{    )}
+\NormalTok{\})}
+
+\FunctionTok{show\_best}\NormalTok{(bout\_boost\_tune\_second, }\AttributeTok{metric =} \StringTok{"mae"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Now refine the grid i.e.~the parameter space according to the results of the last grid search and perform a third one.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# now tune all the remaining hyperparameters with a refined space filling grid}
+
+\CommentTok{\# took roughly 2 hours}
+\FunctionTok{system.time}\NormalTok{(\{}
+  \FunctionTok{set.seed}\NormalTok{(}\DecValTok{2}\NormalTok{)}
+\NormalTok{  bout\_boost\_tune\_third }\OtherTok{\textless{}{-}}\NormalTok{ bout\_boost\_wflow }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{tune\_grid}\NormalTok{(}
+      \AttributeTok{resamples =}\NormalTok{ burnout\_folds,}
+      \AttributeTok{grid =}\NormalTok{ bout\_boost\_params }\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{update}\NormalTok{(}
+          \AttributeTok{mtry =} \FunctionTok{mtry}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{,}\DecValTok{9}\NormalTok{)),}
+          \AttributeTok{tree\_depth =} \FunctionTok{tree\_depth}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\DecValTok{4}\NormalTok{,}\DecValTok{5}\NormalTok{)),}
+          \AttributeTok{learn\_rate =} \FunctionTok{learn\_rate}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{1.7}\NormalTok{, }\SpecialCharTok{{-}}\FloatTok{1.3}\NormalTok{)),}
+          \AttributeTok{loss\_reduction =} \FunctionTok{loss\_reduction}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{8}\NormalTok{,}\SpecialCharTok{{-}}\DecValTok{3}\NormalTok{)),}
+          \AttributeTok{sample\_size =} \FunctionTok{sample\_prop}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\FloatTok{0.4}\NormalTok{, }\FloatTok{0.9}\NormalTok{))}
+\NormalTok{        ) }\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{grid\_latin\_hypercube}\NormalTok{(}
+          \AttributeTok{size =} \DecValTok{200}\NormalTok{),}
+      \AttributeTok{metrics =}\NormalTok{ regr\_metrics}
+\NormalTok{    )}
+\NormalTok{\})}
+
+\FunctionTok{show\_best}\NormalTok{(bout\_boost\_tune\_third, }\AttributeTok{metric =} \StringTok{"mae"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+With this final grid search one is ready to finalize the model.
+
+The results of the three grid searches suggest that no column-subsampling should be applied, the maximum tree depth should be 4, the learning rate should be small but not extremely small (\(\sim 0.02\)), the loss reduction regularization effect is not needed here (very small) and the sample size for each tree should be set to 0.8.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{final\_bout\_boost\_wflow }\OtherTok{\textless{}{-}} 
+\NormalTok{  bout\_boost\_wflow }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{finalize\_workflow}\NormalTok{(}\FunctionTok{tibble}\NormalTok{(}
+    \AttributeTok{mtry =} \DecValTok{9}\NormalTok{,}
+    \AttributeTok{tree\_depth =} \DecValTok{4}\NormalTok{,}
+    \AttributeTok{learn\_rate =} \FloatTok{0.02}\NormalTok{,}
+    \AttributeTok{loss\_reduction =} \FloatTok{0.0000003}\NormalTok{,}
+    \AttributeTok{sample\_size =} \FloatTok{0.8}
+\NormalTok{  )) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{fit}\NormalTok{(burnout\_train)}
+\end{Highlighting}
+\end{Shaded}
+
+From here one no computational intensive task will be performed so one stops the cluster.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# stop cluster}
+\FunctionTok{stopCluster}\NormalTok{(cl)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{evaluate-and-understand-the-model}{%
+\subsection{Evaluate and understand the model}\label{evaluate-and-understand-the-model}}
+
+First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees.
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-79-1.pdf}
+
+This shows that indeed the \texttt{mental\_fatigue\_score} is the most influential predictor by far followed by the \texttt{ressource\_allocation} and \texttt{designation} features. These results are not at all surprising as the EDA exactly came to these conclusions. Especially the very few appearances of the features connected to \texttt{company\_type} and \texttt{date\_of\_joining} are most likely just some minor overfitting.
+
+Now the really interesting part is which model performed the best on the test data set. The results can be viewed below.
+
+\begin{tabular}{l|r|r}
+\hline
+model & mae & rmse\\
+\hline
+boost\_pred & 0.0470 & 0.0599\\
+\hline
+rf\_pred & 0.0473 & 0.0608\\
+\hline
+mfs\_scored\_pred & 0.0624 & 0.0851\\
+\hline
+intercept\_pred & 0.1591 & 0.1986\\
+\hline
+\end{tabular}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-80-1.pdf}
+
+It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low mae. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an \(R^2\) of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor \texttt{mental\_fatigue\_score} should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions there used XGBoost models.
+
+This finishes the analysis of the burnout data set. But no worries there is still one data set and boosting model left to explore namely the insurance data set.
+
+\hypertarget{insurance-data}{%
+\section{Insurance data}\label{insurance-data}}
 
 \hypertarget{conclusion}{%
 \chapter{Conclusion}\label{conclusion}}
