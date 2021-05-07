@@ -862,20 +862,40 @@ burnout_rec_rf <- recipe(burn_rate ~ date_of_joining + gender +
 bake(prep(burnout_rec_boost), new_data = NULL) %>%
   select(!starts_with("date_of_joining_")) %>%
   visdat::gather_cor() %>%
-  ggplot(aes(x = factor(row_1),
-             y = factor(row_2),
+  mutate(
+    row_1 = str_replace_all(row_1, "_", " "),
+    row_2 = str_replace_all(row_2, "_", " "),
+    across(starts_with("row"), function(string) {
+      string <- str_remove(string, " Yes")
+      string <- str_remove(string, " Male")
+      string <- str_remove(string, " Service")
+      fac <- as.factor(string)
+      fac
+    }),
+    row_1 = fct_reorder(row_1, value, sum),
+    row_2 = fct_reorder(row_2, value, sum)
+  ) %>%
+  ggplot(aes(x = row_1,
+             y = row_2,
              fill = value,
              label = as.character(round(value, 2)))) +
   geom_tile() +
   geom_text() +
-  scale_fill_viridis_c(option = "C") +
+  scale_fill_gradient2(low = plasma(3)[1],
+                       high = plasma(3)[2],
+                       mid = "white",
+                       midpoint = 0) +
   labs(x = "",
        y = "", fill = "",
        title = "Pearson correlation matrix") +
   theme_light() +
+  coord_equal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1,
                                    vjust = 1),
-        plot.title = ggtext::element_markdown(size = 11))
+        panel.border = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.title = ggtext::element_markdown(size = 11),
+        axis.text = ggtext::element_markdown(size = 11))
 ```
 
 

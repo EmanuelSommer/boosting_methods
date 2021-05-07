@@ -24,7 +24,7 @@ registerDoParallel(cl)
 
 ```
 
-First one has to set a **metric** for the evaluation of the final performance. This will be the mean average error (MAE) which is kind of the $L_1$ norm of performance metrics. Besides also the root mean squared error (RSME) will be covered but the optimization and tuning will focus on the more robust MAE.
+First one has to set a **metric** for the evaluation of the final performance. As one knows from the EDA that not a lot of outliers are present in the data one can leave the default for XGBoost as the optimization metric for regression which is the root mean squared error (RMSE) which basically corresponds to the $L_2$ loss. Besides also the mean average error (MAE) which is kind of the $L_1$ norm will be covered but the optimization and tuning will focus on the RMSE.
 
 ## Burnout data
 
@@ -162,7 +162,7 @@ Now also this parameter object is ready to be used. The next step is to define t
 
 ```{r}
 # define a metrics set used for evaluation of the hyperparameters
-regr_metrics <- metric_set(mae, rmse)
+regr_metrics <- metric_set(rmse, mae)
 ```
 
 Now the actual tuning begins. The models will be tuned by a space filling grid search. As one has defined ranges for each parameter one can then use different algorithms to construct a grid of combinations of parameter values that tries to best fill the defined ranges by random sampling also in a high dimensional setting. In the following the function `tune::grid_latin_hypercube` is used for this. So basically one tries out all hyperparameter values for each fold and saves the performance of the performance metrics on the hold out fold. These metrics are then aggregated for each combination and with the resulting estimates of performance one can choose the final set of hyperparameters. The more hyperparameters the model has the more tuning rounds might needed to refine the grid. Besides the classical grid search there are also iterative methods for tuning. These are mainly good to tune a single hyperparameter at once and not for a bunch of them simultaneously. They will not be used in the following.
@@ -188,7 +188,7 @@ system.time({
 autoplot(bout_rf_tune) + theme_light()
 # this functions shows the best combinations wrt the mae metric of all the
 # combinations in the grid
-show_best(bout_rf_tune, metric = "mae")
+show_best(bout_rf_tune, metric = "rmse")
 ```
 
 
@@ -216,9 +216,12 @@ If one tunes all parameters at the same time the grid grows to large. Moreover a
 
 The first tuning round:
 
+To display the discussed impact of different maximum tree depths the first grid search for a good number of trees will besides the kind of standard value 6 also be performed for regression stumps i.e. a value of 1 for the maximum tree depth.
+
 ```{r}
-# tuning grid just for the #trees
-first_grid_boost_burn <- crossing(
+# tuning grid just for the #trees one with max tree depth 6 and one with
+# only stumps for comparison
+first_grid_boost_burn_depth6 <- crossing(
   trees = seq(250, 2000, 250),
   mtry = 9,
   tree_depth = 6,
@@ -226,29 +229,84 @@ first_grid_boost_burn <- crossing(
   learn_rate = 0.01,
   sample_size = 1
 )
+
+first_grid_boost_burn_stumps <- crossing(
+  trees = seq(250, 2000, 250),
+  mtry = 9,
+  tree_depth = 1,
+  loss_reduction = 0.000001,
+  learn_rate = 0.01,
+  sample_size = 1
+)
 ```
 
-
-```{r tuneBoostBurnfirst, eval=FALSE, cache=TRUE}
+```{r tuneBoostBurnfirststumps, eval=FALSE, cache=TRUE}
 # took roughly 1 minute
 system.time({
   set.seed(2)
-  bout_boost_tune_first <- bout_boost_wflow %>%
+  bout_boost_tune_first_stumps <- bout_boost_wflow %>%
     tune_grid(
       resamples =  burnout_folds,
-      grid = first_grid_boost_burn,
+      grid = first_grid_boost_burn_stumps,
+      metrics = regr_metrics
+    )
+})
+
+
+autoplot(bout_boost_tune_first_stumps) + theme_light()
+show_best(bout_boost_tune_first_stumps)
+```
+
+```{r tuneBoostBurnfirst6, eval=FALSE, cache=TRUE}
+# took roughly 1 minute
+system.time({
+  set.seed(2)
+  bout_boost_tune_first_depth6 <- bout_boost_wflow %>%
+    tune_grid(
+      resamples =  burnout_folds,
+      grid = first_grid_boost_burn_depth6,
       metrics = regr_metrics
     )
 })
 
 # plot output is shown in the figure below
-autoplot(bout_boost_tune_first) + theme_light()
-show_best(bout_boost_tune_first)
+autoplot(bout_boost_tune_first_depth6) + theme_light()
+show_best(bout_boost_tune_first_depth6)
 ```
 
-```{r boostburntuneplot1,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Result of the first grid search for the XGBoost model."}
+```{r boostburntuneplot1,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Result of the first grid search for the XGBoost model (max depth 6)."}
 knitr::include_graphics("_pictures/burn_boost_tune_first.png")
 ```
+
+Compare the two different first tuning rounds:
+
+```{r, eval=FALSE}
+# output of this code shown in the figure below
+bout_boost_tune_first_stumps %>%
+  collect_metrics() %>%
+  mutate(tree_depth = 1) %>%
+  bind_rows(
+    bout_boost_tune_first_depth6 %>%
+      collect_metrics() %>%
+      mutate(tree_depth = 6)
+  ) %>%
+  ggplot(aes(x = trees, y = mean, col = factor(tree_depth))) +
+  geom_point() +
+  geom_line() +
+  geom_linerange(aes(ymin = mean - std_err, ymax = mean + std_err)) +
+  labs(col = "Max tree depth", y = "", x = "Number of trees",
+       title = "") +
+  scale_color_viridis_d(option = "C") +
+  facet_wrap(~ .metric) +
+  theme_light()
+```
+
+```{r bouttuningstumpsVs6,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Comparison of the initial grid search for the number of trees w.r.t. the maximum tree depth. Actually with tiny confidence bands around the estimates."}
+knitr::include_graphics("_pictures/bout_tuning_stumpsVs6.png")
+```
+
+This shows that the model with just stumps converges much faster or may even never reach the low level of when using deeper trees. One reason for this could be that these stumps do not account for interactions and of course the same number of deep trees encode much more information than the same number of stumps.
+
 
 So 1500 trees should suffice here. Thus the workflow and model will be adjusted accordingly.
 
@@ -297,7 +355,7 @@ system.time({
     )
 })
 
-show_best(bout_boost_tune_second, metric = "mae")
+show_best(bout_boost_tune_second, metric = "rmse")
 ```
 
 Now refine the grid i.e. the parameter space according to the results of the last grid search and perform a third one.
@@ -325,7 +383,7 @@ system.time({
     )
 })
 
-show_best(bout_boost_tune_third, metric = "mae")
+show_best(bout_boost_tune_third, metric = "rmse")
 
 ``` 
 
@@ -367,11 +425,51 @@ final_bout_boost_wflow %>%
 
 This shows that indeed the `mental_fatigue_score` is the most influential predictor by far followed by the `ressource_allocation` and `designation` features. These results are not at all surprising as the EDA exactly came to these conclusions. Especially the very few appearances of the features connected to `company_type` and `date_of_joining` are most likely just some minor overfitting.
 
+Now have a look at the performance of the boosting model w.r.t. missing values in the most influential variable.
+
+```{r}
+burnout_test %>%
+  mutate(boost_pred = predict(final_bout_boost_wflow,
+                              new_data = .)[[".pred"]]) %>%
+  filter(!is.na(mental_fatigue_score)) %>%
+  ggplot(aes(x = burn_rate, y = boost_pred)) +
+  geom_point(col = plasma(1), alpha = 0.1, na.rm = TRUE) + 
+  geom_abline(slope = 1, intercept = 0, size = 1) +
+  xlim(0,1) + ylim(0,1) +
+  theme_light() +
+  labs(y = "XGBoost predictions",
+       x = "True score",
+       title = "XGBoost performance for non missing mental fatigue score") +
+  coord_equal() +
+  theme(plot.title = ggtext::element_markdown(size = 11))
+
+burnout_test %>%
+  mutate(boost_pred = predict(final_bout_boost_wflow,
+                              new_data = .)[[".pred"]]) %>%
+  filter(is.na(mental_fatigue_score)) %>%
+  ggplot(aes(x = burn_rate, y = boost_pred)) +
+  geom_point(col = plasma(1)) + 
+  geom_abline(slope = 1, intercept = 0, size = 1) +
+  xlim(0,1) + ylim(0,1) +
+  theme_light() +
+  labs(y = "XGBoost predictions",
+       x = "True score",
+       title = "XGBoost performance for missing mental fatigue score") +
+  coord_equal() +
+  theme(plot.title = ggtext::element_markdown(size = 11))
+```
+
+The performance for the missing values is indeed not that precise but still quite good. There is at least no huge outlier detectable here.
+
+
+
+
+
 Now the really interesting part is which model performed the best on the test data set. The results can be viewed below in tabular and grapical form.
 
 
 ```{r perfBurn, echo=FALSE}
-# calculate the mae an the rmse for both models (random forest and xgboost)
+# calculate the mae and the rmse for both models (random forest and xgboost)
 bout_test_perf <- burnout_test %>%
   mutate(rf_pred = predict(final_bout_rf_wflow,
                            new_data = .)[[".pred"]],
@@ -432,7 +530,7 @@ bout_test_perf %>%
 ```
 
 
-It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low mae. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an $R^2$ of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor `mental_fatigue_score` should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions there used XGBoost models. 
+It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low MAE and RMSE. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an $R^2$ of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor `mental_fatigue_score` should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions there used XGBoost models. 
 
 This finishes the analysis of the burnout data set. But no worries there is still one data set and boosting model left to explore namely the insurance data set.
 
