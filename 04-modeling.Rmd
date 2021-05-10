@@ -186,7 +186,7 @@ system.time({
 
 # visualization of the tuning results (snapshot of the output below)
 autoplot(bout_rf_tune) + theme_light()
-# this functions shows the best combinations wrt the mae metric of all the
+# this functions shows the best combinations wrt the rmse metric of all the
 # combinations in the grid
 show_best(bout_rf_tune, metric = "rmse")
 ```
@@ -404,12 +404,7 @@ final_bout_boost_wflow <-
   fit(burnout_train)
 ```
 
-From here one no computational intensive task will be performed so one stops the cluster.
 
-```{r}
-# stop cluster
-stopCluster(cl)
-```
 
 ### Evaluate and understand the model
 
@@ -498,7 +493,7 @@ bout_test_perf <- burnout_test %>%
       estimate = value
     )
   ) %>%
-  arrange(mae)
+  arrange(rmse)
 
 knitr::kable(bout_test_perf, digits = 4,
              booktabs = TRUE,
@@ -535,6 +530,470 @@ It can be observed that already the really simple baseline model that just scale
 This finishes the analysis of the burnout data set. But no worries there is still one data set and boosting model left to explore namely the insurance data set.
 
 ## Insurance data
+
+### Baseline models
+
+The first thing is to set up the trivial **baseline models**.
+
+```{r}
+# the trivial intercept only model:
+ins_predict_trivial_mean <- function(new_data) {
+  rep(mean(ins_train$log10_charges), nrow(new_data))
+}
+
+# the trivial linear model without any interactions (as we do not have 
+# missing values does not have to be dealt with them)
+ins_baseline_lm <- lm(log10_charges ~ age + sex + bmi +
+                        children + smoker + region,
+                      data = ins_train %>% 
+                        mutate(across(where(is.character), as.factor)))
+summary(ins_baseline_lm)
+
+```
+
+The predictions of these baseline models on the test data set will be compared with the predictions of the tree-based models that will be constructed.
+
+
+### Model specification
+
+```{r modelSpecIns}
+# Models:
+
+# Random forest model for comparison
+ins_rf_model <- rand_forest(trees = tune(),
+                             mtry = tune()) %>% 
+  set_engine("ranger") %>% 
+  set_mode("regression")
+
+# XGBoost model
+ins_boost_model <- boost_tree(trees = tune(),
+                               learn_rate = tune(),
+                               loss_reduction = tune(),
+                               tree_depth = tune(),
+                               mtry = tune(),
+                               sample_size = tune(),
+                               stop_iter = 10) %>%
+  set_engine("xgboost") %>% 
+  set_mode("regression")
+```
+
+```{r workflowSpecIns}
+# Workflows: model + recipe
+
+ins_rf_wflow <-
+  workflow() %>%
+  add_model(ins_rf_model) %>%
+  add_recipe(ins_rec_rf)
+
+ins_boost_wflow <-
+  workflow() %>%
+  add_model(ins_boost_model) %>%
+  add_recipe(ins_rec_boost)
+```
+
+### Tuning
+
+For the hyperparameter tuning one needs validation sets to monitor the models on unseen data. To do this 5-fold cross validation (CV) is used here.
+
+```{r resamplingObjectsIns}
+# Create Resampling object
+set.seed(2)
+ins_folds <- vfold_cv(ins_train, v = 5)
+```
+
+
+Now the parameter objects will be fixed for the grid searches analogously to above.
+
+```{r}
+ins_rf_params <- ins_rf_wflow %>%
+  parameters() %>%
+  update(trees = trees(c(100, 2000))) %>%
+  finalize(ins_train)
+ins_rf_params %>% pull_dials_object("trees")
+ins_rf_params %>% pull_dials_object("mtry")
+```
+
+```{r}
+ins_boost_params <- ins_boost_wflow %>%
+  parameters() %>%
+  update(trees = trees(c(100, 2000))) %>%
+  finalize(ins_train)
+ins_boost_params
+```
+
+The **random forest model** goes first with the tuning.
+
+Here there are as seen above only two hyperparameters to be tuned thus 30 combinations should suffice.
+
+```{r tuneRFins, cache=TRUE, eval=FALSE}
+# took roughly 2 minutes
+system.time({
+  set.seed(2)
+  ins_rf_tune <- ins_rf_wflow %>%
+    tune_grid(
+      resamples =  ins_folds,
+      grid = ins_rf_params %>%
+        grid_latin_hypercube(size = 30, original = FALSE),
+      metrics = regr_metrics
+    )
+})
+
+# visualization of the tuning results (snapshot of the output below)
+autoplot(ins_rf_tune) + theme_light()
+# this functions shows the best combinations wrt the rmse metric of all the
+# combinations in the grid
+show_best(ins_rf_tune, metric = "rmse")
+```
+
+
+```{r rfInstuneplot,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Result of a spacefilling grid search for the random forest model."}
+knitr::include_graphics("_pictures/rf_ins_tune_plot.png")
+```
+
+The visualization alongside the best performing results suggest that a value of `mtry`of 4 and 1000 `trees` should give good results. Thus one can finalize and fit this model.
+
+```{r}
+final_ins_rf_wflow <- 
+  ins_rf_wflow %>% 
+  finalize_workflow(tibble(
+    trees = 1000,
+    mtry = 4
+  )) %>%
+  fit(ins_train)
+```
+
+Now the **boosting model**.
+
+Again one starts to tune over the number of trees first (this time we also use three different tree depths to visualize the impact of this parameter too)
+
+```{r}
+first_grid_boost_ins <- crossing(
+  trees = seq(250, 2000, 250),
+  mtry = 8,
+  tree_depth = c(1, 4, 6),
+  loss_reduction = 0.000001,
+  learn_rate = 0.01,
+  sample_size = 1
+)
+```
+
+```{r tuneBoostInsfirst, eval=FALSE, cache=TRUE}
+# took roughly half a minute
+system.time({
+  set.seed(2)
+  ins_boost_tune_first <- ins_boost_wflow %>%
+    tune_grid(
+      resamples =  ins_folds,
+      grid = first_grid_boost_ins,
+      metrics = regr_metrics
+    )
+})
+
+
+show_best(ins_boost_tune_first)
+```
+
+
+```{r, eval=FALSE}
+# visualize the tuning results (output in the figure below)
+ins_boost_tune_first %>%
+  collect_metrics() %>%
+  ggplot(aes(x = trees, y = mean, col = factor(tree_depth))) +
+  geom_point() +
+  geom_line() +
+  geom_linerange(aes(ymin = mean - std_err, ymax = mean + std_err)) +
+  labs(col = "Max tree depth", y = "", x = "Number of trees",
+       title = "") +
+  scale_color_viridis_d(option = "C") +
+  facet_wrap(~ .metric) +
+  theme_light()
+```
+
+```{r boostInstuneplot1,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Comparison of the initial grid search for the number of trees w.r.t. the maximum tree depth. Actually with tiny confidence bands around the estimates."}
+knitr::include_graphics("_pictures/boost_ins_tune_plot1.png")
+```
+
+
+This visualization clearly shows that one has to have a closer look at the region around 500 trees. More than 500 trees might lead to overfitting as seen here.
+
+```{r}
+second_grid_boost_ins <- crossing(
+  trees = seq(250, 750, 50),
+  mtry = 8,
+  tree_depth = c(3, 4, 5, 6),
+  loss_reduction = 0.000001,
+  learn_rate = 0.01,
+  sample_size = 1
+)
+```
+
+
+```{r tuneBoostIns2, eval=FALSE, cache=TRUE}
+# took roughly 15 seconds
+system.time({
+  set.seed(2)
+  ins_boost_tune_second <- ins_boost_wflow %>%
+    tune_grid(
+      resamples =  ins_folds,
+      grid = second_grid_boost_ins,
+      metrics = regr_metrics
+    )
+})
+
+
+show_best(ins_boost_tune_second)
+```
+
+```{r, eval=FALSE}
+# visualize the tuning results (output in the figure below)
+ins_boost_tune_second %>%
+  collect_metrics() %>%
+  ggplot(aes(x = trees, y = mean, col = factor(tree_depth))) +
+  geom_point() +
+  geom_line() +
+  geom_linerange(aes(ymin = mean - std_err, ymax = mean + std_err)) +
+  labs(col = "Max tree depth", y = "", x = "Number of trees",
+       title = "") +
+  scale_color_viridis_d(option = "C") +
+  facet_wrap(~ .metric) +
+  theme_light()
+```
+
+```{r boostInstuneplot2,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Comparison of the second grid search for the number of trees w.r.t. the maximum tree depth. Actually with tiny confidence bands around the estimates."}
+knitr::include_graphics("_pictures/boost_ins_tune_plot2.png")
+```
+
+So from this visualization one can conclude that a number of trees of 600 should suffice to get a decent model. So the workflow will be updated and the number of trees fixed. After that the first major space filling grid search will be performed. Moreover with the previous visualizations in mind one can reduce the bound of the parameter space of the maximum tree depth quite a bit from 15 to 9. A minimum tree depth of 2 seems also appropriate. 
+Before one does that mainly for a view on the influence of the learning rate one can tune one round only with the learning rate and some tree numbers for comparison.
+
+```{r}
+# tune mainly learn rate
+lrate_grid_boost_ins <- crossing(
+  trees = seq(200, 1500, 100),
+  mtry = 8,
+  tree_depth = c(3),
+  loss_reduction = c(0.000001),
+  learn_rate = c(0.1, 0.01, 0.001, 0.0001),
+  sample_size = 1
+)
+```
+
+
+```{r tuneBoostInslrate, eval=FALSE, cache=TRUE}
+# took roughly 20 seconds
+system.time({
+  set.seed(2)
+  ins_boost_tune_lrate <- ins_boost_wflow %>%
+    tune_grid(
+      resamples =  ins_folds,
+      grid = lrate_grid_boost_ins,
+      metrics = regr_metrics
+    )
+})
+
+
+show_best(ins_boost_tune_lrate)
+```
+
+
+```{r, eval=FALSE}
+# visualize the tuning results (output in the figure below)
+ins_boost_tune_lrate %>%
+  collect_metrics() %>%
+  ggplot(aes(x = trees, y = mean, col = factor(learn_rate))) +
+  geom_point() +
+  geom_line() +
+  geom_linerange(aes(ymin = mean - std_err, ymax = mean + std_err)) +
+  labs(x = "Number of trees", y = "", col = "Learning rate",
+       title = "") +
+  scale_color_viridis_d(option = "C") +
+  facet_wrap(~ .metric) +
+  theme_light()
+```
+
+```{r boostInstuneplotlrate,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Comparison of the grid search for the number of trees w.r.t. the learning rate. Actually with tiny confidence bands around the estimates."}
+knitr::include_graphics("_pictures/boost_ins_tune_lrate.png")
+```
+
+Now fix the number of trees hyperparameter.
+
+```{r}
+# fix the number of trees by redefining the boostin model with a 
+# fixed number of trees.
+ins_boost_model <- boost_tree(trees = 600,
+                               learn_rate = tune(),
+                               loss_reduction = tune(),
+                               tree_depth = tune(),
+                               mtry = tune(),
+                               sample_size = tune(),
+                               stop_iter = 10) %>%
+  set_engine("xgboost") %>% 
+  set_mode("regression")
+
+# update the workflow
+ins_boost_wflow <-
+  ins_boost_wflow %>%
+  update_model(ins_boost_model)
+
+ins_boost_params <- ins_boost_wflow %>%
+  parameters() %>%
+  update(tree_depth = tree_depth(c(2, 9))) %>%
+  finalize(ins_train)
+
+# reduced hyperparameter space
+ins_boost_params
+```
+
+
+
+```{r tuneBoostIns3, eval=FALSE, cache=TRUE}
+# now tune all the remaining hyperparameters with a large space filling grid
+
+# took roughly 10 minutes
+system.time({
+  set.seed(2)
+  ins_boost_tune_major1 <- ins_boost_wflow %>%
+    tune_grid(
+      resamples = ins_folds,
+      grid = ins_boost_params %>%
+        grid_latin_hypercube(
+          size = 300),
+      metrics = regr_metrics
+    )
+})
+
+show_best(ins_boost_tune_major1, metric = "rmse")
+```
+
+
+Now again with a slightly refined grid.
+
+```{r tuneBoostIns4, eval=FALSE, cache=TRUE}
+# now tune all the remaining hyperparameters with a refined space filling grid
+
+# took roughly 15 minutes
+system.time({
+  set.seed(2)
+  ins_boost_tune_major2 <- ins_boost_wflow %>%
+    tune_grid(
+      resamples = ins_folds,
+      grid = ins_boost_params %>%
+        update(
+          mtry = mtry(c(6,8)),
+          tree_depth = tree_depth(c(3,4)),
+          learn_rate = learn_rate(c(-1.7, -1.5)),
+          loss_reduction = loss_reduction(c(-4, -1.5)),
+          sample_size = sample_prop(c(0.3, 0.9))
+        ) %>%
+        grid_latin_hypercube(
+          size = 300),
+      metrics = regr_metrics
+    )
+})
+
+show_best(ins_boost_tune_major2, metric = "rmse")
+```
+
+The results here are quite clear. One will further use a `mtry` value of 7, a `tree_depth` of 3, a `learn_rate` of 0.02, a `loss_reduction` of 0.03 and a `sample_size` of 0.8.
+
+
+```{r}
+final_ins_boost_wflow <- 
+  ins_boost_wflow %>% 
+  finalize_workflow(tibble(
+    mtry = 7,
+    tree_depth = 3,
+    learn_rate = 0.02,
+    loss_reduction = 0.03,
+    sample_size = 0.8
+  )) %>%
+  fit(ins_train)
+```
+
+From here one no computational intensive task will be performed so one stops the cluster.
+
+```{r}
+# stop cluster
+stopCluster(cl)
+```
+
+
+### Evaluate and understand the model
+
+First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees.
+
+```{r, echo=FALSE}
+final_ins_boost_wflow %>%
+  pull_workflow_fit() %>%
+  vip::vip() + 
+  theme_light() +
+  labs(title = "Variable importance of the XGBoost model")
+```
+Here one can clearly see that the trends that were observable during the EDA are refelcted here again. The most influential variable is indeed the smoker variable, closely followed by the age variable. Also the bmi and the number of children seem to be relevant.
+
+
+Now the really interesting part is which model performed the best on the test data set. The results can be viewed below in tabular and grapical form.
+
+
+```{r perfIns, echo=FALSE}
+# calculate the mae and the rmse for both models (random forest and xgboost)
+ins_test_perf <- ins_test %>%
+  mutate(rf_pred = predict(final_ins_rf_wflow,
+                           new_data = .)[[".pred"]],
+         boost_pred = predict(final_ins_boost_wflow,
+                              new_data = .)[[".pred"]],
+         intercept_pred = ins_predict_trivial_mean(.),
+         baseline_lm = predict(ins_baseline_lm, .)) %>%
+  select(log10_charges, rf_pred, boost_pred, 
+         intercept_pred, baseline_lm) %>%
+  pivot_longer(-log10_charges, names_to = "model") %>%
+  group_by(model) %>%
+  summarise(
+    mae = mae_vec(
+      truth = log10_charges,
+      estimate = value
+    ),
+    rmse = rmse_vec(
+      truth = log10_charges,
+      estimate = value
+    )
+  ) %>%
+  arrange(rmse)
+
+knitr::kable(ins_test_perf, digits = 4,
+             booktabs = TRUE,
+             caption = "Performance on the test data")
+
+
+```
+
+```{r, echo=FALSE}
+ins_test_perf %>%
+  pivot_longer(-model) %>%
+  mutate(model = as.factor(model),
+         model = fct_recode(model, 
+                             "XGBoost" = "boost_pred",
+                            "Random Forest" = "rf_pred",
+                            "Baseline linear model" = "baseline_lm",
+                            "Intercept only" = "intercept_pred"),
+         model = fct_reorder(model,-value)) %>%
+  ggplot(aes(x = value, y = model, col = name)) +
+  geom_point(shape = 16, size = 3) +
+  geom_segment(aes(y = model, yend = model, 
+                   x = 0, xend = value),
+               size = 1) +
+  scale_color_viridis_d(option = "C") +
+  labs(x = "",y = "", title = "Performance on the test data") +
+  theme_light() +
+  theme(legend.position = "None") +
+  facet_wrap(~name)
+```
+
+Some interpretation here.
+
+
+
+
 
 
 

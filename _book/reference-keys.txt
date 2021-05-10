@@ -17,6 +17,11 @@ fig:rfburntuneplot
 fig:boostburntuneplot1
 fig:bouttuningstumpsVs6
 tab:perfBurn
+fig:rfInstuneplot
+fig:boostInstuneplot1
+fig:boostInstuneplot2
+fig:boostInstuneplotlrate
+tab:perfIns
 prerequisites
 intro
 theory
@@ -81,5 +86,9 @@ model-specification
 tuning
 evaluate-and-understand-the-model
 insurance-data
+baseline-models-1
+model-specification-1
+tuning-1
+evaluate-and-understand-the-model-1
 conclusion
 references
