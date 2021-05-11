@@ -1,6 +1,6 @@
 # Let's boost the models {#modeling}
 
-Beside the XGBoost model also a random forest model will be fitted here for comparison. The whole modeling approach and procedure is closely following the principles that are outlined in the great book *Tidy modeling with R* by Max Kuhn and Julia Silge.
+Beside the XGBoost model also a random forest model will be fitted here for comparison. The whole modeling approach and procedure is closely following the principles that are outlined in the **great** book *Tidy modeling with R* by Max Kuhn and Julia Silge.
 
 For the modeling three additional packages are required.[@xgboost_package, @ranger_package, @vipPack]
 
@@ -63,7 +63,7 @@ bout_rf_model <- rand_forest(trees = tune(),
   set_engine("ranger") %>% 
   set_mode("regression")
 
-# XGBoost model
+# XGBoost model 
 bout_boost_model <- boost_tree(trees = tune(),
                                learn_rate = tune(),
                                loss_reduction = tune(),
@@ -73,20 +73,29 @@ bout_boost_model <- boost_tree(trees = tune(),
                                stop_iter = 10) %>%
   set_engine("xgboost") %>% 
   set_mode("regression")
+
 ```
 
 ```{r workflowSpecburn}
 # Workflows: model + recipe
 
+# Random Forest workflow
 bout_rf_wflow <-
   workflow() %>%
   add_model(bout_rf_model) %>%
   add_recipe(burnout_rec_rf)
 
+# XGBoost workflow with the untransformed data
 bout_boost_wflow <-
   workflow() %>%
   add_model(bout_boost_model) %>%
   add_recipe(burnout_rec_boost)
+
+# XGBoost workflow with the transformed data (empirical logit)
+bout_boost_wflow_trans <-
+  workflow() %>%
+  add_model(bout_boost_model) %>%
+  add_recipe(burnout_rec_boost_trans)
 ```
 
 
@@ -125,7 +134,7 @@ bout_rf_params %>% pull_dials_object("mtry")
 bout_rf_params %>% pull_dials_object("trees")
 ```
 
-Now this parameter object is ready for tuning and the same steps have to be performed on the boosting workflow.
+Now this parameter object is ready for tuning and the same steps have to be performed on the main boosting workflow. The parameter set for the untransformed target can then also be used for the transformed one.
 
 ```{r}
 bout_boost_params <- bout_boost_wflow %>%
@@ -155,9 +164,12 @@ bout_boost_params %>%
   pull_dials_object("sample_size")
 bout_boost_params %>%
   pull_dials_object("mtry")
+# use the same object for the tuning of the boosted model
+# with the transformed variable
+bout_boost_params_trans <- bout_boost_params
 ```
 
-Now also this parameter object is ready to be used. The next step is to define the metrics used for evaluation while tuning.
+Now also these parameter objects are ready to be used. The next step is to define the metrics used for evaluation while tuning.
 
 
 ```{r}
@@ -208,7 +220,7 @@ final_bout_rf_wflow <-
   fit(burnout_train)
 ```
 
-Now the **boosting model**.
+Now the main **boosting model**.
 
 First tune only the number of trees in order to detect a number of
 trees that is 'large enough'. Then tune the tree specific arguments.
@@ -337,7 +349,7 @@ bout_boost_params
 ```
 
 
-Now perform the first major grid search over all the other hyperparameters and the second one overall.
+Now perform the first major grid search over all the other hyperparameters.
 
 ```{r tuneBoostBurnsecond, eval=FALSE, cache=TRUE}
 # now tune all the remaining hyperparameters with a large space filling grid
@@ -404,6 +416,113 @@ final_bout_boost_wflow <-
   fit(burnout_train)
 ```
 
+Now tune the **transformed outcome boosting model**.
+
+Again start with the `trees`.
+
+```{r}
+first_grid_boost_burn_trans <- crossing(
+  trees = seq(250, 2000, 250),
+  mtry = 9,
+  tree_depth = 6,
+  loss_reduction = 0.000001,
+  learn_rate = 0.01,
+  sample_size = 1
+)
+```
+
+```{r tuneBoostBurnfirsttrans, eval=FALSE, cache=TRUE}
+# took roughly 1 minute
+system.time({
+  set.seed(2)
+  bout_boost_tune_first_trans <- bout_boost_wflow_trans %>%
+    tune_grid(
+      resamples =  burnout_folds,
+      grid = first_grid_boost_burn_trans,
+      metrics = regr_metrics
+    )
+})
+
+# plot output in the figure below
+autoplot(bout_boost_tune_first_trans) + theme_light()
+show_best(bout_boost_tune_first_trans)
+```
+
+```{r burnboosttunefirsttrans,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Result of the first grid search for the XGBoost model with transformed outcome."}
+knitr::include_graphics("_pictures/burn_boost_tune_first_trans.png")
+```
+
+Again 1500 trees should easily suffice.
+
+```{r}
+# fix the number of trees by redefining the boosted model with a 
+# fixed number of trees.
+bout_boost_model_trans <- boost_tree(trees = 1500,
+                               learn_rate = tune(),
+                               loss_reduction = tune(),
+                               tree_depth = tune(),
+                               mtry = tune(),
+                               sample_size = tune(),
+                               stop_iter = 10) %>%
+  set_engine("xgboost") %>% 
+  set_mode("regression")
+
+# update the workflow
+bout_boost_wflow_trans <-
+  bout_boost_wflow_trans %>%
+  update_model(bout_boost_model_trans)
+
+bout_boost_params_trans <- bout_boost_wflow_trans %>%
+  parameters() %>%
+  finalize(burnout_train)
+
+# reduced hyperparameter space
+bout_boost_params_trans
+```
+
+Now perform the first major grid search over all the other hyperparameters and the second one overall.
+
+```{r tuneBoostBurnsecondtrans, eval=FALSE, cache=TRUE}
+# now tune all the remaining hyperparameters with a large space filling grid
+
+# took roughly 2 hours
+system.time({
+  set.seed(2)
+  bout_boost_tune_second_trans <- bout_boost_wflow_trans %>%
+    tune_grid(
+      resamples = burnout_folds,
+      grid = bout_boost_params_trans %>%
+        grid_latin_hypercube(
+          size = 200),
+      metrics = regr_metrics
+    )
+})
+
+show_best(bout_boost_tune_second_trans, metric = "rmse")
+```
+
+From the tuning results one can conclude that in this setting actually the same hyperparameter setting as for the raw target variable seems appropriate. So one finalizes the workflow with the same hyperparameters and fits the model.
+
+
+```{r}
+final_bout_boost_wflow_trans <- 
+  bout_boost_wflow_trans %>% 
+  finalize_workflow(tibble(
+    mtry = 9,
+    tree_depth = 4,
+    learn_rate = 0.02,
+    loss_reduction = 0.0000003,
+    sample_size = 0.8
+  )) %>%
+  fit(burnout_train)
+```
+
+
+Now all models w.r.t. the burnout data set are fitted.
+
+
+
+
 
 
 ### Evaluate and understand the model
@@ -420,7 +539,26 @@ final_bout_boost_wflow %>%
 
 This shows that indeed the `mental_fatigue_score` is the most influential predictor by far followed by the `ressource_allocation` and `designation` features. These results are not at all surprising as the EDA exactly came to these conclusions. Especially the very few appearances of the features connected to `company_type` and `date_of_joining` are most likely just some minor overfitting.
 
-Now have a look at the performance of the boosting model w.r.t. missing values in the most influential variable.
+Now compare the variable importance of the model with the raw and the transformed target variable.
+
+```{r}
+raw_importance <- final_bout_boost_wflow %>%
+  pull_workflow_fit() %>%
+  vip::vip() + 
+  theme_light() +
+  labs(title = "Raw target")
+trans_importance <- final_bout_boost_wflow_trans %>%
+  pull_workflow_fit() %>%
+  vip::vip() + 
+  theme_light() +
+  labs(title = "Transformed target")
+raw_importance + trans_importance + plot_layout(guides = )
+remove(raw_importance, trans_importance)
+```
+
+One can observe the exact same ordering. The only difference seems to be a higher influence of the designation variable for the transformed target. This is not surprising as the ressource allocation and designation variable are highly correlated.
+
+Now have a look at the performance of the main boosting model w.r.t. missing values in the most influential variable.
 
 ```{r}
 burnout_test %>%
@@ -460,7 +598,7 @@ The performance for the missing values is indeed not that precise but still quit
 
 
 
-Now the really interesting part is which model performed the best on the test data set. The results can be viewed below in tabular and grapical form.
+Now the really interesting part is which model performed the best on the test data set. The results can be viewed below in tabular and graphical form.
 
 
 ```{r perfBurn, echo=FALSE}
@@ -470,6 +608,9 @@ bout_test_perf <- burnout_test %>%
                            new_data = .)[[".pred"]],
          boost_pred = predict(final_bout_boost_wflow,
                               new_data = .)[[".pred"]],
+         boost_trans_pred = predict(final_bout_boost_wflow_trans,
+                              new_data = .)[[".pred"]],
+         boost_trans_pred = (2 / (exp(-boost_trans_pred) + 1)) - 0.5,
          intercept_pred = bout_predict_trivial_mean(.),
          mfs_scored_pred = bout_predict_trivial_mfs(.)) %>%
   mutate(across(ends_with("pred"), function(col) {
@@ -479,7 +620,7 @@ bout_test_perf <- burnout_test %>%
       TRUE ~ col
       )
   })) %>%
-  select(burn_rate, rf_pred, boost_pred, 
+  select(burn_rate, rf_pred, boost_pred, boost_trans_pred,
          intercept_pred, mfs_scored_pred) %>%
   pivot_longer(-burn_rate, names_to = "model") %>%
   group_by(model) %>%
@@ -508,6 +649,7 @@ bout_test_perf %>%
   mutate(model = as.factor(model),
          model = fct_recode(model, 
                              "XGBoost" = "boost_pred",
+                            "XGBoost transformed" = "boost_trans_pred",
                             "Random Forest" = "rf_pred",
                             "Baseline scaled" = "mfs_scored_pred",
                             "Intercept only" = "intercept_pred"),
@@ -525,7 +667,34 @@ bout_test_perf %>%
 ```
 
 
-It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low MAE and RMSE. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an $R^2$ of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor `mental_fatigue_score` should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions there used XGBoost models. 
+It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low MAE and RMSE. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an $R^2$ of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor `mental_fatigue_score` should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions there used XGBoost models. The transformation of the outcome variable did actually not change the predictive power of the model as the result for both the model with the raw target as well as the one with the transformed one performed equally good. Below one can see a scatterplot comparing the individual predictions of these two models on the test set which perfectly underlines the hypothesis that the models are the same as there is almost no variation around the identity slope.
+
+```{r, echo=FALSE}
+burnout_test %>%
+  mutate(boost_pred = predict(final_bout_boost_wflow,
+                              new_data = .)[[".pred"]],
+         boost_trans_pred = predict(final_bout_boost_wflow_trans,
+                              new_data = .)[[".pred"]],
+         boost_trans_pred = (2 / (exp(-boost_trans_pred) + 1)) - 0.5) %>%
+  mutate(across(ends_with("pred"), function(col) {
+    case_when(
+      col < 0 ~ 0,
+      col > 1 ~ 1,
+      TRUE ~ col
+      )
+  })) %>%
+  select(boost_pred, boost_trans_pred) %>%
+  ggplot(aes(x = boost_pred, y = boost_trans_pred)) +
+  geom_point(col = plasma(1), alpha = 0.1) +
+  geom_abline() +
+  xlim(0,1) + ylim(0,1) +
+  coord_equal() +
+  labs(x = "Raw target model", 
+       y = "Transformed target model",
+       title = "Predictions on the test data set") +
+  theme_light()
+```
+
 
 This finishes the analysis of the burnout data set. But no worries there is still one data set and boosting model left to explore namely the insurance data set.
 
@@ -929,10 +1098,11 @@ final_ins_boost_wflow %>%
   theme_light() +
   labs(title = "Variable importance of the XGBoost model")
 ```
-Here one can clearly see that the trends that were observable during the EDA are refelcted here again. The most influential variable is indeed the smoker variable, closely followed by the age variable. Also the bmi and the number of children seem to be relevant.
+
+Here one can clearly see that the trends that were observable during the EDA are reflected here again. The most influential variable is indeed the smoker variable, closely followed by the age variable. Also the bmi and the number of children seem to be relevant.
 
 
-Now the really interesting part is which model performed the best on the test data set. The results can be viewed below in tabular and grapical form.
+Now the really interesting part is which model performed the best on the test data set. The results can be viewed below in tabular and graphical form.
 
 
 ```{r perfIns, echo=FALSE}

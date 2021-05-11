@@ -144,8 +144,65 @@ remove(burn_rate_box)
 remove(burn_rate_hist)
 ```
 
-The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region $[0,1]$ is covered quite well. Actually by overlaying a normal distribution with the sample mean $\hat{\mu}$ and the sample standard deviation $\hat{\sigma}^2$ as the parameters one can clearly see that the outcome almost perfectly follows a normal distribution. One could further fit a Q-Q-plot to visualize the normality but this will be omitted here as the normality of the outcome is not required for the here covered boosting model.
+The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region $[0,1]$ is covered quite well. Actually by overlaying a normal distribution with the sample mean $\hat{\mu}$ and the sample standard deviation $\hat{\sigma}^2$ as the parameters one can clearly see that the outcome almost perfectly follows a normal distribution. One could further fit a Q-Q-plot to visualize the normality. **BUT** of course here there is a bounded domain while the normal distribution has the whole $\mathbb{R}$ as domain. This bounded domain does not interfere with the boosted model as tree-based models do not superimpose a distribution assumptions upon the target variable. Nevertheless one can transform the outcome with the empirical logit $log(\frac{y_i+0.5}{1-y_i+0.5})$.By doing this one removes the bounds on the target. One can then re-transform the predictions in the end by applying $\frac{2}{exp(-y)+1}-0.5$. Here to see whether this transformation changes the behavior or improves the boosting model
+one will have a look not only at the untransformed target `burn_rate` but also at the transformed one `burn_rate_trans`. The focus will be on the untransformed modeling as the low pre-processing strength of such boosting models should be emphasized. Below is the distribution of the transformed one.
 
+```{r}
+# Add transformed outcome
+burnout_train$burn_rate_trans <- log((burnout_train$burn_rate + 0.5) /
+                                       (1.5 - burnout_train$burn_rate))
+burnout_test$burn_rate_trans <- log((burnout_test$burn_rate + 0.5) /
+                                       (1.5 - burnout_test$burn_rate))
+```
+
+
+```{r , echo=FALSE, warning=FALSE, message=FALSE}
+burn_rate_box <- ggplot(burnout_train, aes(x = 1, y = burn_rate_trans)) +
+  geom_jitter(alpha = 0.05, col = plasma(1)) +
+  geom_boxplot(col = "black", size = .8, fill = NA) +
+  labs(x = "", y = "Burn rate transformed") +
+  coord_flip() +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank())
+
+
+burn_rate_hist <- ggplot(burnout_train, aes(x = burn_rate_trans)) +
+  geom_histogram(aes(y = ..density..),
+                 fill = plasma(1), binwidth = 0.1) +
+  stat_function(fun = dnorm, args = 
+                  list(
+                    mean = mean(burnout_train$burn_rate_trans),
+                    sd = sd(burnout_train$burn_rate_trans)),
+                col = plasma(3)[2],
+                size = 1
+    ) +
+  annotate("text",
+           x = 0.8, y = 0.7,
+           label = latex2exp::TeX("$N(\\hat{\\mu}, \\hat{\\sigma}^2)$") ,
+           col = plasma(3)[2], size = 5) +
+  labs(x = "", y = "", subtitle = "binwidth = 0.1",
+       title = "Outcome variable: **Burn Rate transformed**") +
+  geom_line(
+    data = data.frame(
+      x = c(0.5, 0.63),
+      y = c(0.4, 0.6)
+    ),
+    aes(x = x, y = y),
+    inherit.aes = FALSE,
+    col = plasma(3)[2],
+    size = .5) +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        plot.title = ggtext::element_markdown(size = 11),
+        plot.subtitle = ggtext::element_markdown(size = 8))
+burn_rate_hist / burn_rate_box
+remove(burn_rate_box)
+remove(burn_rate_hist)
+```
+
+The transformed outcome basically resembles exactly the same properties as the untransformed one but the nice thing is that the bounds were removed. The further EDA will be based on the untransformed variable but the implications are the same due to the choice of the transformation via the empirical logit.
 
 ### Distribution and main effects of the predictors
 
@@ -831,6 +888,20 @@ A recipe is an object that defines a series of steps for data pre-processing and
 ### recipe for xgboost (nominal variables must be dummy variables)
 # define outcome, predictors and training data set
 burnout_rec_boost <- recipe(burn_rate ~ date_of_joining + gender +
+                            company_type + wfh_setup_available +
+                            designation + resource_allocation +
+                            mental_fatigue_score,
+                            data = burnout_train) %>%
+  # extract the date features day of the week and month
+  step_date(date_of_joining, features = c("dow", "month")) %>%
+  # dummify all nominal features
+  step_dummy(all_nominal()) %>%
+  # encode the date as integers
+  step_mutate(date_of_joining = as.integer(date_of_joining))
+
+### recipe for xgboost (nominal variables must be dummy variables)
+# HERE the TRANSFORMED target
+burnout_rec_boost_trans <- recipe(burn_rate_trans ~ date_of_joining + gender +
                             company_type + wfh_setup_available +
                             designation + resource_allocation +
                             mental_fatigue_score,
