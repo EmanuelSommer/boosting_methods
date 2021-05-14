@@ -166,8 +166,8 @@ Corresponding parts:
 
     -   Set $\phi_k(x) = \phi_{k-1}(x) + t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$ with $t \in \mathcal{T}$
 
+<!--
 ---
-
 ## Which loss to pick?
 
 ### $L_2$ loss
@@ -191,9 +191,8 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/huber_loss.
 ```
 
 ]
-
+-->
 ---
-
 ## Combat Overfitting
 
 ### Early stopping
@@ -278,25 +277,354 @@ background-image: url("https://media.giphy.com/media/BpGWitbFZflfSUYuZ9/giphy.gi
 background-size: cover
 class: center, bottom, hide-logo
 
+
+---
+
+## Burnout data set
+
+**Goal:** Predict the burnout rate of an employee.
+
+.left-column[
+<br>
+
+**Number of predictors:** 
+
+.center[9]
+
+**Training data:** 
+
+.center[17301 rows]
+
+**Test data:** 
+
+.center[4325 rows]
+
+**Missing:**
+
+.center[14%]
+]
+
+.right-column[
+```{r, echo=FALSE, out.width="100%", fig.align='center'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/burn_rate_raw.png"))
+```
+]
+---
+
+## Transformed outcome
+
+The transformation with the empirical logit removes the bounds on the target.
+
+$$log(\frac{x+0.5}{1-x+0.5})$$
+
+```{r, echo=FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/burn_rate_trans.png"))
+```
+
+---
+## Mental fatigue score
+
+```{r, echo=FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/mfs_main.png"))
+```
+
+Proposed baseline model:
+
+$$
+\text{burn_rate}_i = \beta_0 + \beta_1 \text{ mental_fatigue_score}_i + \epsilon_i \quad \text{with }
+\epsilon_i \sim N(0,\sigma^2)
+$$
+
+
+---
+## Two closely related features
+
+<br>
+
+```{r, echo=FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/designationVsRessources.png"))
+```
+
+Both features show relevant main effects.
+
+---
+## Prepare for takeoff
+
+### Pre-processing / Feature Engineering
+
+* All variables are used without normalization.
+* Extract extra features `day of the week` and `month` of the date of joining.
+* Dummy-encoding of all nominal variables.
+
+--
+
+### Resampling
+
+**5-fold cross validation** is used for model evaluation e.g. hyperparameter tuning.
+
+```{r, echo=FALSE, out.width="70%", fig.align='center'}
+knitr::include_graphics("img/cv5_illustration.png")
+```
+
+---
+## Tuning strategy
+
+1. Large enough number of trees with a small learning rate.
+
+2. Space-filling grid search over sensible ranges of the hyperparameters.
+
+3. Refine the grid as often as needed.
+
+4. Optional: Iterative searches for single parameters.
+
+
+## The ranges used here
+
+.pull-left[
+`#Trees`: $K \in [100,2000]$
+
+`Max tree depth`: $max(J^{(k)}) \in [1,15]$
+
+`Learning rate`: $\eta \in [1e^{-10},0.1]$
+]
+
+.pull-right[
+`Loss reduction`: $\nu \in [1e^{-10},30]$
+
+`Column-subsampling`: $[1,\text{#features}]$
+
+`Row-subsampling`:  $[0.1,1]$
+]
+---
+## Tuning the number of trees
+
+Tuning only two hyperparameters at once is easy to visualize:
+
+```{r, echo=FALSE, out.width="90%", fig.align='center'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/bout_tuning_stumpsVs6.png"))
+```
+
+So the number of trees is now fixed with a value of 1500.
+
+---
+## Space-filling grid search
+
+Tuning both the model with the raw outcome and the transformed one with space-filling grids came at a cost.
+
+- 800 combinations.
+- 6 million trees.
+- 8 hours of parallel computation.
+
+
+
+### The final parameters
+
+.pull-left[
+`#Trees`: 1500
+
+`Max tree depth`: 4
+
+`Learning rate`: 0.02
+]
+
+.pull-right[
+`Loss reduction`: roughly 0
+
+`Column-subsampling`: not enabled
+
+`Row-subsampling`:  80%
+]
+
+---
+## Raw vs transformed target
+
+The two models behaved exactly the same while tuning and show no notable differences in any of the following visualizations so the focus will now be on the raw model.
+
+```{r, echo=FALSE, out.width="80%", fig.align='left'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/bout_raw_vs_trans.png"))
+```
+
+---
+## Feature importance
+
+The feature importance is basically the relative frequency of the overall model to choose the feature in a split.
+
+```{r, echo=FALSE, out.width="90%", fig.align='left'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/vip_burn.png"))
+```
+
+---
+## Handling of missing values
+
+```{r, echo=FALSE, out.width="90%", fig.align='left'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/miss_vals_burn2.png"))
+```
+
+The default directions of XGBoost seem to work really well.
+
+---
+## Final performance
+
+```{r, echo=FALSE, out.width="90%", fig.align='left'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/final_perf_burn.png"))
+```
+
+---
+
+## Insurance data set
+
+**Goal:** Predict the medical costs (Charges) billed by health insurance.
+
+.left-column[
+<br>
+
+**Number of predictors:** 
+
+.center[6]
+
+**Training data:** 
+
+.center[1071 rows]
+
+**Test data:** 
+
+.center[267 rows]
+
+**Missing:**
+
+.center[None]
+]
+
+
+.right-column[
+```{r, echo=FALSE, out.width="100%", fig.align='center'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/charges_ins.png"))
+```
+]
+
+---
+## Prepare for takeoff
+
+- Again all variables are used without normalization.
+- Dummy-encoding of all nominal variables.
+- Resampling setup with 5-fold CV is the same.
+- The tuning strategy and ranges are unchanged.
+
+--
+
+<br>
+.center[
+<img src="https://media.giphy.com/media/ZNHlhLQb1pm5FYXoWy/giphy.gif" width="300" height="300" />
+]
+
+---
+## Tuning the number of trees
+
+```{r, echo=FALSE, out.width="90%", fig.align='center'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/boost_ins_tune_plot1.png"))
+```
+
+So a closer look at the region around 500 is advisable.
+
+---
+## Tuning the number of trees
+
+```{r, echo=FALSE, out.width="90%", fig.align='center'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/boost_ins_tune_plot2.png"))
+```
+
+The value 600 seems appropriate.
+
+---
+## A look at learning rates
+
+```{r, echo=FALSE, out.width="90%", fig.align='center'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/boost_ins_tune_lrate.png"))
+```
+
+Thus a too small learning rate can also be a problem.
+
+---
+## Space-filling grid search
+
+
+- 600 combinations.
+- 900k trees.
+- 30 minutes of parallel computation.
+
+```{r, echo=FALSE, out.width="90%", fig.align='center'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/tuning_ins_parallelcoord.png"))
+```
+
+---
+## The final parameters
+
+
+`#Trees`: 600
+
+`Max tree depth`: 3
+
+`Learning rate`: 0.02
+
+`Loss reduction`: 0.03
+
+`Column-subsampling`: 7 of 8
+
+`Row-subsampling`:  80%
+
+
+---
+## Feature importance
+
+```{r, echo=FALSE, out.width="90%", fig.align='left'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/vip_ins.png"))
+```
+
+
+---
+## Final Performance
+
+```{r, echo=FALSE, out.width="90%", fig.align='left'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/final_perf_ins.png"))
+```
+
+---
+## Pros 
+
+- **Minimal pre-processing**
+
+- **Flexible enough to detect complex non-linear patterns**
+
+- **Robust to outliers and missing values**
+
+- **Good generalization due to lots of regularization options**
+
+- **Strong predictive power**
+
+## Cons
+
+- **Not easily explainable**
+
+- **Computationally demanding (especially the hyperparameter tuning)**
+
+- **Better if there are lots of observations**
+
+
 ---
 class: inverse, center, middle, hide-logo
-<!-- 
-example for an inverse slide + hide-logo
--->
-## Application!
 
 
----
+## Thank you and happy boosting!
 
-## Footnotes
-<!--
-footnotes!
--->
-Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.<sup>*</sup>
+Here the link to the bookdown project TBD
+
+Basically everything regarding my work for this seminar can be found there. 
 
 
-.footnote[[*] reference]
 
----
+
+
+
+
 
 

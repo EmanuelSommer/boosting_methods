@@ -529,19 +529,22 @@ Now all models w.r.t. the burnout data set are fitted.
 
 First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees.
 
-```{r, echo=FALSE}
-final_bout_boost_wflow %>%
+```{r, echo=FALSE, message=FALSE}
+vip_burn <- final_bout_boost_wflow %>%
   pull_workflow_fit() %>%
   vip::vip() + 
   theme_light() +
   labs(title = "Variable importance of the XGBoost model")
+vip_burn
+ggsave("_pictures/vip_burn.png",plot = vip_burn)
+remove(vip_burn)
 ```
 
 This shows that indeed the `mental_fatigue_score` is the most influential predictor by far followed by the `ressource_allocation` and `designation` features. These results are not at all surprising as the EDA exactly came to these conclusions. Especially the very few appearances of the features connected to `company_type` and `date_of_joining` are most likely just some minor overfitting.
 
 Now compare the variable importance of the model with the raw and the transformed target variable.
 
-```{r}
+```{r, echo=FALSE}
 raw_importance <- final_bout_boost_wflow %>%
   pull_workflow_fit() %>%
   vip::vip() + 
@@ -560,8 +563,8 @@ One can observe the exact same ordering. The only difference seems to be a highe
 
 Now have a look at the performance of the main boosting model w.r.t. missing values in the most influential variable.
 
-```{r}
-burnout_test %>%
+```{r, echo=FALSE, message=FALSE}
+miss_vals_burn1 <- burnout_test %>%
   mutate(boost_pred = predict(final_bout_boost_wflow,
                               new_data = .)[[".pred"]]) %>%
   filter(!is.na(mental_fatigue_score)) %>%
@@ -576,7 +579,7 @@ burnout_test %>%
   coord_equal() +
   theme(plot.title = ggtext::element_markdown(size = 11))
 
-burnout_test %>%
+miss_vals_burn2 <- burnout_test %>%
   mutate(boost_pred = predict(final_bout_boost_wflow,
                               new_data = .)[[".pred"]]) %>%
   filter(is.na(mental_fatigue_score)) %>%
@@ -590,6 +593,11 @@ burnout_test %>%
        title = "XGBoost performance for missing mental fatigue score") +
   coord_equal() +
   theme(plot.title = ggtext::element_markdown(size = 11))
+miss_vals_burn1
+miss_vals_burn2
+ggsave("_pictures/miss_vals_burn1.png", plot = miss_vals_burn1)
+ggsave("_pictures/miss_vals_burn2.png", plot = miss_vals_burn2)
+remove(miss_vals_burn1, miss_vals_burn2)
 ```
 
 The performance for the missing values is indeed not that precise but still quite good. There is at least no huge outlier detectable here.
@@ -643,8 +651,8 @@ knitr::kable(bout_test_perf, digits = 4,
 
 ```
 
-```{r, echo=FALSE}
-bout_test_perf %>%
+```{r, echo=FALSE, message=FALSE}
+final_perf_burn <- bout_test_perf %>%
   pivot_longer(-model) %>%
   mutate(model = as.factor(model),
          model = fct_recode(model, 
@@ -664,13 +672,16 @@ bout_test_perf %>%
   theme_light() +
   theme(legend.position = "None") +
   facet_wrap(~name)
+final_perf_burn
+ggsave("_pictures/final_perf_burn.png",plot = final_perf_burn)
+remove(final_perf_burn)
 ```
 
 
-It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low MAE and RMSE. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an $R^2$ of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor `mental_fatigue_score` should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions there used XGBoost models. The transformation of the outcome variable did actually not change the predictive power of the model as the result for both the model with the raw target as well as the one with the transformed one performed equally good. Below one can see a scatterplot comparing the individual predictions of these two models on the test set which perfectly underlines the hypothesis that the models are the same as there is almost no variation around the identity slope.
+It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low MAE and RMSE. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an $R^2$ of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor `mental_fatigue_score` should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions there used XGBoost models. The transformation of the outcome variable did actually not change the predictive power of the model as the result for both the model with the raw target as well as the one with the transformed one performed equally good. Below one can see a scatterplot comparing the individual predictions of these two models on the test set which perfectly underlines the hypothesis that the models are basically the same as there is almost no variation around the identity slope.
 
-```{r, echo=FALSE}
-burnout_test %>%
+```{r, echo=FALSE, message=FALSE}
+bout_raw_vs_trans <- burnout_test %>%
   mutate(boost_pred = predict(final_bout_boost_wflow,
                               new_data = .)[[".pred"]],
          boost_trans_pred = predict(final_bout_boost_wflow_trans,
@@ -693,6 +704,10 @@ burnout_test %>%
        y = "Transformed target model",
        title = "Predictions on the test data set") +
   theme_light()
+bout_raw_vs_trans
+ggsave("_pictures/bout_raw_vs_trans.png",plot = bout_raw_vs_trans)
+remove(bout_raw_vs_trans)
+
 ```
 
 
@@ -1035,7 +1050,34 @@ show_best(ins_boost_tune_major1, metric = "rmse")
 ```
 
 
-Now again with a slightly refined grid.
+
+```{r, eval=FALSE, echo=FALSE}
+# parallel coordinate plot to detect best combinations
+ins_boost_tune_major1 %>%
+  collect_metrics() %>%
+  mutate(
+    log10_learn_rate = log10(learn_rate),
+    log10_loss_red = log10(loss_reduction)
+  ) %>%
+  GGally::ggparcoord(columns = c(1:5), groupColumn = "mean", 
+                     scale = "uniminmax", alphaLines = 0.1) +
+  scale_color_gradient(low = plasma(1), high = "white", trans = "log") +
+  labs(col = "RMSE",
+       x = "",
+       title = "Visualize the tuning rounds to refine the grid",
+       y = "") +
+  theme_light() +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        axis.text.y = element_blank())
+```
+
+```{r insparallelcoord,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Visualize the tuning results with a parallel coordinate plot. The y axis represents the scaled range for each of the hyperparameter spaces."}
+knitr::include_graphics("_pictures/tuning_ins_parallelcoord.png")
+```
+
+The most prominent suggestions of the visualizations and the table of the best performing ones are combinations of hyperparameters with a very low `loss_reduction` , a low `learn_rate`, a medium to high value of `mtry`, a not too big `tree_depth` as well as a rather high value for the `sample_size`.
+These observations will be used to refine the search space and perform once more a space filling grid search.
 
 ```{r tuneBoostIns4, eval=FALSE, cache=TRUE}
 # now tune all the remaining hyperparameters with a refined space filling grid
@@ -1063,7 +1105,7 @@ system.time({
 show_best(ins_boost_tune_major2, metric = "rmse")
 ```
 
-The results here are quite clear. One will further use a `mtry` value of 7, a `tree_depth` of 3, a `learn_rate` of 0.02, a `loss_reduction` of 0.03 and a `sample_size` of 0.8.
+The results from this grid search were quite clear. One will further use a `mtry` value of 7, a `tree_depth` of 3, a `learn_rate` of 0.02, a `loss_reduction` of 0.03 and a `sample_size` of 0.8.
 
 
 ```{r}
@@ -1091,12 +1133,15 @@ stopCluster(cl)
 
 First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees.
 
-```{r, echo=FALSE}
-final_ins_boost_wflow %>%
+```{r, echo=FALSE, message=FALSE}
+vip_ins <- final_ins_boost_wflow %>%
   pull_workflow_fit() %>%
   vip::vip() + 
   theme_light() +
   labs(title = "Variable importance of the XGBoost model")
+vip_ins
+ggsave("_pictures/vip_ins.png", plot = vip_ins)
+remove(vip_ins)
 ```
 
 Here one can clearly see that the trends that were observable during the EDA are reflected here again. The most influential variable is indeed the smoker variable, closely followed by the age variable. Also the bmi and the number of children seem to be relevant.
@@ -1159,7 +1204,38 @@ ins_test_perf %>%
   facet_wrap(~name)
 ```
 
-Some interpretation here.
+Once without the intercept only model.
+
+```{r, echo=FALSE, message=FALSE}
+final_perf_ins <- ins_test_perf %>%
+  pivot_longer(-model) %>%
+  mutate(model = as.factor(model),
+         model = fct_recode(model, 
+                             "XGBoost" = "boost_pred",
+                            "Random Forest" = "rf_pred",
+                            "Baseline linear model" = "baseline_lm",
+                            "Intercept only" = "intercept_pred"),
+         model = fct_reorder(model,-value)) %>%
+  filter(model != "Intercept only") %>%
+  ggplot(aes(x = value, y = model, col = name)) +
+  geom_point(shape = 16, size = 3) +
+  geom_segment(aes(y = model, yend = model, 
+                   x = 0, xend = value),
+               size = 1) +
+  scale_color_viridis_d(option = "C") +
+  labs(x = "",y = "", title = "Performance on the test data") +
+  theme_light() +
+  theme(legend.position = "None") +
+  facet_wrap(~name, scales = "free_x")
+final_perf_ins
+ggsave("_pictures/final_perf_ins.png", plot = final_perf_ins)
+remove(final_perf_ins)
+```
+
+So overall the XGBoost model again delivered the best performance on the test data set. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the Random forest model. All in all one of the major strengths of gradient boosting is displayed here, namely its predictive power. Whether the difference in performance is worth considering such a model is then up to the use case. 
+
+
+In the next and final chapter the most important pros and cons of gradient boosting are discussed. 
 
 
 

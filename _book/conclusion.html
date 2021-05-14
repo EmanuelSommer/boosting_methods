@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-05-11" />
+<meta name="date" content="2021-05-14" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -196,7 +196,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="5.2.4" data-path="modeling.html"><a href="modeling.html#evaluate-and-understand-the-model-1"><i class="fa fa-check"></i><b>5.2.4</b> Evaluate and understand the model</a></li>
 </ul></li>
 </ul></li>
-<li class="chapter" data-level="6" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>6</b> Conclusion</a></li>
+<li class="chapter" data-level="6" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>6</b> Conclusion</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="conclusion.html"><a href="conclusion.html#pros"><i class="fa fa-check"></i><b>6.1</b> Pros</a></li>
+<li class="chapter" data-level="6.2" data-path="conclusion.html"><a href="conclusion.html#cons"><i class="fa fa-check"></i><b>6.2</b> Cons</a></li>
+</ul></li>
 <li class="chapter" data-level="7" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i><b>7</b> References</a></li>
 </ul>
 
@@ -217,8 +221,28 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
             <section class="normal" id="section-">
 <div id="conclusion" class="section level1" number="6">
 <h1><span class="header-section-number">Chapter 6</span> Conclusion</h1>
-<p>Let’s wrap it up!</p>
+<p>Now after having a solid theoretical understanding of gradient boosting methods for regression and the implementation XGBoost as well as seeing the application of such models to two data sets one can wrap up this project by discussing the major pros and cons of this approach.</p>
+<div id="pros" class="section level2" number="6.1">
+<h2><span class="header-section-number">6.1</span> Pros</h2>
+<ul>
+<li><p>Minimal pre-processing</p></li>
+<li><p>Flexible enough to detect complex non-linear patterns</p></li>
+<li><p>Robust to outliers and missing values</p></li>
+<li><p>Good generalization due to lots of regularization options</p></li>
+<li><p>Strong predictive power</p></li>
+</ul>
+</div>
+<div id="cons" class="section level2" number="6.2">
+<h2><span class="header-section-number">6.2</span> Cons</h2>
+<ul>
+<li><p>Not as explainable as for example a linear model</p></li>
+<li><p>Computationally demanding (especially the hyperparameter tuning)</p></li>
+<li><p>Better if there are lots of observations</p></li>
+</ul>
+<p>These pros and cons show that tree-based gradient boosting is a very powerful learning algorithm but still not suitable to any application. Due to its very robust nature and good handling of missing values and features of different scales it is one of the dominant algorithms in data mining alongside models like random forest. But in critical applications with just few observations such models should be treated with care as they are not that explainable. Still if one handles tabular data in order to perform a regression or classification task one should take the pros and cons that were mentioned above into account and in many cases a consideration of a tree-based gradient boosting model like XGBoost is advisable.</p>
+<p><strong>Thanks thanks for sticking with it!</strong></p>
 
+</div>
 </div>
             </section>
 

@@ -1,6 +1,6 @@
 # Explore the data {#eda}
 
-Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork; @visdat; @lubridate, @latexplots] The most important ones will be loaded below.
+Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork; @visdat; @lubridate, @latexplots, @ggally] The most important ones will be loaded below.
 
 ```{r load_packages, message=FALSE, warning=FALSE}
 library(tidyverse) # general data handling tools
@@ -139,8 +139,10 @@ burn_rate_hist <- ggplot(burnout_train, aes(x = burn_rate)) +
         axis.text.y = element_blank(),
         plot.title = ggtext::element_markdown(size = 11),
         plot.subtitle = ggtext::element_markdown(size = 8))
-burn_rate_hist / burn_rate_box
-remove(burn_rate_box)
+burn_rate_raw <- burn_rate_hist / burn_rate_box
+burn_rate_raw
+ggsave("_pictures/burn_rate_raw.png", plot = burn_rate_raw)
+remove(burn_rate_box, burn_rate_raw)
 remove(burn_rate_hist)
 ```
 
@@ -197,8 +199,10 @@ burn_rate_hist <- ggplot(burnout_train, aes(x = burn_rate_trans)) +
         axis.text.y = element_blank(),
         plot.title = ggtext::element_markdown(size = 11),
         plot.subtitle = ggtext::element_markdown(size = 8))
-burn_rate_hist / burn_rate_box
-remove(burn_rate_box)
+burn_rate_trans <- burn_rate_hist / burn_rate_box
+burn_rate_trans
+ggsave("_pictures/burn_rate_trans.png", plot = burn_rate_trans)
+remove(burn_rate_box, burn_rate_trans)
 remove(burn_rate_hist)
 ```
 
@@ -519,8 +523,8 @@ ggplot(burnout_train, aes(x = mental_fatigue_score)) +
 
 Although there is a very slight skew towards a higher mental fatigue score the overall distribution is still more or less bell shaped and quite symmetrical. Moreover the whole allowed range is covered and the bounds are not violated. Next the main effect of the variable.
 
-```{r echo=FALSE}
-ggplot(burnout_train,
+```{r echo=FALSE, message=FALSE}
+mfs_main <- ggplot(burnout_train,
        aes(y = mental_fatigue_score,
            x = burn_rate)) +
   geom_point(alpha = 0.1, col = plasma(1),
@@ -539,6 +543,9 @@ ggplot(burnout_train,
   theme_light() +
   theme(legend.position = "None",
         plot.title = ggtext::element_markdown(size = 11))
+mfs_main
+ggsave("_pictures/mfs_main.png", plot = mfs_main)
+remove(mfs_main)
 ```
 
 This scatterplot shows drastic results! The mental fatigue score has an almost perfect linear relationship with the outcome variable. This is also underlined by the very high pearson correlation. This indicates that mental fatigue score will be a most important predictor. If a communication with the data collector would be possible it would be important to check whether the two scores have common confounding variables as then one would have to question the practical usability of this predictor. This comes from the fact that no model would be needed if it was as hard to collect the data about the predictors as the outcome data. Moreover there are `r sum(is.na(burnout_train$mental_fatigue_score))` missing values in the feature so for those the model has to rely on the other maybe more weak predictors. It should be noted that when evaluating the final model one should consider to compare its performance to a trivial model (like a single intercept model). When constructing such a trivial model one could and maybe should also use this variable (when available) to get a trivial prediction by scaling the `mental_fatigue_score` feature by a simple scalar.
@@ -791,8 +798,8 @@ Again this is of course very similar to the main effect of the `wfh_setup_availa
 
 #### Designation vs the remaining
 
-```{r, echo=FALSE}
-burnout_train %>%
+```{r, echo=FALSE, message=FALSE}
+designationVsRessources <- burnout_train %>%
   group_by(designation, resource_allocation) %>%
   summarise(count = n(), .groups = "drop") %>%
   ggplot(aes(x = factor(designation),
@@ -808,6 +815,10 @@ burnout_train %>%
   theme_light() +
   theme(legend.position = "None",
         plot.title = ggtext::element_markdown(size = 11))
+designationVsRessources
+ggsave("_pictures/designationVsRessources.png",
+       plot = designationVsRessources, )
+remove(designationVsRessources)
 ```
 
 Here a strong quite linear relationship is visible. This is sensible as often more resource responsibility is given to employees with high designation.
@@ -1046,7 +1057,7 @@ remove(charges_hist)
 Not like the `burn_rate` previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting `log_charges` outcome variable is shown below. 
 
 
-```{r , echo=FALSE}
+```{r , echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 charges_box <- ggplot(ins_train, aes(x = 1, y = log10(charges))) +
   geom_jitter(alpha = 0.3, col = plasma(1)) +
   geom_boxplot(col = "black", size = .8, fill = NA) +
@@ -1067,10 +1078,17 @@ charges_hist <- ggplot(ins_train, aes(x = log10(charges))) +
         axis.text.y = element_blank(),
         plot.title = ggtext::element_markdown(size = 11),
         plot.subtitle = ggtext::element_markdown(size = 8))
-charges_hist / charges_box
-remove(charges_box)
-remove(charges_hist)
+charges_ins <- charges_hist / charges_box
+
 ```
+
+```{r, message=FALSE, echo=FALSE}
+charges_ins
+ggsave("_pictures/charges_ins.png", plot = charges_ins)
+remove(charges_box)
+remove(charges_hist, charges_ins)
+```
+
 
 Although such a transformation of the outcome variable is not needed for tree-based modeling it can make the job of the algorithm somewhat easier. 
 
