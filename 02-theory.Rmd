@@ -2,7 +2,7 @@
 
 ## The powerful idea of gradient boosting
 
-As roughly mentioned in the introduction section \@ref(intro) the main idea of boosting is to sequentially build weak learners that form a powerful ensemble model. With weak learners models with high bias and low variance are meant that perform at least a little better than guessing. This already shows that the sequential approach of gradient boosting with 'weak' learners stands in strong contrast to bagged ensembles like random forest. There many models with low bias and high variance are fitted in a parallel fashion and the variance is then reduced by averaging over the models.[@HandsOnMLwithR] It is not totally clear from which field boosting methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth.[@elements] PAC learning can be considered one field within the broader field of learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC).[@pacbounds] This section will first cover the general setup of gradient boosting as the most prominent method to train forward stagewise additive models. Secondly tree-based gradient boosting and finally a very efficient and robust tree-based gradient boosting algorithm namely XGBoost will be discussed in detail.
+As roughly mentioned in the introduction section \@ref(intro) the main idea of boosting is to sequentially build weak learners that form a powerful ensemble model. With weak learners models with high bias and low variance are meant that perform at least a little better than guessing. This already shows that the sequential approach of gradient boosting with weak learners stands in strong contrast to bagged ensembles like random forest. There many models with low bias and high variance are fitted in a parallel fashion and the variance is then reduced by averaging over the models.[@HandsOnMLwithR] It is not totally clear from which field boosting methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth.[@elements] PAC learning can be considered one field within the broader field of learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC).[@pacbounds] This section will first cover the general setup of gradient boosting as the most prominent method to train forward stagewise additive models. Secondly tree-based gradient boosting and finally a very efficient and robust tree-based gradient boosting algorithm namely XGBoost will be discussed in detail.
 
 ### Forward Stagewise Additive Modeling
 
@@ -175,7 +175,7 @@ The only unknowns in this algorithm are now the differentiable loss function and
 
 ### Single tree depth
 
-The question which $J^{(k)}$ should be used at each iteration is now shortly discussed. Basically using the tree depth two means allowing only the main effects and no interactions. A value of 3 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values $J^{(k)}$ to a constant $J \approx 6$.[@elements] Also decision stumps ($J = 2$) could be used but may require a lot more iterations.
+The question which $J^{(k)}$ should be used at each iteration is now shortly discussed. Basically using the tree depth ($log_2(J^{(k)}) = Depth^{(k)}$) two means allowing only the main effects and no interactions. A value of 3 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values $Depth^{(k)}$ to a constant $Depth \approx 6$.[@elements] Also decision stumps ($Depth = 1$) could be used but may require a lot more iterations.
 
 ### Combat overfitting {#combOver}
 
@@ -237,11 +237,11 @@ Instead of the first order approach, that has been introduced in \@ref(numOpt), 
 (\#eq:oneappStepXGBoost)
 \end{equation}
 ```
-This representation is used as it can be decomposed by the $J$ leafs of the tree. One can then define an scoring function for split finding that only depends on $g^{(k)}$ and $z^{(k)}$.
+This representation is used as it can be decomposed by the $J$ leafs of the tree. One can then define a scoring function for split finding that only depends on $g^{(k)}$ and $z^{(k)}$. This approach speeds up the split finding and allows further parallel computations with respect to the leafs.
 
 ### Shrinkage and subsampling
 
-As discussed above in \@ref(combOver) shrinkage and subsampling are great ways to regularize the model and prevent overfitting. XGBoost implements both shrinkage and subsampling. XGBoost enables the user to use column as well as row subsampling. The authors claim that in practice column subsampling has prevented overfitting more than row subsampling.[@xgboostPaper]
+As discussed above in \@ref(combOver) shrinkage and subsampling are great ways to regularize the model and prevent overfitting. XGBoost implements both shrinkage and subsampling. It enables the user to use column as well as row subsampling. The authors claim that in practice column subsampling has prevented overfitting more than row subsampling.[@xgboostPaper]
 
 ### Even more tweaks
 
@@ -251,29 +251,29 @@ Besides the changes above the authors also implemented an effective approximate 
 
 As the **tidymodels** framework will be used in the applied part, the according names from the parsnip interface for tree-based boosting i.e. `boost_tree` are discussed below.[@xgboostPaper, @xgboost_package, @tidymodels]
 
-+------------------+----------------+---------------------------------------------------------------------------------------------+
-| Hyperparameter   | Notation above | Meaning                                                                                     |
-+==================+================+=============================================================================================+
-| `trees`          | $K$            | Number of trees in the ensemble.                                                            |
-+------------------+----------------+---------------------------------------------------------------------------------------------+
-| `tree_depth`     | $max(J^{(k)})$ | Maximum depth of the trees.                                                                 |
-+------------------+----------------+---------------------------------------------------------------------------------------------+
-| `learn_rate`     | $\eta$         | Learning rate (shrinkage).                                                                  |
-+------------------+----------------+---------------------------------------------------------------------------------------------+
-| `min_n`          |                | Minimum number of observations in terminal region $R^{(k)}_j$.                              |
-+------------------+----------------+---------------------------------------------------------------------------------------------+
-| `lambda`         | $\lambda$      | $L_2$ regularization parameter on $\gamma$ as in \@ref(eq:oneappStepXGBoost) (default = 0). |
-+------------------+----------------+---------------------------------------------------------------------------------------------+
-| `alpha`          |                | $L_1$ regularization parameter on $\gamma$ (default = 0).                                   |
-+------------------+----------------+---------------------------------------------------------------------------------------------+
-| `loss_reduction` | $\nu$          | Minimal loss reduction for terminal partitions. (default = 0)                               |
-+------------------+----------------+---------------------------------------------------------------------------------------------+
-| `mtry`           |                | Proportion or number of columns for column subsampling.                                     |
-+------------------+----------------+---------------------------------------------------------------------------------------------+
-| `sample_size`    |                | Proportion of observations for row subsampling.                                             |
-+------------------+----------------+---------------------------------------------------------------------------------------------+
-| `stop_iter`      |                | Allowed number of rounds without improvement before early stopping.                         |
-+------------------+----------------+---------------------------------------------------------------------------------------------+
++------------------+---------------------+---------------------------------------------------------------------------------------------+
+| Hyperparameter   | Notation above      | Meaning                                                                                     |
++==================+=====================+=============================================================================================+
+| `trees`          | $K$                 | Number of trees in the ensemble.                                                            |
++------------------+---------------------+---------------------------------------------------------------------------------------------+
+| `tree_depth`     | $max(log_2J^{(k)})$ | Maximum depth of the trees.                                                                 |
++------------------+---------------------+---------------------------------------------------------------------------------------------+
+| `learn_rate`     | $\eta$              | Learning rate (shrinkage).                                                                  |
++------------------+---------------------+---------------------------------------------------------------------------------------------+
+| `min_n`          |                     | Minimum number of observations in terminal region $R^{(k)}_j$.                              |
++------------------+---------------------+---------------------------------------------------------------------------------------------+
+| `lambda`         | $\lambda$           | $L_2$ regularization parameter on $\gamma$ as in \@ref(eq:oneappStepXGBoost) (default = 0). |
++------------------+---------------------+---------------------------------------------------------------------------------------------+
+| `alpha`          |                     | $L_1$ regularization parameter on $\gamma$ (default = 0).                                   |
++------------------+---------------------+---------------------------------------------------------------------------------------------+
+| `loss_reduction` | $\nu$               | Minimal loss reduction for terminal partitions. (default = 0)                               |
++------------------+---------------------+---------------------------------------------------------------------------------------------+
+| `mtry`           |                     | Proportion or number of columns for column subsampling.                                     |
++------------------+---------------------+---------------------------------------------------------------------------------------------+
+| `sample_size`    |                     | Proportion of observations for row subsampling.                                             |
++------------------+---------------------+---------------------------------------------------------------------------------------------+
+| `stop_iter`      |                     | Allowed number of rounds without improvement before early stopping.                         |
++------------------+---------------------+---------------------------------------------------------------------------------------------+
 
 : (\#tab:xgboostHyper) XGBoost hyperparameters overview.
 
