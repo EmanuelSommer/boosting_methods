@@ -1,6 +1,6 @@
 # Explore the data {#eda}
 
-Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork; @visdat; @lubridate, @latexplots, @ggally] The most important ones will be loaded below.
+Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork; @visdat; @lubridate; @latexplots; @ggally] The most important ones will be loaded below.
 
 ```{r load_packages, message=FALSE, warning=FALSE}
 library(tidyverse) # general data handling tools
@@ -75,7 +75,7 @@ knitr::kable(
 )
 ```
 
-A general visualization of the whole datas set to detect missing values below.
+A general visualization of the whole data set to detect missing values below.
 
 ```{r visdat, echo=FALSE}
 visdat::vis_dat(burnout_train)
@@ -911,7 +911,7 @@ burnout_rec_boost <- recipe(burn_rate ~ date_of_joining + gender +
   step_mutate(date_of_joining = as.integer(date_of_joining))
 
 ### recipe for xgboost (nominal variables must be dummy variables)
-# HERE the TRANSFORMED target
+### HERE the TRANSFORMED target
 burnout_rec_boost_trans <- recipe(burn_rate_trans ~ date_of_joining + gender +
                             company_type + wfh_setup_available +
                             designation + resource_allocation +
@@ -1007,6 +1007,9 @@ remove(insurance_data)
 remove(ins_split)
 ```
 
+The training data set contains `r nrow(ins_train)` rows and `r ncol(ins_train)` variables.
+
+The test data set contains `r nrow(ins_test)` observations and naturally also `r ncol(ins_test)` variables.
 
 ### A general overview
 

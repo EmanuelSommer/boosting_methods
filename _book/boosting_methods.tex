@@ -138,7 +138,7 @@
 
 \title{Boosting methods: Theory and application in R}
 \author{Emanuel Sommer}
-\date{2021-05-14}
+\date{2021-05-15}
 
 \begin{document}
 \maketitle
@@ -198,7 +198,7 @@ The application of the discussed boosting models to two real world data sets wit
 \hypertarget{the-powerful-idea-of-gradient-boosting}{%
 \section{The powerful idea of gradient boosting}\label{the-powerful-idea-of-gradient-boosting}}
 
-As roughly mentioned in the introduction section \ref{intro} the main idea of boosting is to sequentially build weak learners that form a powerful ensemble model. With weak learners models with high bias and low variance are meant that perform at least a little better than guessing. This already shows that the sequential approach of gradient boosting with `weak' learners stands in strong contrast to bagged ensembles like random forest. There many models with low bias and high variance are fitted in a parallel fashion and the variance is then reduced by averaging over the models.\citep{HandsOnMLwithR} It is not totally clear from which field boosting methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth.\citep{elements} PAC learning can be considered one field within the broader field of learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC).\citep{pacbounds} This section will first cover the general setup of gradient boosting as the most prominent method to train forward stagewise additive models. Secondly tree-based gradient boosting and finally a very efficient and robust tree-based gradient boosting algorithm namely XGBoost will be discussed in detail.
+As roughly mentioned in the introduction section \ref{intro} the main idea of boosting is to sequentially build weak learners that form a powerful ensemble model. With weak learners models with high bias and low variance are meant that perform at least a little better than guessing. This already shows that the sequential approach of gradient boosting with weak learners stands in strong contrast to bagged ensembles like random forest. There many models with low bias and high variance are fitted in a parallel fashion and the variance is then reduced by averaging over the models.\citep{HandsOnMLwithR} It is not totally clear from which field boosting methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth.\citep{elements} PAC learning can be considered one field within the broader field of learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC).\citep{pacbounds} This section will first cover the general setup of gradient boosting as the most prominent method to train forward stagewise additive models. Secondly tree-based gradient boosting and finally a very efficient and robust tree-based gradient boosting algorithm namely XGBoost will be discussed in detail.
 
 \hypertarget{forward-stagewise-additive-modeling}{%
 \subsection{Forward Stagewise Additive Modeling}\label{forward-stagewise-additive-modeling}}
@@ -401,7 +401,7 @@ Huber loss \eqref{eq:huberLoss} & \(y_i - \phi(x_i)\) for \(|y_i - \phi(x_i)| \l
 \hypertarget{single-tree-depth}{%
 \subsection{Single tree depth}\label{single-tree-depth}}
 
-The question which \(J^{(k)}\) should be used at each iteration is now shortly discussed. Basically using the tree depth two means allowing only the main effects and no interactions. A value of 3 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values \(J^{(k)}\) to a constant \(J \approx 6\).\citep{elements} Also decision stumps (\(J = 2\)) could be used but may require a lot more iterations.
+The question which \(J^{(k)}\) should be used at each iteration is now shortly discussed. Basically using the tree depth (\(log_2(J^{(k)}) = Depth^{(k)}\)) two means allowing only the main effects and no interactions. A value of 3 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values \(Depth^{(k)}\) to a constant \(Depth \approx 6\).\citep{elements} Also decision stumps (\(Depth = 1\)) could be used but may require a lot more iterations.
 
 \hypertarget{combOver}{%
 \subsection{Combat overfitting}\label{combOver}}
@@ -464,12 +464,12 @@ Instead of the first order approach, that has been introduced in \ref{numOpt}, X
 \label{eq:oneappStepXGBoost}
 \end{equation}
 
-This representation is used as it can be decomposed by the \(J\) leafs of the tree. One can then define an scoring function for split finding that only depends on \(g^{(k)}\) and \(z^{(k)}\).
+This representation is used as it can be decomposed by the \(J\) leafs of the tree. One can then define a scoring function for split finding that only depends on \(g^{(k)}\) and \(z^{(k)}\). This approach speeds up the split finding and allows further parallel computations with respect to the leafs.
 
 \hypertarget{shrinkage-and-subsampling}{%
 \subsection{Shrinkage and subsampling}\label{shrinkage-and-subsampling}}
 
-As discussed above in \ref{combOver} shrinkage and subsampling are great ways to regularize the model and prevent overfitting. XGBoost implements both shrinkage and subsampling. XGBoost enables the user to use column as well as row subsampling. The authors claim that in practice column subsampling has prevented overfitting more than row subsampling.\citep{xgboostPaper}
+As discussed above in \ref{combOver} shrinkage and subsampling are great ways to regularize the model and prevent overfitting. XGBoost implements both shrinkage and subsampling. It enables the user to use column as well as row subsampling. The authors claim that in practice column subsampling has prevented overfitting more than row subsampling.\citep{xgboostPaper}
 
 \hypertarget{even-more-tweaks}{%
 \subsection{Even more tweaks}\label{even-more-tweaks}}
@@ -482,9 +482,9 @@ Besides the changes above the authors also implemented an effective approximate 
 As the \textbf{tidymodels} framework will be used in the applied part, the according names from the parsnip interface for tree-based boosting i.e.~\texttt{boost\_tree} are discussed below.\citep[\citet{xgboost_package}, \citet{tidymodels}]{xgboostPaper}
 
 \begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.15}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.13}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.72}}@{}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.14}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.16}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.70}}@{}}
 \caption{\label{tab:xgboostHyper} XGBoost hyperparameters overview.}\tabularnewline
 \toprule
 Hyperparameter & Notation above & Meaning \\
@@ -495,7 +495,7 @@ Hyperparameter & Notation above & Meaning \\
 \midrule
 \endhead
 \texttt{trees} & \(K\) & Number of trees in the ensemble. \\
-\texttt{tree\_depth} & \(max(J^{(k)})\) & Maximum depth of the trees. \\
+\texttt{tree\_depth} & \(max(log_2J^{(k)})\) & Maximum depth of the trees. \\
 \texttt{learn\_rate} & \(\eta\) & Learning rate (shrinkage). \\
 \texttt{min\_n} & & Minimum number of observations in terminal region \(R^{(k)}_j\). \\
 \texttt{lambda} & \(\lambda\) & \(L_2\) regularization parameter on \(\gamma\) as in \eqref{eq:oneappStepXGBoost} (default = 0). \\
@@ -514,7 +514,7 @@ This closes the chapter on the theory of boosting methods with a focus on tree-b
 \hypertarget{eda}{%
 \chapter{Explore the data}\label{eda}}
 
-Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.\citetext{\citealp{tidyverse}; \citealp{tidymodels}; \citealp{viridis}; \citealp{ggtext}; \citealp[ ]{viridisLite}; \citealp{patchwork}; \citealp{visdat}; \citealp[\citet{latexplots}, \citet{ggally}]{lubridate}} The most important ones will be loaded below.
+Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.\citetext{\citealp{tidyverse}; \citealp{tidymodels}; \citealp{viridis}; \citealp{ggtext}; \citealp[ ]{viridisLite}; \citealp{patchwork}; \citealp{visdat}; \citealp{lubridate}; \citealp{latexplots}; \citealp{ggally}} The most important ones will be loaded below.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -615,7 +615,7 @@ burn\_rate & numeric\\
 \hline
 \end{tabular}
 
-A general visualization of the whole datas set to detect missing values below.
+A general visualization of the whole data set to detect missing values below.
 
 \includegraphics{boosting_methods_files/figure-latex/visdat-1.pdf}
 
@@ -1002,7 +1002,7 @@ A recipe is an object that defines a series of steps for data pre-processing and
   \FunctionTok{step\_mutate}\NormalTok{(}\AttributeTok{date\_of\_joining =} \FunctionTok{as.integer}\NormalTok{(date\_of\_joining))}
 
 \DocumentationTok{\#\#\# recipe for xgboost (nominal variables must be dummy variables)}
-\CommentTok{\# HERE the TRANSFORMED target}
+\DocumentationTok{\#\#\# HERE the TRANSFORMED target}
 \NormalTok{burnout\_rec\_boost\_trans }\OtherTok{\textless{}{-}} \FunctionTok{recipe}\NormalTok{(burn\_rate\_trans }\SpecialCharTok{\textasciitilde{}}\NormalTok{ date\_of\_joining }\SpecialCharTok{+}\NormalTok{ gender }\SpecialCharTok{+}
 \NormalTok{                            company\_type }\SpecialCharTok{+}\NormalTok{ wfh\_setup\_available }\SpecialCharTok{+}
 \NormalTok{                            designation }\SpecialCharTok{+}\NormalTok{ resource\_allocation }\SpecialCharTok{+}
@@ -1055,6 +1055,10 @@ The insurance data set is part of the book \emph{Machine Learning with R} by Bre
 \NormalTok{ins\_test  }\OtherTok{\textless{}{-}}\NormalTok{ rsample}\SpecialCharTok{::}\FunctionTok{testing}\NormalTok{(ins\_split)}
 \end{Highlighting}
 \end{Shaded}
+
+The training data set contains 1071 rows and 7 variables.
+
+The test data set contains 267 observations and naturally also 7 variables.
 
 \hypertarget{a-general-overview}{%
 \subsection{A general overview}\label{a-general-overview}}
@@ -1307,7 +1311,7 @@ Having now all the recipes ready one can proceed with modeling. Finally!
 
 Beside the XGBoost model also a random forest model will be fitted here for comparison. The whole modeling approach and procedure is closely following the principles that are outlined in the \textbf{great} book \emph{Tidy modeling with R} by Max Kuhn and Julia Silge.
 
-For the modeling three additional packages are required.\citep[\citet{ranger_package}, \citet{vipPack}]{xgboost_package}
+For the modeling three additional packages are required.\citep{xgboost_package, ranger_package, vipPack}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1398,13 +1402,13 @@ The predictions of these baseline models on the test data set will be compared w
   \FunctionTok{add\_model}\NormalTok{(bout\_rf\_model) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{add\_recipe}\NormalTok{(burnout\_rec\_rf)}
 
-\CommentTok{\# XGBoost workflow with the untransformed data}
+\CommentTok{\# XGBoost workflow with the untransformed target}
 \NormalTok{bout\_boost\_wflow }\OtherTok{\textless{}{-}}
   \FunctionTok{workflow}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{add\_model}\NormalTok{(bout\_boost\_model) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{add\_recipe}\NormalTok{(burnout\_rec\_boost)}
 
-\CommentTok{\# XGBoost workflow with the transformed data (empirical logit)}
+\CommentTok{\# XGBoost workflow with the transformed target (empirical logit)}
 \NormalTok{bout\_boost\_wflow\_trans }\OtherTok{\textless{}{-}}
   \FunctionTok{workflow}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{add\_model}\NormalTok{(bout\_boost\_model) }\SpecialCharTok{\%\textgreater{}\%}
@@ -1631,7 +1635,7 @@ So \texttt{sample\_size} must also be finalized. Again the lower bound on the nu
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# use the same object for the tuning of the boosted model}
-\CommentTok{\# with the transformed variable}
+\CommentTok{\# with the transformed target}
 \NormalTok{bout\_boost\_params\_trans }\OtherTok{\textless{}{-}}\NormalTok{ bout\_boost\_params}
 \end{Highlighting}
 \end{Shaded}
@@ -1645,7 +1649,7 @@ Now also these parameter objects are ready to be used. The next step is to defin
 \end{Highlighting}
 \end{Shaded}
 
-Now the actual tuning begins. The models will be tuned by a space filling grid search. As one has defined ranges for each parameter one can then use different algorithms to construct a grid of combinations of parameter values that tries to best fill the defined ranges by random sampling also in a high dimensional setting. In the following the function \texttt{tune::grid\_latin\_hypercube} is used for this. So basically one tries out all hyperparameter values for each fold and saves the performance of the performance metrics on the hold out fold. These metrics are then aggregated for each combination and with the resulting estimates of performance one can choose the final set of hyperparameters. The more hyperparameters the model has the more tuning rounds might needed to refine the grid. Besides the classical grid search there are also iterative methods for tuning. These are mainly good to tune a single hyperparameter at once and not for a bunch of them simultaneously. They will not be used in the following.
+Now the actual tuning begins. The models will be tuned by a space filling grid search. As one has defined ranges for each parameter one can then use different algorithms to construct a grid of combinations of parameter values that tries to best fill the defined ranges by random sampling also in a high dimensional setting. In the following the function \texttt{tune::grid\_latin\_hypercube} is used for this. So basically one tries out all hyperparameter values for each fold and saves the performance of the performance metrics on the hold out fold. These metrics are then aggregated for each combination and with the resulting estimates of performance one can choose the final set of hyperparameters. The more hyperparameters the model has the more tuning rounds might be needed to refine the grid. Besides the classical grid search there are also iterative methods for tuning. These are mainly good to tune a single hyperparameter at once and not for a bunch of them simultaneously. They will not be used in the following.
 
 The \textbf{random forest model} goes first with the tuning.
 
@@ -1811,7 +1815,7 @@ Compare the two different first tuning rounds:
 \caption{Comparison of the initial grid search for the number of trees w.r.t. the maximum tree depth. Actually with tiny confidence bands around the estimates.}\label{fig:bouttuningstumpsVs6}
 \end{figure}
 
-This shows that the model with just stumps converges much faster or may even never reach the low level of when using deeper trees. One reason for this could be that these stumps do not account for interactions and of course the same number of deep trees encode much more information than the same number of stumps.
+This shows that the model with just stumps converges much slower or may even never reach the low level of when using deeper trees. One reason for this could be that these stumps do not account for interactions and of course the same number of deep trees encode much more information than the same number of stumps.
 
 So 1500 trees should suffice here. Thus the workflow and model will be adjusted accordingly.
 
@@ -2494,7 +2498,9 @@ Before one does that mainly for a view on the influence of the learning rate one
 \caption{Comparison of the grid search for the number of trees w.r.t. the learning rate. Actually with tiny confidence bands around the estimates.}\label{fig:boostInstuneplotlrate}
 \end{figure}
 
-Now fix the number of trees hyperparameter.
+This showcases the fact that indeed a learning rate that is too small can blow up the computational costs.
+
+Now fix the number of the \texttt{trees} hyperparameter.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -2614,7 +2620,7 @@ The results from this grid search were quite clear. One will further use a \text
 \end{Highlighting}
 \end{Shaded}
 
-From here one no computational intensive task will be performed so one stops the cluster.
+From here no computational intensive task will be performed so one stops the cluster.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -2690,7 +2696,7 @@ Now after having a solid theoretical understanding of gradient boosting methods 
 \item
   Computationally demanding (especially the hyperparameter tuning)
 \item
-  Better if there are lots of observations
+  Preferably lots of observations
 \end{itemize}
 
 These pros and cons show that tree-based gradient boosting is a very powerful learning algorithm but still not suitable to any application. Due to its very robust nature and good handling of missing values and features of different scales it is one of the dominant algorithms in data mining alongside models like random forest. But in critical applications with just few observations such models should be treated with care as they are not that explainable. Still if one handles tabular data in order to perform a regression or classification task one should take the pros and cons that were mentioned above into account and in many cases a consideration of a tree-based gradient boosting model like XGBoost is advisable.

@@ -2,7 +2,7 @@
 
 Beside the XGBoost model also a random forest model will be fitted here for comparison. The whole modeling approach and procedure is closely following the principles that are outlined in the **great** book *Tidy modeling with R* by Max Kuhn and Julia Silge.
 
-For the modeling three additional packages are required.[@xgboost_package, @ranger_package, @vipPack]
+For the modeling three additional packages are required.[@xgboost_package; @ranger_package; @vipPack]
 
 ```{r loadModelPackages, message=FALSE, warning=FALSE}
 library(xgboost) # for the xgboost model
@@ -85,13 +85,13 @@ bout_rf_wflow <-
   add_model(bout_rf_model) %>%
   add_recipe(burnout_rec_rf)
 
-# XGBoost workflow with the untransformed data
+# XGBoost workflow with the untransformed target
 bout_boost_wflow <-
   workflow() %>%
   add_model(bout_boost_model) %>%
   add_recipe(burnout_rec_boost)
 
-# XGBoost workflow with the transformed data (empirical logit)
+# XGBoost workflow with the transformed target (empirical logit)
 bout_boost_wflow_trans <-
   workflow() %>%
   add_model(bout_boost_model) %>%
@@ -165,7 +165,7 @@ bout_boost_params %>%
 bout_boost_params %>%
   pull_dials_object("mtry")
 # use the same object for the tuning of the boosted model
-# with the transformed variable
+# with the transformed target
 bout_boost_params_trans <- bout_boost_params
 ```
 
@@ -177,7 +177,7 @@ Now also these parameter objects are ready to be used. The next step is to defin
 regr_metrics <- metric_set(rmse, mae)
 ```
 
-Now the actual tuning begins. The models will be tuned by a space filling grid search. As one has defined ranges for each parameter one can then use different algorithms to construct a grid of combinations of parameter values that tries to best fill the defined ranges by random sampling also in a high dimensional setting. In the following the function `tune::grid_latin_hypercube` is used for this. So basically one tries out all hyperparameter values for each fold and saves the performance of the performance metrics on the hold out fold. These metrics are then aggregated for each combination and with the resulting estimates of performance one can choose the final set of hyperparameters. The more hyperparameters the model has the more tuning rounds might needed to refine the grid. Besides the classical grid search there are also iterative methods for tuning. These are mainly good to tune a single hyperparameter at once and not for a bunch of them simultaneously. They will not be used in the following.
+Now the actual tuning begins. The models will be tuned by a space filling grid search. As one has defined ranges for each parameter one can then use different algorithms to construct a grid of combinations of parameter values that tries to best fill the defined ranges by random sampling also in a high dimensional setting. In the following the function `tune::grid_latin_hypercube` is used for this. So basically one tries out all hyperparameter values for each fold and saves the performance of the performance metrics on the hold out fold. These metrics are then aggregated for each combination and with the resulting estimates of performance one can choose the final set of hyperparameters. The more hyperparameters the model has the more tuning rounds might be needed to refine the grid. Besides the classical grid search there are also iterative methods for tuning. These are mainly good to tune a single hyperparameter at once and not for a bunch of them simultaneously. They will not be used in the following.
 
 The **random forest model** goes first with the tuning.
 
@@ -317,7 +317,7 @@ bout_boost_tune_first_stumps %>%
 knitr::include_graphics("_pictures/bout_tuning_stumpsVs6.png")
 ```
 
-This shows that the model with just stumps converges much faster or may even never reach the low level of when using deeper trees. One reason for this could be that these stumps do not account for interactions and of course the same number of deep trees encode much more information than the same number of stumps.
+This shows that the model with just stumps converges much slower or may even never reach the low level of when using deeper trees. One reason for this could be that these stumps do not account for interactions and of course the same number of deep trees encode much more information than the same number of stumps.
 
 
 So 1500 trees should suffice here. Thus the workflow and model will be adjusted accordingly.
@@ -999,7 +999,9 @@ ins_boost_tune_lrate %>%
 knitr::include_graphics("_pictures/boost_ins_tune_lrate.png")
 ```
 
-Now fix the number of trees hyperparameter.
+This showcases the fact that indeed a learning rate that is too small can blow up the computational costs.
+
+Now fix the number of the `trees` hyperparameter.
 
 ```{r}
 # fix the number of trees by redefining the boostin model with a 
@@ -1121,7 +1123,7 @@ final_ins_boost_wflow <-
   fit(ins_train)
 ```
 
-From here one no computational intensive task will be performed so one stops the cluster.
+From here no computational intensive task will be performed so one stops the cluster.
 
 ```{r}
 # stop cluster
