@@ -293,7 +293,23 @@ class: center, bottom, hide-logo
 
 
 ---
+## R setup
 
+.pull-left[
+```{r, echo=FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("img/tidyverse_hex.png")
+```
+]
+.pull-right[
+```{r, echo=FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("img/tidymodels_hex.png")
+```
+]
+
+<br>
+Amazing book: **Tidy modeling with R**
+
+---
 ## Burnout data set
 
 **Goal:** Predict the burnout rate of an employee.
@@ -477,7 +493,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/vip_burn.pn
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/miss_vals_burn2.png"))
 ```
 
-The default directions of XGBoost seem to work really well.
+The default directions of XGBoost seem to work well.
 
 ---
 ## Final performance
@@ -612,7 +628,9 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/final_perf_
 
 - **Flexible enough to detect complex non-linear patterns**
 
-- **Robust to outliers and missing values**
+- **Handling of missing values**
+
+- **Integrated feature selection**
 
 - **Good generalization due to lots of regularization options**
 
