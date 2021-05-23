@@ -1057,7 +1057,7 @@ remove(charges_box)
 remove(charges_hist)
 ```
 
-Not like the `burn_rate` previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting `log_charges` outcome variable is shown below. 
+Not like the `burn_rate` previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting `log10_charges` outcome variable is shown below. 
 
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}

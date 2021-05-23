@@ -1,6 +1,6 @@
 # Conclusion {#conclusion}
 
-Now after having a solid theoretical understanding of gradient boosting methods for regression and the implementation XGBoost as well as seeing the application of such models to two data sets one can wrap up this project by discussing the major pros and cons of this approach.
+Now after having a solid theoretical understanding of gradient boosting methods for regression and the implementation XGBoost as well as seeing the application of such models to two data sets one can wrap up this project by discussing the major pros and cons of this approach with this specific implementation in mind.
 
 ## Pros
 
@@ -8,7 +8,9 @@ Now after having a solid theoretical understanding of gradient boosting methods 
 
 -   Flexible enough to detect complex non-linear patterns
 
--   Robust to outliers and missing values
+-   Handling of missing values 
+
+-   Integrated feature selection
 
 -   Good generalization due to lots of regularization options
 

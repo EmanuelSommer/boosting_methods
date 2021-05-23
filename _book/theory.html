@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-05-15" />
+<meta name="date" content="2021-05-23" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -226,7 +226,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>As roughly mentioned in the introduction section <a href="intro.html#intro">2</a> the main idea of boosting is to sequentially build weak learners that form a powerful ensemble model. With weak learners models with high bias and low variance are meant that perform at least a little better than guessing. This already shows that the sequential approach of gradient boosting with weak learners stands in strong contrast to bagged ensembles like random forest. There many models with low bias and high variance are fitted in a parallel fashion and the variance is then reduced by averaging over the models.<span class="citation">[<a href="references.html#ref-HandsOnMLwithR" role="doc-biblioref">2</a>]</span> It is not totally clear from which field boosting methods emerged but some claim that the work of Freund and Schapire with respect to PAC learning in the 1990s were instrumental for their growth.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span> PAC learning can be considered one field within the broader field of learning theory that tries to find generalization bounds for algorithms that are probably approximately correct (PAC).<span class="citation">[<a href="references.html#ref-pacbounds" role="doc-biblioref">3</a>]</span> This section will first cover the general setup of gradient boosting as the most prominent method to train forward stagewise additive models. Secondly tree-based gradient boosting and finally a very efficient and robust tree-based gradient boosting algorithm namely XGBoost will be discussed in detail.</p>
 <div id="forward-stagewise-additive-modeling" class="section level3" number="3.1.1">
 <h3><span class="header-section-number">3.1.1</span> Forward Stagewise Additive Modeling</h3>
-<p>In the setting of the dataset <span class="math inline">\(\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}\)</span> with predictors <span class="math inline">\(x_i \in \mathbb{R}^m\)</span> and target <span class="math inline">\(y_i \in \mathbb{R}\)</span> boosting is fitting the following additive, still quite general, model.</p>
+<p>In the setting of the data set <span class="math inline">\(\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}\)</span> with predictors <span class="math inline">\(x_i \in \mathbb{R}^m\)</span> and target <span class="math inline">\(y_i \in \mathbb{R}\)</span> boosting is fitting the following additive, still quite general, model.</p>
 <span class="math display" id="eq:additiveModel">\[\begin{equation}
   \hat{y_i} = \phi(x_i) = \sum_{k=1}^{K} f_k(x_i), \quad f_k \in \mathcal{F}
   \tag{3.1}

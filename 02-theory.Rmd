@@ -6,7 +6,7 @@ As roughly mentioned in the introduction section \@ref(intro) the main idea of b
 
 ### Forward Stagewise Additive Modeling
 
-In the setting of the dataset $\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}$ with predictors $x_i \in \mathbb{R}^m$ and target $y_i \in \mathbb{R}$ boosting is fitting the following additive, still quite general, model.
+In the setting of the data set $\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}$ with predictors $x_i \in \mathbb{R}^m$ and target $y_i \in \mathbb{R}$ boosting is fitting the following additive, still quite general, model.
 
 ```{=tex}
 \begin{equation}

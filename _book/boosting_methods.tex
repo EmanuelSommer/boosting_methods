@@ -138,7 +138,7 @@
 
 \title{Boosting methods: Theory and application in R}
 \author{Emanuel Sommer}
-\date{2021-05-15}
+\date{2021-05-23}
 
 \begin{document}
 \maketitle
@@ -203,7 +203,7 @@ As roughly mentioned in the introduction section \ref{intro} the main idea of bo
 \hypertarget{forward-stagewise-additive-modeling}{%
 \subsection{Forward Stagewise Additive Modeling}\label{forward-stagewise-additive-modeling}}
 
-In the setting of the dataset \(\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}\) with predictors \(x_i \in \mathbb{R}^m\) and target \(y_i \in \mathbb{R}\) boosting is fitting the following additive, still quite general, model.
+In the setting of the data set \(\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}\) with predictors \(x_i \in \mathbb{R}^m\) and target \(y_i \in \mathbb{R}\) boosting is fitting the following additive, still quite general, model.
 
 \begin{equation}
   \hat{y_i} = \phi(x_i) = \sum_{k=1}^{K} f_k(x_i), \quad f_k \in \mathcal{F}
@@ -1085,7 +1085,7 @@ Now the distribution of the outcome.
 
 \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-43-1.pdf}
 
-Not like the \texttt{burn\_rate} previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting \texttt{log\_charges} outcome variable is shown below.
+Not like the \texttt{burn\_rate} previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting \texttt{log10\_charges} outcome variable is shown below.
 
 \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-45-1.pdf}
 
@@ -2061,7 +2061,7 @@ Now all models w.r.t. the burnout data set are fitted.
 \hypertarget{evaluate-and-understand-the-model}{%
 \subsection{Evaluate and understand the model}\label{evaluate-and-understand-the-model}}
 
-First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees.
+First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees and also takes into account the gain w.r.t. the loss.
 
 \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-85-1.pdf}
 
@@ -2071,15 +2071,15 @@ Now compare the variable importance of the model with the raw and the transforme
 
 \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-86-1.pdf}
 
-One can observe the exact same ordering. The only difference seems to be a higher influence of the designation variable for the transformed target. This is not surprising as the ressource allocation and designation variable are highly correlated.
+One can observe the exact same ordering. The only difference seems to be a higher influence of the designation variable for the transformed target. This is not surprising as the resource allocation and designation variable are highly correlated.
 
 Now have a look at the performance of the main boosting model w.r.t. missing values in the most influential variable.
 
 \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-87-1.pdf} \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-87-2.pdf}
 
-The performance for the missing values is indeed not that precise but still quite good. There is at least no huge outlier detectable here.
+The performance for the missing values is indeed not that precise but still quite good. There is at least no huge outlier detectable here. While at first glance the fact that outliers are handled naturally by the model is not astonishing it really is one the core strengths of the model to deal with messy data that includes missing and sparse data. So there is no need for imputation or a second fallback model for missing values.
 
-Now the really interesting part is which model performed the best on the test data set. The results can be viewed below in tabular and graphical form.
+Now it is interesting to check which model performed the best on the test data set. The results can be viewed below in tabular and graphical form.
 
 \begin{table}
 
@@ -2103,6 +2103,8 @@ intercept\_pred & 0.1591 & 0.1986\\
 It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low MAE and RMSE. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an \(R^2\) of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor \texttt{mental\_fatigue\_score} should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions there used XGBoost models. The transformation of the outcome variable did actually not change the predictive power of the model as the result for both the model with the raw target as well as the one with the transformed one performed equally good. Below one can see a scatterplot comparing the individual predictions of these two models on the test set which perfectly underlines the hypothesis that the models are basically the same as there is almost no variation around the identity slope.
 
 \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-89-1.pdf}
+
+So all in all for this data set it was not a way better predictive performance (if one is not in an artificial machine learning setup) that was the core strength of the tree-based gradient boosting model but the minimal pre-processing and exploratory work (for example no interactions have to be detected manually or be tested for significance) that was needed and the natural handling of missing values to achieve the model. This of course came to a quite high computational price. The famous predictive performance could probably be displayed better when having a data set with more complex non-linear patterns.
 
 This finishes the analysis of the burnout data set. But no worries there is still one data set and boosting model left to explore namely the insurance data set.
 
@@ -2632,13 +2634,13 @@ From here no computational intensive task will be performed so one stops the clu
 \hypertarget{evaluate-and-understand-the-model-1}{%
 \subsection{Evaluate and understand the model}\label{evaluate-and-understand-the-model-1}}
 
-First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees.
+First a visualization of the variable importance. The variable importance is again calculated by measuring the frequency of appearance of each feature in the single trees and also by taking the gain w.r.t. the loss into account.
 
 \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-104-1.pdf}
 
 Here one can clearly see that the trends that were observable during the EDA are reflected here again. The most influential variable is indeed the smoker variable, closely followed by the age variable. Also the bmi and the number of children seem to be relevant.
 
-Now the really interesting part is which model performed the best on the test data set. The results can be viewed below in tabular and graphical form.
+Which model performed the best on the test data set is the next interesting question. The results can be viewed below in tabular and graphical form.
 
 \begin{table}
 
@@ -2662,14 +2664,12 @@ Once without the intercept only model.
 
 \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-106-1.pdf}
 
-So overall the XGBoost model again delivered the best performance on the test data set. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the Random forest model. All in all one of the major strengths of gradient boosting is displayed here, namely its predictive power. Whether the difference in performance is worth considering such a model is then up to the use case.
-
-In the next and final chapter the most important pros and cons of gradient boosting are discussed.
+So overall the XGBoost model again delivered the best performance on the test data set, but again not by a huge margin. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the Random forest model. Whether the rather small difference in performance is worth considering such a model is of course up to the use case. Again the XGBoost model displayed that it reaches a very competitive performance with minimal pre-processing, integrated feature selection and in this case the computational effort was quite small. The major pros and cons of the tree-based gradient boosting models will be shortly reviewed in the next and final section.
 
 \hypertarget{conclusion}{%
 \chapter{Conclusion}\label{conclusion}}
 
-Now after having a solid theoretical understanding of gradient boosting methods for regression and the implementation XGBoost as well as seeing the application of such models to two data sets one can wrap up this project by discussing the major pros and cons of this approach.
+Now after having a solid theoretical understanding of gradient boosting methods for regression and the implementation XGBoost as well as seeing the application of such models to two data sets one can wrap up this project by discussing the major pros and cons of this approach with this specific implementation in mind.
 
 \hypertarget{pros}{%
 \section{Pros}\label{pros}}
@@ -2680,7 +2680,9 @@ Now after having a solid theoretical understanding of gradient boosting methods 
 \item
   Flexible enough to detect complex non-linear patterns
 \item
-  Robust to outliers and missing values
+  Handling of missing values
+\item
+  Integrated feature selection
 \item
   Good generalization due to lots of regularization options
 \item

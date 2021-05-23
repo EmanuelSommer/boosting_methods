@@ -527,7 +527,7 @@ Now all models w.r.t. the burnout data set are fitted.
 
 ### Evaluate and understand the model
 
-First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees.
+First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees and also takes into account the gain w.r.t. the loss.
 
 ```{r, echo=FALSE, message=FALSE}
 vip_burn <- final_bout_boost_wflow %>%
@@ -559,9 +559,11 @@ raw_importance + trans_importance + plot_layout(guides = )
 remove(raw_importance, trans_importance)
 ```
 
-One can observe the exact same ordering. The only difference seems to be a higher influence of the designation variable for the transformed target. This is not surprising as the ressource allocation and designation variable are highly correlated.
+One can observe the exact same ordering. The only difference seems to be a higher influence of the designation variable for the transformed target. This is not surprising as the resource allocation and designation variable are highly correlated.
 
 Now have a look at the performance of the main boosting model w.r.t. missing values in the most influential variable.
+
+
 
 ```{r, echo=FALSE, message=FALSE}
 miss_vals_burn1 <- burnout_test %>%
@@ -600,13 +602,13 @@ ggsave("_pictures/miss_vals_burn2.png", plot = miss_vals_burn2)
 remove(miss_vals_burn1, miss_vals_burn2)
 ```
 
-The performance for the missing values is indeed not that precise but still quite good. There is at least no huge outlier detectable here.
+The performance for the missing values is indeed not that precise but still quite good. There is at least no huge outlier detectable here. While at first glance the fact that outliers are handled naturally by the model is not astonishing it really is one the core strengths of the model to deal with messy data that includes missing and sparse data. So there is no need for imputation or a second fallback model for missing values.
 
 
 
 
 
-Now the really interesting part is which model performed the best on the test data set. The results can be viewed below in tabular and graphical form.
+Now it is interesting to check which model performed the best on the test data set. The results can be viewed below in tabular and graphical form.
 
 
 ```{r perfBurn, echo=FALSE}
@@ -709,6 +711,8 @@ ggsave("_pictures/bout_raw_vs_trans.png",plot = bout_raw_vs_trans)
 remove(bout_raw_vs_trans)
 
 ```
+
+So all in all for this data set it was not a way better predictive performance (if one is not in an artificial machine learning setup) that was the core strength of the tree-based gradient boosting model but the minimal pre-processing and exploratory work (for example no interactions have to be detected manually or be tested for significance) that was needed and the natural handling of missing values to achieve the model. This of course came to a quite high computational price. The famous predictive performance could probably be displayed better when having a data set with more complex non-linear patterns.
 
 
 This finishes the analysis of the burnout data set. But no worries there is still one data set and boosting model left to explore namely the insurance data set.
@@ -1133,7 +1137,7 @@ stopCluster(cl)
 
 ### Evaluate and understand the model
 
-First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees.
+First a visualization of the variable importance. The variable importance is again calculated by measuring the frequency of appearance of each feature in the single trees and also by taking the gain w.r.t. the loss into account.
 
 ```{r, echo=FALSE, message=FALSE}
 vip_ins <- final_ins_boost_wflow %>%
@@ -1149,7 +1153,7 @@ remove(vip_ins)
 Here one can clearly see that the trends that were observable during the EDA are reflected here again. The most influential variable is indeed the smoker variable, closely followed by the age variable. Also the bmi and the number of children seem to be relevant.
 
 
-Now the really interesting part is which model performed the best on the test data set. The results can be viewed below in tabular and graphical form.
+Which model performed the best on the test data set is the next interesting question. The results can be viewed below in tabular and graphical form.
 
 
 ```{r perfIns, echo=FALSE}
@@ -1234,10 +1238,8 @@ ggsave("_pictures/final_perf_ins.png", plot = final_perf_ins)
 remove(final_perf_ins)
 ```
 
-So overall the XGBoost model again delivered the best performance on the test data set. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the Random forest model. All in all one of the major strengths of gradient boosting is displayed here, namely its predictive power. Whether the difference in performance is worth considering such a model is then up to the use case. 
+So overall the XGBoost model again delivered the best performance on the test data set, but again not by a huge margin. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the Random forest model. Whether the rather small difference in performance is worth considering such a model is of course up to the use case. Again the XGBoost model displayed that it reaches a very competitive performance with minimal pre-processing, integrated feature selection and in this case the computational effort was quite small. The major pros and cons of the tree-based gradient boosting models will be shortly reviewed in the next and final section.
 
-
-In the next and final chapter the most important pros and cons of gradient boosting are discussed. 
 
 
 

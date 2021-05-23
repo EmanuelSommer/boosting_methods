@@ -22,7 +22,7 @@ English title page
 --&gt;
 
 #### Emanuel Sommer
-#### 2021-05-14
+#### 2021-05-20
 
 
 &lt;center&gt;
@@ -37,7 +37,23 @@ Technical University of Munich
 
 
 ---
+## Basic Notation
 
+Training data set:
+
+`$$\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}$$`
+
+Response: `\(y_i \in \mathbb{R}\)` like the burnout rate or the charges.
+
+Predictors: `\(x_i \in \mathbb{R}^m\)`
+
+$$
+y = (y_1, \dots, y_N)^T
+\quad
+x = (x_1, \dots, x_N)^T
+$$
+
+---
 ## Previously
 
 .pull-left[
@@ -147,7 +163,6 @@ Corresponding parts:
     -   Set `\(\phi_k(x) = \phi_{k-1}(x) + t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)\)` with `\(t \in \mathcal{T}\)`
 
 &lt;!--
----
 ## Which loss to pick?
 
 ### `\(L_2\)` loss
@@ -215,7 +230,6 @@ class: inverse, hide-logo, middle, center
 * Strong regularization
 * Parallelized tree building
 * Extremely efficient on sparse data (default directions)
-* Efficient tree pruning
 * Cache aware algorithm (clever data structure)
 
 ---
@@ -265,23 +279,23 @@ class: center, bottom, hide-logo
 
 **Number of predictors:** 
 
-.center[9]
+9
 
 **Training data:** 
 
-.center[17301 rows]
+17301 rows
 
 **Test data:** 
 
-.center[4325 rows]
+4325 rows
 
 **Missing:**
 
-.center[14%]
+14%
 ]
 
 .right-column[
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/burn_rate_raw.png" width="100%" style="display: block; margin: auto;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/burn_rate_raw.png" width="90%" style="display: block; margin: auto;" /&gt;
 ]
 ---
 
@@ -291,12 +305,12 @@ The transformation with the empirical logit removes the bounds on the target.
 
 `$$log(\frac{x+0.5}{1-x+0.5})$$`
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/burn_rate_trans.png" width="80%" style="display: block; margin: auto;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/burn_rate_trans.png" width="65%" style="display: block; margin: auto;" /&gt;
 
 ---
 ## Mental fatigue score
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/mfs_main.png" width="80%" style="display: block; margin: auto;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/mfs_main.png" width="70%" style="display: block; margin: auto;" /&gt;
 
 Proposed baseline model:
 
@@ -306,7 +320,7 @@ $$
 $$
 
 
----
+&lt;!--
 ## Two closely related features
 
 &lt;br&gt;
@@ -314,7 +328,7 @@ $$
 &lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/designationVsRessources.png" width="80%" style="display: block; margin: auto;" /&gt;
 
 Both features show relevant main effects.
-
+--&gt;
 ---
 ## Prepare for takeoff
 
@@ -337,14 +351,17 @@ Both features show relevant main effects.
 
 1. Large enough number of trees with a small learning rate.
 
-2. Space-filling grid search over sensible ranges of the hyperparameters.
+2. Space-filling grid search over sensible ranges of the tree and the basic regularization hyperparameters. 
 
-3. Refine the grid as often as needed.
+3. Refine the grid as often as needed and explore further regularization parameters if required.
 
 4. Optional: Iterative searches for single parameters.
 
+&lt;br&gt; 
 
-## The ranges used here
+--
+
+**The ranges used here:**
 
 .pull-left[
 `#Trees`: `\(K \in [100,2000]\)`
@@ -364,11 +381,11 @@ Both features show relevant main effects.
 ---
 ## Tuning the number of trees
 
-Tuning only two hyperparameters at once is easy to visualize:
+Besides the standard value of six for the maximum tree depth also the influence of considering just stumps is displayed.
 
 &lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/bout_tuning_stumpsVs6.png" width="90%" style="display: block; margin: auto;" /&gt;
 
-So the number of trees is now fixed with a value of 1500.
+👉 Fix 1500 trees.
 
 ---
 ## Space-filling grid search
@@ -379,9 +396,9 @@ Tuning both the model with the raw outcome and the transformed one with space-fi
 - 6 million trees.
 - 8 hours of parallel computation.
 
+&lt;br&gt;
 
-
-### The final parameters
+**The final parameters:**
 
 .pull-left[
 `#Trees`: 1500
@@ -404,26 +421,26 @@ Tuning both the model with the raw outcome and the transformed one with space-fi
 
 The two models behaved exactly the same while tuning and show no notable differences in any of the following visualizations so the focus will now be on the raw model.
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/bout_raw_vs_trans.png" width="80%" style="display: block; margin: auto auto auto 0;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/bout_raw_vs_trans.png" width="70%" style="display: block; margin: auto auto auto 0;" /&gt;
 
 ---
 ## Feature importance
 
 The feature importance is basically the relative frequency of the overall model to choose the feature in a split.
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/vip_burn.png" width="90%" style="display: block; margin: auto auto auto 0;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/vip_burn.png" width="80%" style="display: block; margin: auto auto auto 0;" /&gt;
 
 ---
 ## Handling of missing values
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/miss_vals_burn2.png" width="90%" style="display: block; margin: auto auto auto 0;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/miss_vals_burn2.png" width="75%" style="display: block; margin: auto auto auto 0;" /&gt;
 
 The default directions of XGBoost seem to work really well.
 
 ---
 ## Final performance
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/final_perf_burn.png" width="90%" style="display: block; margin: auto auto auto 0;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/final_perf_burn.png" width="80%" style="display: block; margin: auto auto auto 0;" /&gt;
 
 ---
 
@@ -436,24 +453,24 @@ The default directions of XGBoost seem to work really well.
 
 **Number of predictors:** 
 
-.center[6]
+6
 
 **Training data:** 
 
-.center[1071 rows]
+1071 rows
 
 **Test data:** 
 
-.center[267 rows]
+267 rows
 
 **Missing:**
 
-.center[None]
+None
 ]
 
 
 .right-column[
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/charges_ins.png" width="100%" style="display: block; margin: auto;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/charges_ins.png" width="90%" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -483,10 +500,10 @@ So a closer look at the region around 500 is advisable.
 
 &lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/boost_ins_tune_plot2.png" width="90%" style="display: block; margin: auto;" /&gt;
 
-The value 600 seems appropriate.
+👉 Fix 600 trees.
 
 ---
-## A look at learning rates
+## A glimpse at learning rates
 
 &lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/boost_ins_tune_lrate.png" width="90%" style="display: block; margin: auto;" /&gt;
 
@@ -528,7 +545,7 @@ Thus a too small learning rate can also be a problem.
 ---
 ## Final Performance
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/final_perf_ins.png" width="90%" style="display: block; margin: auto auto auto 0;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/final_perf_ins.png" width="80%" style="display: block; margin: auto auto auto 0;" /&gt;
 
 ---
 ## Pros 
@@ -564,7 +581,11 @@ Basically everything regarding my work for this seminar can be found there.
 
 
 
+---
+class: inverse, center, middle, hide-logo
 
+
+## Discussion
 
 
 

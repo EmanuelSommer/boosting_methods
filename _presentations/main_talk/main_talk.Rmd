@@ -51,7 +51,23 @@ Technical University of Munich
 
 
 ---
+## Basic Notation
 
+Training data set:
+
+$$\mathcal{D} = \{(y_i,x_i)\ | i \in [N]\}$$
+
+Response: $y_i \in \mathbb{R}$ like the burnout rate or the charges.
+
+Predictors: $x_i \in \mathbb{R}^m$
+
+$$
+y = (y_1, \dots, y_N)^T
+\quad
+x = (x_1, \dots, x_N)^T
+$$
+
+---
 ## Previously
 
 .pull-left[
@@ -167,7 +183,6 @@ Corresponding parts:
     -   Set $\phi_k(x) = \phi_{k-1}(x) + t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$ with $t \in \mathcal{T}$
 
 <!--
----
 ## Which loss to pick?
 
 ### $L_2$ loss
@@ -239,7 +254,6 @@ knitr::include_graphics("img/xgb_hist_annot.jpg")
 * Strong regularization
 * Parallelized tree building
 * Extremely efficient on sparse data (default directions)
-* Efficient tree pruning
 * Cache aware algorithm (clever data structure)
 
 ---
@@ -289,23 +303,23 @@ class: center, bottom, hide-logo
 
 **Number of predictors:** 
 
-.center[9]
+9
 
 **Training data:** 
 
-.center[17301 rows]
+17301 rows
 
 **Test data:** 
 
-.center[4325 rows]
+4325 rows
 
 **Missing:**
 
-.center[14%]
+14%
 ]
 
 .right-column[
-```{r, echo=FALSE, out.width="100%", fig.align='center'}
+```{r, echo=FALSE, out.width="90%", fig.align='center'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/burn_rate_raw.png"))
 ```
 ]
@@ -317,14 +331,14 @@ The transformation with the empirical logit removes the bounds on the target.
 
 $$log(\frac{x+0.5}{1-x+0.5})$$
 
-```{r, echo=FALSE, out.width="80%", fig.align='center'}
+```{r, echo=FALSE, out.width="65%", fig.align='center'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/burn_rate_trans.png"))
 ```
 
 ---
 ## Mental fatigue score
 
-```{r, echo=FALSE, out.width="80%", fig.align='center'}
+```{r, echo=FALSE, out.width="70%", fig.align='center'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/mfs_main.png"))
 ```
 
@@ -336,7 +350,7 @@ $$
 $$
 
 
----
+<!--
 ## Two closely related features
 
 <br>
@@ -346,7 +360,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/designation
 ```
 
 Both features show relevant main effects.
-
+-->
 ---
 ## Prepare for takeoff
 
@@ -371,14 +385,17 @@ knitr::include_graphics("img/cv5_illustration.png")
 
 1. Large enough number of trees with a small learning rate.
 
-2. Space-filling grid search over sensible ranges of the hyperparameters.
+2. Space-filling grid search over sensible ranges of the tree and the basic regularization hyperparameters. 
 
-3. Refine the grid as often as needed.
+3. Refine the grid as often as needed and explore further regularization parameters if required.
 
 4. Optional: Iterative searches for single parameters.
 
+<br> 
 
-## The ranges used here
+--
+
+**The ranges used here:**
 
 .pull-left[
 `#Trees`: $K \in [100,2000]$
@@ -398,13 +415,13 @@ knitr::include_graphics("img/cv5_illustration.png")
 ---
 ## Tuning the number of trees
 
-Tuning only two hyperparameters at once is easy to visualize:
+Besides the standard value of six for the maximum tree depth also the influence of considering just stumps is displayed.
 
 ```{r, echo=FALSE, out.width="90%", fig.align='center'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/bout_tuning_stumpsVs6.png"))
 ```
 
-So the number of trees is now fixed with a value of 1500.
+`r emo::ji("backhand index pointing right")` Fix 1500 trees.
 
 ---
 ## Space-filling grid search
@@ -415,9 +432,9 @@ Tuning both the model with the raw outcome and the transformed one with space-fi
 - 6 million trees.
 - 8 hours of parallel computation.
 
+<br>
 
-
-### The final parameters
+**The final parameters:**
 
 .pull-left[
 `#Trees`: 1500
@@ -440,7 +457,7 @@ Tuning both the model with the raw outcome and the transformed one with space-fi
 
 The two models behaved exactly the same while tuning and show no notable differences in any of the following visualizations so the focus will now be on the raw model.
 
-```{r, echo=FALSE, out.width="80%", fig.align='left'}
+```{r, echo=FALSE, out.width="70%", fig.align='left'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/bout_raw_vs_trans.png"))
 ```
 
@@ -449,14 +466,14 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/bout_raw_vs
 
 The feature importance is basically the relative frequency of the overall model to choose the feature in a split.
 
-```{r, echo=FALSE, out.width="90%", fig.align='left'}
+```{r, echo=FALSE, out.width="80%", fig.align='left'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/vip_burn.png"))
 ```
 
 ---
 ## Handling of missing values
 
-```{r, echo=FALSE, out.width="90%", fig.align='left'}
+```{r, echo=FALSE, out.width="75%", fig.align='left'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/miss_vals_burn2.png"))
 ```
 
@@ -465,7 +482,7 @@ The default directions of XGBoost seem to work really well.
 ---
 ## Final performance
 
-```{r, echo=FALSE, out.width="90%", fig.align='left'}
+```{r, echo=FALSE, out.width="80%", fig.align='left'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/final_perf_burn.png"))
 ```
 
@@ -480,24 +497,24 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/final_perf_
 
 **Number of predictors:** 
 
-.center[6]
+6
 
 **Training data:** 
 
-.center[1071 rows]
+1071 rows
 
 **Test data:** 
 
-.center[267 rows]
+267 rows
 
 **Missing:**
 
-.center[None]
+None
 ]
 
 
 .right-column[
-```{r, echo=FALSE, out.width="100%", fig.align='center'}
+```{r, echo=FALSE, out.width="90%", fig.align='center'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/charges_ins.png"))
 ```
 ]
@@ -533,10 +550,10 @@ So a closer look at the region around 500 is advisable.
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/boost_ins_tune_plot2.png"))
 ```
 
-The value 600 seems appropriate.
+`r emo::ji("backhand index pointing right")` Fix 600 trees.
 
 ---
-## A look at learning rates
+## A glimpse at learning rates
 
 ```{r, echo=FALSE, out.width="90%", fig.align='center'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/boost_ins_tune_lrate.png"))
@@ -584,7 +601,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/vip_ins.png
 ---
 ## Final Performance
 
-```{r, echo=FALSE, out.width="90%", fig.align='left'}
+```{r, echo=FALSE, out.width="80%", fig.align='left'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/final_perf_ins.png"))
 ```
 
@@ -622,7 +639,11 @@ Basically everything regarding my work for this seminar can be found there.
 
 
 
+---
+class: inverse, center, middle, hide-logo
 
+
+## Discussion
 
 
 
