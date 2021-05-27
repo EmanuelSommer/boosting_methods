@@ -527,7 +527,7 @@ Now all models w.r.t. the burnout data set are fitted.
 
 ### Evaluate and understand the model
 
-First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees and also takes into account the gain w.r.t. the loss.
+First a visualization of the variable importance. The variable importance is basically calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.
 
 ```{r, echo=FALSE, message=FALSE}
 vip_burn <- final_bout_boost_wflow %>%
@@ -1137,7 +1137,7 @@ stopCluster(cl)
 
 ### Evaluate and understand the model
 
-First a visualization of the variable importance. The variable importance is again calculated by measuring the frequency of appearance of each feature in the single trees and also by taking the gain w.r.t. the loss into account.
+First a visualization of the variable importance. The variable importance is again calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.
 
 ```{r, echo=FALSE, message=FALSE}
 vip_ins <- final_ins_boost_wflow %>%
@@ -1150,8 +1150,23 @@ ggsave("_pictures/vip_ins.png", plot = vip_ins)
 remove(vip_ins)
 ```
 
-Here one can clearly see that the trends that were observable during the EDA are reflected here again. The most influential variable is indeed the smoker variable, closely followed by the age variable. Also the bmi and the number of children seem to be relevant.
+Here one can clearly see that the trends that were observable during the EDA are reflected here again. The most influential variable is indeed the smoker variable, closely followed by the age variable. Also the bmi and the number of children seem to be relevant. To get an even better sense for where which variable was mostly used one can have a look at the visualization below which shows the final model in a compressed form as a single tree. At each node the most important (again by the feature importance score like above) 5 variables are listed with their respective raw importance scores in brackets. The 'Leaf' variable just corresponds to the case where trees ended at this point.
 
+```{r, eval=FALSE}
+# Visualization of the ensemble of trees as a single collective unit
+final_ins_boost_fit <- final_ins_boost_wflow %>%
+  pull_workflow_fit()
+final_ins_boost_fit$fit %>%
+  xgb.plot.multi.trees(render = T)
+# output as figure below as this returns a htmlwidget which is not that
+# intuitively handled by latex (pdf output)
+```
+
+```{r insmultitree,echo=FALSE,fig.height=4, out.width='70%', fig.align='center', fig.cap="Visualization of the final ensemble of trees as a single collective unit."}
+knitr::include_graphics("_pictures/ins_multitree_xgb.png")
+```
+
+It is quite interesting to see that most of the time the smoker feature was used just once in the first node but not multiple times. This suggests a quite linear influence of smokers and of course the binary character of the feature can support this behavior. Age on the other hand is represented in multiple deephts with high importance which suggests a non-linear influence which was also visible during the EDA. Interestingly the children variable for example mostly is used at depth 3 for a split.
 
 Which model performed the best on the test data set is the next interesting question. The results can be viewed below in tabular and graphical form.
 

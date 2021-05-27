@@ -480,7 +480,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/bout_raw_vs
 ---
 ## Feature importance
 
-The feature importance is basically the relative frequency of the overall model to choose the feature in a split.
+The feature importance is basically the gain w.r.t. the loss of the feature over all splits.
 
 ```{r, echo=FALSE, out.width="80%", fig.align='left'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/vip_burn.png"))
@@ -613,7 +613,12 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/tuning_ins_
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/vip_ins.png"))
 ```
 
+---
+## Compressed tree visualization 
 
+```{r, echo=FALSE, out.width="75%", fig.align='left'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/ins_multitree_xgb.png"))
+```
 ---
 ## Final Performance
 

@@ -138,7 +138,7 @@
 
 \title{Boosting methods: Theory and application in R}
 \author{Emanuel Sommer}
-\date{2021-05-23}
+\date{2021-05-27}
 
 \begin{document}
 \maketitle
@@ -2061,7 +2061,7 @@ Now all models w.r.t. the burnout data set are fitted.
 \hypertarget{evaluate-and-understand-the-model}{%
 \subsection{Evaluate and understand the model}\label{evaluate-and-understand-the-model}}
 
-First a visualization of the variable importance. The variable importance is calculated by measuring the frequency of appearance of each feature in the single trees and also takes into account the gain w.r.t. the loss.
+First a visualization of the variable importance. The variable importance is basically calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.
 
 \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-85-1.pdf}
 
@@ -2634,11 +2634,34 @@ From here no computational intensive task will be performed so one stops the clu
 \hypertarget{evaluate-and-understand-the-model-1}{%
 \subsection{Evaluate and understand the model}\label{evaluate-and-understand-the-model-1}}
 
-First a visualization of the variable importance. The variable importance is again calculated by measuring the frequency of appearance of each feature in the single trees and also by taking the gain w.r.t. the loss into account.
+First a visualization of the variable importance. The variable importance is again calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.
 
 \includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-104-1.pdf}
 
-Here one can clearly see that the trends that were observable during the EDA are reflected here again. The most influential variable is indeed the smoker variable, closely followed by the age variable. Also the bmi and the number of children seem to be relevant.
+Here one can clearly see that the trends that were observable during the EDA are reflected here again. The most influential variable is indeed the smoker variable, closely followed by the age variable. Also the bmi and the number of children seem to be relevant. To get an even better sense for where which variable was mostly used one can have a look at the visualization below which shows the final model in a compressed form as a single tree. At each node the most important (again by the feature importance score like above) 5 variables are listed with their respective raw importance scores in brackets. The `Leaf' variable just corresponds to the case where trees ended at this point.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Visualization of the ensemble of trees as a single collective unit}
+\NormalTok{final\_ins\_boost\_fit }\OtherTok{\textless{}{-}}\NormalTok{ final\_ins\_boost\_wflow }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pull\_workflow\_fit}\NormalTok{()}
+\NormalTok{final\_ins\_boost\_fit}\SpecialCharTok{$}\NormalTok{fit }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{xgb.plot.multi.trees}\NormalTok{(}\AttributeTok{render =}\NormalTok{ T)}
+\CommentTok{\# output as figure below as this returns a htmlwidget which is not that}
+\CommentTok{\# intuitively handled by latex (pdf output)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.7\linewidth]{_pictures/ins_multitree_xgb} 
+
+}
+
+\caption{Visualization of the final ensemble of trees as a single collective unit.}\label{fig:insmultitree}
+\end{figure}
+
+It is quite interesting to see that most of the time the smoker feature was used just once in the first node but not multiple times. This suggests a quite linear influence of smokers and of course the binary character of the feature can support this behavior. Age on the other hand is represented in multiple deephts with high importance which suggests a non-linear influence which was also visible during the EDA. Interestingly the children variable for example mostly is used at depth 3 for a split.
 
 Which model performed the best on the test data set is the next interesting question. The results can be viewed below in tabular and graphical form.
 
@@ -2658,11 +2681,11 @@ intercept\_pred & 0.3189 & 0.3922\\
 \end{tabular}
 \end{table}
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-105-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-106-1.pdf}
 
 Once without the intercept only model.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-106-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-107-1.pdf}
 
 So overall the XGBoost model again delivered the best performance on the test data set, but again not by a huge margin. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the Random forest model. Whether the rather small difference in performance is worth considering such a model is of course up to the use case. Again the XGBoost model displayed that it reaches a very competitive performance with minimal pre-processing, integrated feature selection and in this case the computational effort was quite small. The major pros and cons of the tree-based gradient boosting models will be shortly reviewed in the next and final section.
 
@@ -2703,7 +2726,7 @@ Now after having a solid theoretical understanding of gradient boosting methods 
 
 These pros and cons show that tree-based gradient boosting is a very powerful learning algorithm but still not suitable to any application. Due to its very robust nature and good handling of missing values and features of different scales it is one of the dominant algorithms in data mining alongside models like random forest. But in critical applications with just few observations such models should be treated with care as they are not that explainable. Still if one handles tabular data in order to perform a regression or classification task one should take the pros and cons that were mentioned above into account and in many cases a consideration of a tree-based gradient boosting model like XGBoost is advisable.
 
-\textbf{Thanks thanks for sticking with it!}
+\textbf{Thanks for sticking with it!}
 
 \hypertarget{references}{%
 \chapter{References}\label{references}}

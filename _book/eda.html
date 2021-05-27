@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-05-23" />
+<meta name="date" content="2021-05-27" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -325,7 +325,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##  0.0000  0.3100  0.4500  0.4513  0.5900  1.0000</code></pre>
 <p>Now the distribution of the outcome.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-35-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <p>The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region <span class="math inline">\([0,1]\)</span> is covered quite well. Actually by overlaying a normal distribution with the sample mean <span class="math inline">\(\hat{\mu}\)</span> and the sample standard deviation <span class="math inline">\(\hat{\sigma}^2\)</span> as the parameters one can clearly see that the outcome almost perfectly follows a normal distribution. One could further fit a Q-Q-plot to visualize the normality. <strong>BUT</strong> of course here there is a bounded domain while the normal distribution has the whole <span class="math inline">\(\mathbb{R}\)</span> as domain. This bounded domain does not interfere with the boosted model as tree-based models do not superimpose a distribution assumptions upon the target variable. Nevertheless one can transform the outcome with the empirical logit <span class="math inline">\(log(\frac{y_i+0.5}{1-y_i+0.5})\)</span>.By doing this one removes the bounds on the target. One can then re-transform the predictions in the end by applying <span class="math inline">\(\frac{2}{exp(-y)+1}-0.5\)</span>. Here to see whether this transformation changes the behavior or improves the boosting model
 one will have a look not only at the untransformed target <code>burn_rate</code> but also at the transformed one <code>burn_rate_trans</code>. The focus will be on the untransformed modeling as the low pre-processing strength of such boosting models should be emphasized. Below is the distribution of the transformed one.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="eda.html#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add transformed outcome</span></span>
@@ -333,7 +333,7 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <span id="cb7-3"><a href="eda.html#cb7-3" aria-hidden="true" tabindex="-1"></a>                                       (<span class="fl">1.5</span> <span class="sc">-</span> burnout_train<span class="sc">$</span>burn_rate))</span>
 <span id="cb7-4"><a href="eda.html#cb7-4" aria-hidden="true" tabindex="-1"></a>burnout_test<span class="sc">$</span>burn_rate_trans <span class="ot">&lt;-</span> <span class="fu">log</span>((burnout_test<span class="sc">$</span>burn_rate <span class="sc">+</span> <span class="fl">0.5</span>) <span class="sc">/</span></span>
 <span id="cb7-5"><a href="eda.html#cb7-5" aria-hidden="true" tabindex="-1"></a>                                       (<span class="fl">1.5</span> <span class="sc">-</span> burnout_test<span class="sc">$</span>burn_rate))</span></code></pre></div>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-37-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <p>The transformed outcome basically resembles exactly the same properties as the untransformed one but the nice thing is that the bounds were removed. The further EDA will be based on the untransformed variable but the implications are the same due to the choice of the transformation via the empirical logit.</p>
 </div>
 <div id="distribution-and-main-effects-of-the-predictors" class="section level3" number="4.1.4">
@@ -352,9 +352,9 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <div id="date-of-joining" class="section level4" number="4.1.4.2">
 <h4><span class="header-section-number">4.1.4.2</span> Date of joining</h4>
 <p><code>date_of_joining</code> is the date the employee has joined the company. Thus a continuous variable that most likely needs some kind of feature engineering.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-39-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <p>Although there is a lot of variation no major trends in hirings are visible from this plot. Overall the variable seems to be quite equally distributed over the year 2008.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-40-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>In its raw form the variable <code>date_of_joining</code> seems not to have a notable main effect on the outcome variable. Nevertheless the feature will be used in the model and as tree-based models have an in-built feature selection one can see after the fitting if the feature was helpful overall. The feature will not be included just as an integer (the default format how Dates are represented) but rather some more features like weekday or month will be extracted from the raw variable further down the road.</p>
 </div>
 <div id="gender" class="section level4" number="4.1.4.3">
@@ -365,7 +365,7 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <pre><code>## Female   Male 
 ##   9101   8200</code></pre>
 <p>The two classes are well balanced. Now a look at the main effect of the feature.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-42-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>For both classes the distributions are very similar and symmetrical. It seems like the male employees have overall a slightly higher risk of having a higher burn score i.e. a burnout.</p>
 </div>
 <div id="company-type" class="section level4" number="4.1.4.4">
@@ -376,7 +376,7 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <pre><code>## Product Service 
 ##    6018   11283</code></pre>
 <p>In this case the classes are not fully balanced but each class is still well represented. Now a look at the main effect of the feature.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-44-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
 <p>For both classes the distributions are almost identical and symmetrical. From an univariate point of view no notable main effect is visible from these visualizations.</p>
 </div>
 <div id="work-from-home-setup" class="section level4" number="4.1.4.5">
@@ -387,7 +387,7 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <pre><code>##   No  Yes 
 ## 7929 9372</code></pre>
 <p>The two classes are well balanced. Now a look at the main effect of the feature.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-46-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 <p>Again both distributions are quite similar i.e. bell shaped and symmetrical. Here quite a main effect is visible. A work from home setup most likely has a positive influence on the wellbeing and thus lowers the risk for a high burn rate.</p>
 </div>
 <div id="designation" class="section level4" number="4.1.4.6">
@@ -397,9 +397,9 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <span id="cb16-2"><a href="eda.html#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(burnout_train<span class="sc">$</span>designation)</span></code></pre></div>
 <pre><code>## [1] 2 1 3 0 4 5</code></pre>
 <p>As the feature has a natural ordering this variable will be treated as an ordinal one i.e. be encoded with the integers and not by one-hot-encoding.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-48-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
 <p>Here clearly the more extreme levels of designation are less represented in the data. This makes total sense w.r.t. the meaning of the variable.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-49-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 <p>A strong main effect is visible in the plot. The plot also further strengthens the hypothesis that we should treat the feature as ordinal. A higher level of designation seems to have an influence on the risk of having a burnout. For example employees from the training data set with a level of designation below 3 never even achieved a maximal burn score of one.</p>
 </div>
 <div id="resource-allocation" class="section level4" number="4.1.4.7">
@@ -409,9 +409,9 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <span id="cb18-2"><a href="eda.html#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(burnout_train<span class="sc">$</span>resource_allocation)</span></code></pre></div>
 <pre><code>##  [1]  3  1  7  4  6  5  2 NA  8 10  9</code></pre>
 <p>Here again the question is whether one should encode this variable as a categorical or an ordinal categorical feature. In this case as there are quite some levels and again a natural ordering the variable will be encoded as a continuous integer score.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-51-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 <p>A similar behavior as the one of the previous variable is visible. But here there are some missing values (NA’s).</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-52-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
 <p>A strong main effect is visible in the plot. The plot again further strengthens the hypothesis that we should treat this feature as ordinal. A higher amount of resources assigned to an employee seems to have a positive influence on the risk of having a burnout. The missing values do not seem to have some structure as they replicate the base distribution of the outcome variable.</p>
 </div>
 <div id="mental-fatigue-score" class="section level4" number="4.1.4.8">
@@ -421,9 +421,9 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <span id="cb20-2"><a href="eda.html#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(burnout_train<span class="sc">$</span>mental_fatigue_score)) </span></code></pre></div>
 <pre><code>## [1] 102</code></pre>
 <p>This variable will without a question be treated in a continuous way.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-54-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
 <p>Although there is a very slight skew towards a higher mental fatigue score the overall distribution is still more or less bell shaped and quite symmetrical. Moreover the whole allowed range is covered and the bounds are not violated. Next the main effect of the variable.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-55-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
 <p>This scatterplot shows drastic results! The mental fatigue score has an almost perfect linear relationship with the outcome variable. This is also underlined by the very high pearson correlation. This indicates that mental fatigue score will be a most important predictor. If a communication with the data collector would be possible it would be important to check whether the two scores have common confounding variables as then one would have to question the practical usability of this predictor. This comes from the fact that no model would be needed if it was as hard to collect the data about the predictors as the outcome data. Moreover there are 1555 missing values in the feature so for those the model has to rely on the other maybe more weak predictors. It should be noted that when evaluating the final model one should consider to compare its performance to a trivial model (like a single intercept model). When constructing such a trivial model one could and maybe should also use this variable (when available) to get a trivial prediction by scaling the <code>mental_fatigue_score</code> feature by a simple scalar.</p>
 </div>
 </div>
@@ -453,12 +453,12 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 ##   Male   4094 4106</code></pre>
 <p>Slightly more women have a work from home setup available.</p>
 <p><strong>Now the ordinal variables:</strong></p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-59-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
 <p>It has to be noted again that female and male emplyees are almost equally represented in the data set. Thus one can see from the above plot that the biggest difference in distribution is for the levels 1 and 4 with opposing effects. While male employees more often have a quite high designation of 4 females are the much more frequent employee with designation level 1.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-60-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
 <p>Here a major shift in distribution is visible towards men getting more resources allocated to them. This reflects the society that still promotes men much more often to high paying jobs that most often come with resource responsibility.</p>
 <p><strong>Now the mental fatigue score:</strong></p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-61-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-31-1.png" width="672" /></p>
 <p>This is of course very similar to the main effect of the <code>gender</code> variable as the outcome and the feature <code>mental_fatigue_score</code> are highly linearly correlated.</p>
 </div>
 <div id="company-type-vs.-the-remaining" class="section level4" number="4.1.5.3">
@@ -470,21 +470,21 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 ##   Product 2764 3254
 ##   Service 5165 6118</code></pre>
 <p>No notable trend.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-63-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-33-1.png" width="672" /></p>
 <p>No trend here either.</p>
 </div>
 <div id="work-from-home-setup-vs.-the-remaining" class="section level4" number="4.1.5.4">
 <h4><span class="header-section-number">4.1.5.4</span> Work from home setup vs. the remaining</h4>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-64-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-34-1.png" width="672" /></p>
 <p>A work from home setup is way more often available for employees with a lower designation (<span class="math inline">\(\leq 2\)</span>).</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-65-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-35-1.png" width="672" /></p>
 <p>The same structure as in the previous comparison is visible here again. Employees with a lower amount of resources allocated to them have more often a work from home setup available. This could be due to the fewer responsibilities they have in the business.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-66-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-36-1.png" width="672" /></p>
 <p>Again this is of course very similar to the main effect of the <code>wfh_setup_available</code> variable as the outcome and the feature <code>mental_fatigue_score</code> are highly linearly correlated.</p>
 </div>
 <div id="designation-vs-the-remaining" class="section level4" number="4.1.5.5">
 <h4><span class="header-section-number">4.1.5.5</span> Designation vs the remaining</h4>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-67-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-37-1.png" width="672" /></p>
 <p>Here a strong quite linear relationship is visible. This is sensible as often more resource responsibility is given to employees with high designation.</p>
 <p>The last two relationships will be omitted here as both for the variable <code>designation</code> as well as for <code>resource_allocation</code> the comparison with <code>mental_fatigue_score</code> will be very similar to the main effect of the two variables. This comes again from the high correlation of the latter with the outcome.</p>
 <p>Overall some stronger and mainly less strong relationships between the predictors could be detected. Not like in ordinary least squares regression for gradient tree boosting no decorrelation and normalization of the features is needed. But before one fixes the pre-processing one can try to extract some more information from some features through some feature engineering.</p>
@@ -494,9 +494,9 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <h3><span class="header-section-number">4.1.6</span> Some feature engineering</h3>
 <p>The only variable that allows for reasonable feature engineering is the date of joining predictor. One can try to extract some underlying patterns and see if an effect on the outcome is visible.</p>
 <p>First extract the day of the week:</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-68-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-38-1.png" width="672" /></p>
 <p>No main effect is visible here. So try the month next.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-69-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-39-1.png" width="672" /></p>
 <p>Again no main effect is visible.</p>
 <p>Nevertheless one can include those two variables into the model because as mentioned before tree-based models actually perform a feature selection at each split. So including these just comes at a small computational cost. This minimal pre-processing that is needed when dealing with tree-based models is actually one of its biggest strengths. It is very robust against any kind of weird selection of features with different scales for example. This is one of the reasons, beside the strong predictive power, for the heavy use of such models in data mining applications.<span class="citation">[<a href="references.html#ref-elements" role="doc-biblioref">1</a>]</span></p>
 </div>
@@ -574,9 +574,9 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##    1122    4703    9433   13128   16436   63770</code></pre>
 <p>Now the distribution of the outcome.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-73-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-43-1.png" width="672" /></p>
 <p>Not like the <code>burn_rate</code> previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting <code>log10_charges</code> outcome variable is shown below.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-75-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-45-1.png" width="672" /></p>
 <p>Although such a transformation of the outcome variable is not needed for tree-based modeling it can make the job of the algorithm somewhat easier.</p>
 </div>
 <div id="distribution-and-main-effects-of-the-predictors-1" class="section level3" number="4.2.4">
@@ -584,9 +584,9 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <div id="age" class="section level4" number="4.2.4.1">
 <h4><span class="header-section-number">4.2.4.1</span> Age</h4>
 <p><code>age</code>: The age of the insurance contractor. This is naturally a continuous variable.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-76-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-46-1.png" width="672" /></p>
 <p>A wide range of ages is covered. Notably there is a peak at roughly 18 which means that many fresh adults were observed in this data set.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-77-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-47-1.png" width="672" /></p>
 <p>There seems to be a strong main effect although it does not seem to be linear. The general trend is that older contractors generally accumulate more medical costs. This is very intuitive.</p>
 </div>
 <div id="sex" class="section level4" number="4.2.4.2">
@@ -596,15 +596,15 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <pre><code>## female   male 
 ##    534    537</code></pre>
 <p>The classes are very well balanced. Now the main effect.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-79-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-49-1.png" width="672" /></p>
 <p>No notable difference can be detected here.</p>
 </div>
 <div id="body-mass-index" class="section level4" number="4.2.4.3">
 <h4><span class="header-section-number">4.2.4.3</span> Body mass index</h4>
 <p><code>bmi</code>: The body mass index is providing an understanding of the body composition. It is a ratio composed out of the weight which is divided by the height <span class="math inline">\(\frac{kg}{m^2}\)</span>. Ideally the ratio is between 18.5 and 24.9. The variable is obviously a continuous variable.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-80-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-50-1.png" width="672" /></p>
 <p>The distribution is bell-shaped and symmetrical roughly around a bmi of 30 which is above the ideal range. Actually only a small amount of the data falls into the normal range here. Moreover the right tail is heavier than the left one. Now a look at the main effect of the variable.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-81-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-51-1.png" width="672" /></p>
 <p>With some fantasy one can grasp some non-linear patterns on the right side of the plot but beside that no strong main effect is visible here.</p>
 </div>
 <div id="number-of-children" class="section level4" number="4.2.4.4">
@@ -614,9 +614,9 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <span id="cb34-2"><a href="eda.html#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(ins_train<span class="sc">$</span>children)</span></code></pre></div>
 <pre><code>## [1] 0 1 3 2 5 4</code></pre>
 <p>This could be treated as categorical but as there is a natural ordering it will be encoded by the integers so the treatment is like the one of a continuous feature.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-83-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-53-1.png" width="672" /></p>
 <p>As one would also think the more children the lower the number of observed values. Especially the numbers greater than 3 are not well represented. If encoded by one-hot-encoding one would have to think about removing these then near-zero-variance variables. But as they will be encoded in a continuous way this is no problem at all. A look at the main effects can now strengthen or weaken this hypothesis of a natural ordering.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-84-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-54-1.png" width="672" /></p>
 <p>This plot is quite similar to the main effect plot for the <code>age</code> feature. As most likely (will be checked later) the age is positively correlated with the number of children one can observe a rise of the minimal observed charges towards a greater amount of children. The upper two boxplots are built with just a few observations so they should not be interpreted in great detail. Overall there seems to be some kind of main effect.</p>
 </div>
 <div id="smoking" class="section level4" number="4.2.4.5">
@@ -626,15 +626,15 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <pre><code>##  no yes 
 ## 859 212</code></pre>
 <p>The classes are not balanced but the class of the smokers is still represented with a good amount of observations. Now a look at the main effect.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-86-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-56-1.png" width="672" /></p>
 <p>This main effect is as drastic as it is intuitive. Smoking seems to definitely increases the charges. This means that this variable has probably a lot of predictive power.</p>
 </div>
 <div id="region" class="section level4" number="4.2.4.6">
 <h4><span class="header-section-number">4.2.4.6</span> Region</h4>
 <p><code>region</code>: The beneficiary’s residential area in the US. Either northeast, southeast, southwest or northwest. This definitely is a categorical variable.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-87-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-57-1.png" width="672" /></p>
 <p>The four regions are balanced. Now to the main effect.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-88-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-58-1.png" width="672" /></p>
 <p>No important main effect is detectable from this plot.</p>
 </div>
 </div>
@@ -643,14 +643,14 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 <div id="age-vs-the-others" class="section level4" number="4.2.5.1">
 <h4><span class="header-section-number">4.2.5.1</span> Age vs the others</h4>
 <p>First the continuous one: <code>bmi</code></p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-89-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-59-1.png" width="672" /></p>
 <p>No relationship detectable. The pearson correlation is with 0.109 also low.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-91-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-61-1.png" width="672" /></p>
 <p>The most interesting take away from these four plots is that the hypothesis about the age of the contractors with children seem to be okish except for the ones with more than 3 children. But again this counterintuitive behavior could also be due to the few samples. At this point one might think about encoding the children variable as a categorical but in the following it will be left continuous.</p>
 </div>
 <div id="sex-vs-the-remaining" class="section level4" number="4.2.5.2">
 <h4><span class="header-section-number">4.2.5.2</span> Sex vs the remaining</h4>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-92-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-62-1.png" width="672" /></p>
 <p>No notable differences.</p>
 <p>Contingency table for the binary variable <code>smoker</code>:</p>
 <div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="eda.html#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sex vs smoker</span></span>
@@ -663,19 +663,19 @@ one will have a look not only at the untransformed target <code>burn_rate</code>
 </div>
 <div id="bmi-vs-the-remaining" class="section level4" number="4.2.5.3">
 <h4><span class="header-section-number">4.2.5.3</span> BMI vs the remaining</h4>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-94-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-64-1.png" width="672" /></p>
 <p>The most notable fact here is that southeast of the US seems to be a little more overweight than the rest.</p>
 </div>
 <div id="children-vs-the-remaining" class="section level4" number="4.2.5.4">
 <h4><span class="header-section-number">4.2.5.4</span> Children vs the remaining</h4>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-95-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-65-1.png" width="672" /></p>
 <p>In relative terms actually the contractors with three children smoke the most but the other levels seem quite balanced.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-96-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-66-1.png" width="672" /></p>
 <p>Here no trend is visible.</p>
 </div>
 <div id="smoker-vs-region" class="section level4" number="4.2.5.5">
 <h4><span class="header-section-number">4.2.5.5</span> Smoker vs Region</h4>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-97-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-67-1.png" width="672" /></p>
 <p>So the southeast is not only the most overweight region but also the one with the most smokers in relative terms.</p>
 <p>This concludes the tour of the pairwise relationships. Of course such an in detail look at all pairwise relationships for both data sets was only possible because there are quite few predictors and is not always needed in this extend. Besides a crystal clear understanding of the data one sees that there is not much room left for feature engineering for the insurance data set. Thus one can go on and define the recipe.</p>
 </div>

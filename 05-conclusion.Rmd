@@ -26,4 +26,4 @@ Now after having a solid theoretical understanding of gradient boosting methods 
 
 These pros and cons show that tree-based gradient boosting is a very powerful learning algorithm but still not suitable to any application. Due to its very robust nature and good handling of missing values and features of different scales it is one of the dominant algorithms in data mining alongside models like random forest. But in critical applications with just few observations such models should be treated with care as they are not that explainable. Still if one handles tabular data in order to perform a regression or classification task one should take the pros and cons that were mentioned above into account and in many cases a consideration of a tree-based gradient boosting model like XGBoost is advisable.
 
-**Thanks thanks for sticking with it!**
+**Thanks for sticking with it!**
