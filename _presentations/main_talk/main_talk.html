@@ -22,7 +22,7 @@ English title page
 --&gt;
 
 #### Emanuel Sommer
-#### 2021-05-23
+#### 2021-05-27
 
 
 &lt;center&gt;
@@ -208,13 +208,9 @@ Introduce a learning rate `\(\eta\)` that scales the contribution of the new mod
 
 **Column-subsampling:** In each step use only a fraction of the training features.
 
----
-class: inverse, hide-logo, middle, center
-
-
-
+&lt;!--
 &lt;img src="img/xgb_hist_annot.jpg" width="80%" style="display: block; margin: auto;" /&gt;
-
+--&gt;
 ---
 
 ## An implementation: XGBoost
@@ -228,11 +224,16 @@ class: inverse, hide-logo, middle, center
 ### Core strengths
 
 * Strong regularization
+  - Lasso/ Ridge penalization on `\(\gamma\)`
+  - Shrinkage
+  - Subsampling
+  - Early stopping
+  - Maximum tree depth
 * Parallelized tree building
 * Extremely efficient on sparse data (default directions)
 * Cache aware algorithm (clever data structure)
 
----
+&lt;!-- 
 ## XGBoost vs overfitting 
 
 ### Regularized Loss
@@ -248,7 +249,6 @@ Where `\(\Omega_{\alpha, \lambda, \nu}\)` is the penalizing term for model compl
 * `\(\nu\)` is the minimal loss reduction for terminal partitions.
 * Second order approximations of the loss allow for better parallelization.
 
---
 
 .pull-left[
 ### Shrinkage
@@ -261,7 +261,7 @@ Where `\(\Omega_{\alpha, \lambda, \nu}\)` is the penalizing term for model compl
 
 ### Maximum tree depth
 ]
-
+--&gt;
 ---
 background-image: url("https://media.giphy.com/media/BpGWitbFZflfSUYuZ9/giphy.gif")
 background-size: cover
@@ -438,7 +438,7 @@ The two models behaved exactly the same while tuning and show no notable differe
 ---
 ## Feature importance
 
-The feature importance is basically the relative frequency of the overall model to choose the feature in a split.
+The feature importance is basically the gain w.r.t. the loss of the feature over all splits.
 
 &lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/vip_burn.png" width="80%" style="display: block; margin: auto auto auto 0;" /&gt;
 
@@ -514,12 +514,13 @@ So a closer look at the region around 500 is advisable.
 
 👉 Fix 600 trees.
 
----
+&lt;!--
 ## A glimpse at learning rates
 
 &lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/boost_ins_tune_lrate.png" width="90%" style="display: block; margin: auto;" /&gt;
 
 Thus a too small learning rate can also be a problem.
+--&gt;
 
 ---
 ## Space-filling grid search
@@ -553,11 +554,24 @@ Thus a too small learning rate can also be a problem.
 
 &lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/vip_ins.png" width="90%" style="display: block; margin: auto auto auto 0;" /&gt;
 
+---
+## Compressed tree visualization 
 
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/ins_multitree_xgb.png" width="90%" style="display: block; margin: auto auto auto 0;" /&gt;
 ---
 ## Final Performance
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/final_perf_ins.png" width="80%" style="display: block; margin: auto auto auto 0;" /&gt;
+
+&lt;br&gt;
+&lt;br&gt;
+
+
+|model          |   rmse|
+|:--------------|------:|
+|XGBoost        | 0.1678|
+|Random Forest  | 0.1766|
+|Linear Model   | 0.1795|
+|Intercept Only | 0.3922|
 
 ---
 ## Pros 

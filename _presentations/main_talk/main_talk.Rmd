@@ -230,15 +230,11 @@ $$\phi_k(x) = \phi_{k-1}(x) + \eta * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k
 
 **Column-subsampling:** In each step use only a fraction of the training features.
 
----
-class: inverse, hide-logo, middle, center
-
-
-
+<!--
 ```{r, echo=FALSE, out.width="80%", fig.align='center'}
 knitr::include_graphics("img/xgb_hist_annot.jpg")
 ```
-
+-->
 ---
 
 ## An implementation: XGBoost
@@ -252,11 +248,16 @@ knitr::include_graphics("img/xgb_hist_annot.jpg")
 ### Core strengths
 
 * Strong regularization
+  - Lasso/ Ridge penalization on $\gamma$
+  - Shrinkage
+  - Subsampling
+  - Early stopping
+  - Maximum tree depth
 * Parallelized tree building
 * Extremely efficient on sparse data (default directions)
 * Cache aware algorithm (clever data structure)
 
----
+<!-- 
 ## XGBoost vs overfitting 
 
 ### Regularized Loss
@@ -272,7 +273,6 @@ Where $\Omega_{\alpha, \lambda, \nu}$ is the penalizing term for model complexit
 * $\nu$ is the minimal loss reduction for terminal partitions.
 * Second order approximations of the loss allow for better parallelization.
 
---
 
 .pull-left[
 ### Shrinkage
@@ -285,7 +285,7 @@ Where $\Omega_{\alpha, \lambda, \nu}$ is the penalizing term for model complexit
 
 ### Maximum tree depth
 ]
-
+-->
 ---
 background-image: url("https://media.giphy.com/media/BpGWitbFZflfSUYuZ9/giphy.gif")
 background-size: cover
@@ -568,7 +568,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/boost_ins_t
 
 `r emo::ji("backhand index pointing right")` Fix 600 trees.
 
----
+<!--
 ## A glimpse at learning rates
 
 ```{r, echo=FALSE, out.width="90%", fig.align='center'}
@@ -576,6 +576,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/boost_ins_t
 ```
 
 Thus a too small learning rate can also be a problem.
+-->
 
 ---
 ## Space-filling grid search
@@ -616,14 +617,26 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/vip_ins.png
 ---
 ## Compressed tree visualization 
 
-```{r, echo=FALSE, out.width="75%", fig.align='left'}
+```{r, echo=FALSE, out.width="90%", fig.align='left'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/ins_multitree_xgb.png"))
 ```
 ---
 ## Final Performance
 
+
+<br>
+<br>
+
 ```{r, echo=FALSE, out.width="80%", fig.align='left'}
-knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/final_perf_ins.png"))
+# knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/final_perf_ins.png"))
+final_ins <- dplyr::tribble(
+  ~model, ~rmse,
+  "XGBoost", 0.1678,
+  "Random Forest", 0.1766,
+  "Linear Model", 0.1795,
+  "Intercept Only", 0.3922
+)
+knitr::kable(final_ins)
 ```
 
 ---
