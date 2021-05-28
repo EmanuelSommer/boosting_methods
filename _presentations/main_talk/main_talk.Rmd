@@ -409,7 +409,6 @@ knitr::include_graphics("img/cv5_illustration.png")
 
 <br> 
 
---
 
 **The ranges used here:**
 
