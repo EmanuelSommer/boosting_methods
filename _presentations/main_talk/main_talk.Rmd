@@ -61,11 +61,17 @@ Response: $y_i \in \mathbb{R}$ like the burnout rate or the charges.
 
 Predictors: $x_i \in \mathbb{R}^m$
 
-$$
-y = (y_1, \dots, y_N)^T
-\quad
-x = (x_1, \dots, x_N)^T
-$$
+.pull-left[
+.right[
+$\textbf{y} = \begin{pmatrix}y_1\\ \vdots \\ y_N \end{pmatrix}$
+]
+]
+
+.pull-right[
+.left[
+$\textbf{x} = \begin{pmatrix}x_1\\ \vdots \\ x_N \end{pmatrix}$
+]
+]
 
 ---
 ## Previously
@@ -79,7 +85,7 @@ knitr::include_graphics("img/tree_illustration.png")
 
 Let $\mathcal{T}$ be the space of CART models.
 
-$$t(x, \gamma, R) = \sum_{j=1}^J \gamma_j I(x \in R_j) \quad \text{for  } t \in \mathcal{T}$$
+$$t(x_i, \gamma, R) = \sum_{j=1}^J \gamma_j I(x_i \in R_j) \quad  t \in \mathcal{T}$$
 with $R_j$ being distinct regions of the predictor space and $\gamma_j$ the prediction w.r.t. the region.
 ]
 
@@ -105,7 +111,7 @@ class: center, bottom, hide-logo
 
 ## The core idea of boosting
 
-**Sequentially** build weak learners that are ultimately combined in an additive fashion. Each additional learner should improve the total model.
+**Sequentially** build weak learners - here shallow trees - that are ultimately combined in an additive fashion. Each additional learner should improve the total model.
 
 ```{r, echo=FALSE, out.width="50%", fig.align='center'}
 knitr::include_graphics("img/boost_illustration.png")
@@ -113,9 +119,8 @@ knitr::include_graphics("img/boost_illustration.png")
 
 **The general additive model:**
 
-$$\hat{y_i} = \phi(x_i) = \sum_{k=1}^{K} f_k(x_i), \quad f_k \in \mathcal{F}$$
+$$\hat{y}_i = \phi(x_i) = \sum_{k=1}^{K} t_k(x_i), \quad t_k \in \mathcal{T}$$
 
-with $\mathcal{F}$ being the space of learning algorithms. From now on we use $\mathcal{T}$.
 
 ---
 
@@ -126,9 +131,9 @@ To fit such a model one uses **Forward Stagewise Additive Modeling**.
 * Sequentially add $t \in \mathcal{T}$ to the current model.
 * Do not change the parameters of the previous trees.
 
-$$\phi_k(x) = \phi_{k-1}(x) + t_k(x, \gamma^{(k)}, R^{(k)})$$
+$$\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + t_k(\textbf{x}, \gamma^{(k)}, R^{(k)})$$
 
-Each tree that is added should solve the following optimization problem:
+Each additional tree should improve the overall model i.e. solve the following optimization problem:
 
 $$(\gamma^{(k)},R^{(k)}) = argmin_{\gamma,R} \sum_{i=1}^N L(y_i, \phi_{k-1}(x_i) + t(x_i,\gamma,R))$$
 where $L$ is a convex and differentiable loss function.
@@ -139,28 +144,52 @@ where $L$ is a convex and differentiable loss function.
 
 **General minimization problem:**
 
-$$
-s_{opt} = argmin_sf(s) \quad s \in \mathbb{R}^N
-$$
+$$\textbf{s}_{opt} = argmin_\textbf{s} f(\textbf{s}) \quad \textbf{s} \in \mathbb{R}^N$$
 
 With $f$ is differentiable and $\lambda \in \mathbb{R}$ a scalar.
 
-**Gradient descent in a nutshell:** 
+**Gradient descent in a nutshell:**
 
 $$
-s^{(k)} = s^{(k-1)} - \lambda \bigg[\frac{\partial f(s)}{\partial s}\bigg]_{s=s^{(k-1)}}
+\textbf{s}^{(k)} = \textbf{s}^{(k-1)} - \lambda \bigg[\frac{\partial f(\textbf{s})}{\partial \textbf{s}}\bigg]_{\textbf{s}=\textbf{s}^{(k-1)}}
 $$
---
 
-This looks quite similar to the structure of our boosting model:
+For now set $\lambda = 1$.
 
-$$\phi_k(x) = \phi_{k-1}(x) + t_k(x, \gamma^{(k)}, R^{(k)})$$
+---
+## Connection with Gradient descent
+
+.pull-left[
+**General minimization setup:**
+
+$$\textbf{s}_{opt} = argmin_\textbf{s} f(\textbf{s}) \quad \textbf{s} \in \mathbb{R}^N$$
+
+<br>
+
+Gradient descent:
+
+$$
+\textbf{s}^{(k)} = \textbf{s}^{(k-1)} - \bigg[\frac{\partial f(\textbf{s})}{\partial \textbf{s}}\bigg]_{\textbf{s}=\textbf{s}^{(k-1)}}
+$$
+]
+
+.pull-right[
+**The boosting setup:**
+
+$$\phi_{opt} = argmin_{\phi} \sum_{i=1}^N L(y_i, \phi(x_i))$$
+
+
+
+<br>
+
+$$\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + t_k(\textbf{x}, \gamma^{(k)}, R^{(k)})$$
+]
 
 Corresponding parts:
 
 * The loss function $L$ to the function $f$
-* The predictions $\phi_k(x)$ to the input $s^{(k)}$
-* The predictions of the tree $t_k$ to the gradient of $f$
+* The predictions $\phi_k(\textbf{x})$ to the input $s^{(k)}$
+* The predictions of the tree $t_k$ to the negative gradient of $f$
 
 ---
 
@@ -168,19 +197,19 @@ Corresponding parts:
 
 **Algorithm:**
 
-1.  Initialize $\phi_0(x)$ as a singular node tree.
+1.  Initialize $\phi_0(\textbf{x})$ as a singular node tree.
 
-2.  For $k = 1$ to $K$ do:
+2.  For each tree addition $k = 1$ to $K$ do:
 
-    -   For $i = 1$ to $N$ compute:
+    -   For each observation $i = 1$ to $N$ compute:
 
         $g^{(k)}_{i} = \bigg[\frac{\partial L(y_i, \phi(x_i))}{\partial \phi(x_i)}\bigg]_{\phi = \phi_{k-1}}$
 
-    -   Fit a regression tree by least squares to the outcome vector $-g^{(k)}$ in order to get the $J^{(k)}$ distinct regions $\tilde{R}^{(k)}_j$.
+    -   Fit a regression tree by least squares to the outcome vector $-\textbf{g}^{(k)}$ in order to get the $J^{(k)}$ distinct regions $\tilde{R}^{(k)}_j$.
 
     -   For each of these $J^{(k)}$ regions perform a line search in order to compute the leaf predictions $\tilde{\gamma}^{(k)}_{j}$.
 
-    -   Set $\phi_k(x) = \phi_{k-1}(x) + t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$ with $t \in \mathcal{T}$
+    -   Set $\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + t(\textbf{x},\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$ with $t \in \mathcal{T}$
 
 <!--
 ## Which loss to pick?
@@ -207,6 +236,239 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/huber_loss.
 
 ]
 -->
+
+---
+## An example
+
+```{r, include=FALSE, cache=TRUE}
+library(tidyverse)
+library(tidymodels)
+library(viridis)
+burnout_data <- read_csv(paste0(dirname(dirname(getwd())),"/_data/burn_out_train.csv"))
+# convert colnames to snake_case
+colnames(burnout_data) <- tolower(
+  stringr::str_replace_all(
+    colnames(burnout_data),
+    " ",
+    "_"
+  ))
+# omit missing values in the outcome variable
+burnout_data <- na.omit(burnout_data) %>%
+  mutate(across(where(is.character), as.factor))
+set.seed(2)
+burnout_split <- rsample::initial_split(burnout_data, prop = 0.80)
+burnout_train <- rsample::training(burnout_split)
+burnout_test  <- rsample::testing(burnout_split)
+remove(burnout_data)
+remove(burnout_split)
+
+library(rpart)
+library(rpart.plot)
+iter1_model <- decision_tree(tree_depth = 1) %>%
+  set_engine("rpart") %>%
+  set_mode("regression")
+iter2_model <- iter1_model
+iter3_model <- iter1_model
+
+# first model
+iter1_model_fit <- iter1_model %>%
+  fit_xy(x = burnout_train[,3:8], y = burnout_train$burn_rate)
+
+
+iter1_rmse <- rmse_vec(truth = burnout_test$burn_rate,
+                       estimate = predict(iter1_model_fit,
+                        new_data = burnout_test)[[".pred"]])
+iter1_resid <- burnout_train$burn_rate - predict(iter1_model_fit,
+                                                 new_data = burnout_train)
+# second model
+iter2_model_fit <- iter2_model %>%
+  fit_xy(x = burnout_train[,3:8], y = iter1_resid)
+
+iter2_rmse <- rmse_vec(truth = burnout_test$burn_rate,
+                       estimate = predict(iter1_model_fit,
+                        new_data = burnout_test)[[".pred"]] +
+                         predict(iter2_model_fit,
+                        new_data = burnout_test)[[".pred"]])
+
+iter2_resid <- burnout_train$burn_rate - 
+  predict(iter1_model_fit, new_data = burnout_train) -
+  predict(iter2_model_fit, new_data = burnout_train)
+
+# third model
+iter3_model_fit <- iter3_model %>%
+  fit_xy(x = burnout_train[,3:8], y = iter2_resid)
+
+
+
+iter3_rmse <- rmse_vec(truth = burnout_test$burn_rate,
+                       estimate = predict(iter1_model_fit,
+                        new_data = burnout_test)[[".pred"]] +
+                         predict(iter2_model_fit,
+                        new_data = burnout_test)[[".pred"]] +
+                         predict(iter3_model_fit,
+                        new_data = burnout_test)[[".pred"]])
+
+
+```
+
+Model for the burnout data with the RMSE loss, fixed $K = 2$ and tree depth 1.
+
+```{r, echo=FALSE, out.width="95%", fig.align='center'}
+knitr::include_graphics("img/grad_boost_example.png")
+```
+
+
+
+
+```{r,echo=FALSE, fig., cache=TRUE, include=FALSE}
+rpart.plot(iter1_model_fit$fit, type = 5, roundint = F)
+```
+
+```{r, echo=FALSE, cache=TRUE, include=FALSE}
+rpart.plot(iter2_model_fit$fit, type = 5, roundint = F)
+```
+
+```{r, echo=FALSE, cache=TRUE, include=FALSE}
+rpart.plot(iter3_model_fit$fit, type = 5, roundint = F)
+```
+
+```{r, echo=FALSE, cache=TRUE, include=FALSE}
+ggplot(burnout_train,
+       aes(y = mental_fatigue_score,
+           x = burn_rate)) +
+  # geom_rect(aes(xmin = -0.01, ymin = 5.8,
+  #               xmax = 1.01, ymax = 10.1),
+  #           fill = "#858585",
+  #           alpha = 0.01) +
+  scale_x_continuous(expand = c(0, 0),
+                     limits = c(-0.01, 1.01)) +
+  scale_y_continuous(expand = c(0, 0),
+                     limits = c(-0.1, 10.1)) +
+  geom_point(alpha = 0.1, col = plasma(1),
+             na.rm = TRUE) +
+  geom_segment(aes(x = 0.29, y = 5.8, yend = 5.8, xend = 0.59),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.59, y = 5.8, yend = 10.1, xend = 0.59),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.29, y = -0.1, yend = 5.8, xend = 0.29),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  labs(y = "Mental fatigue score", x = "Burn rate",
+       title = "**Model predictions**",
+       subtitle = "Iteration: Initialization") +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+```{r, echo=FALSE, cache=TRUE, include=FALSE}
+ggplot(burnout_train,
+       aes(y = mental_fatigue_score,
+           x = burn_rate)) +
+  # geom_rect(aes(xmin = -0.01, ymin = 5.8,
+  #               xmax = 1.01, ymax = 7.8),
+  #           fill = plasma(5)[5],
+  #           alpha = 0.01) +
+  scale_x_continuous(expand = c(0, 0),
+                     limits = c(-0.01, 1.01)) +
+  scale_y_continuous(expand = c(0, 0),
+                     limits = c(-0.1, 10.1)) +
+  # second tree region
+  # geom_rect(aes(xmin = -0.01, ymin = 7.8,
+  #               xmax = 1.01, ymax = 10.1),
+  #           fill = plasma(5)[5],
+  #           alpha = 0.02) +
+  geom_point(alpha = 0.1, col = plasma(1),
+             na.rm = TRUE) +
+  geom_segment(aes(x = 0.29, y = 5.8, yend = 5.8, xend = 0.565),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.565, y = 7.8, yend = 7.8, xend = 0.74),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.74, y = 7.8, yend = 10.1, xend = 0.74),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.565, y = 5.8, yend = 7.8, xend = 0.565),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.29, y = -0.1, yend = 5.8, xend = 0.29),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  labs(y = "Mental fatigue score", x = "Burn rate",
+       title = "**Model predictions**",
+       subtitle = "Iteration: 1") +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+
+
+```{r, echo=FALSE, cache=TRUE, include=FALSE}
+ggplot(burnout_train,
+       aes(y = mental_fatigue_score,
+           x = burn_rate)) +
+  # geom_rect(aes(xmin = -0.01, ymin = 5.8,
+  #               xmax = 1.01, ymax = 7.8),
+  #           fill = plasma(5)[5],
+  #           alpha = 0.005) +
+  scale_x_continuous(expand = c(0, 0),
+                     limits = c(-0.01, 1.01)) +
+  scale_y_continuous(expand = c(0, 0),
+                     limits = c(-0.1, 10.1)) +
+  # # second tree region
+  # geom_rect(aes(xmin = -0.01, ymin = 7.8,
+  #               xmax = 1.01, ymax = 10.1),
+  #           fill = plasma(5)[5],
+  #           alpha = 0.01) +
+  # # third tree region
+  # geom_rect(aes(xmin = -0.01, ymin = 3.1,
+  #               xmax = 1.01, ymax = 5.8),
+  #           fill = plasma(5)[5],
+  #           alpha = 0.0025) +
+  geom_point(alpha = 0.1, col = plasma(1),
+             na.rm = TRUE) +
+  geom_segment(aes(x = 0.274, y = 5.8, yend = 5.8, xend = 0.565),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.565, y = 7.8, yend = 7.8, xend = 0.74),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.13, y = 3.1, yend = 3.1, xend = 0.274),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.74, y = 7.8, yend = 10.1, xend = 0.74),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.565, y = 5.8, yend = 7.8, xend = 0.565),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.274, y = 3.1, yend = 5.8, xend = 0.274),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  geom_segment(aes(x = 0.13, y = -0.1, yend = 3.1, xend = 0.13),
+               inherit.aes = FALSE,
+               size = 1.5) +
+  labs(y = "Mental fatigue score", x = "Burn rate",
+       title = "**Model predictions**",
+       subtitle = "Iteration: 2") +
+  theme_light() +
+  theme(legend.position = "None",
+        plot.title = ggtext::element_markdown(size = 11))
+```
+
+
+
+
+
+
+
+
+
+
 ---
 ## Combat Overfitting
 
@@ -220,7 +482,7 @@ Monitor the loss on one or many (CV) validation sets and stop the addition of tr
 
 Introduce a learning rate $\eta$ that scales the contribution of the new model. 
 
-$$\phi_k(x) = \phi_{k-1}(x) + \eta * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$$
+$$\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + \eta * t(\textbf{x},\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$$
 
 --
 
@@ -230,11 +492,13 @@ $$\phi_k(x) = \phi_{k-1}(x) + \eta * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k
 
 **Column-subsampling:** In each step use only a fraction of the training features.
 
-<!--
+---
+class: center, middle, hide-logo
+
 ```{r, echo=FALSE, out.width="80%", fig.align='center'}
 knitr::include_graphics("img/xgb_hist_annot.jpg")
 ```
--->
+
 ---
 
 ## An implementation: XGBoost
@@ -336,7 +600,7 @@ Amazing book: **Tidy modeling with R**
 
 .right-column[
 ```{r, echo=FALSE, out.width="90%", fig.align='center'}
-knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/burn_rate_raw.png"))
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/burn_rate_raw_nojitter.png"))
 ```
 ]
 ---
@@ -348,7 +612,7 @@ The transformation with the empirical logit removes the bounds on the target.
 $$log(\frac{x+0.5}{1-x+0.5})$$
 
 ```{r, echo=FALSE, out.width="65%", fig.align='center'}
-knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/burn_rate_trans.png"))
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/burn_rate_trans_nojitter.png"))
 ```
 
 ---
@@ -405,8 +669,6 @@ knitr::include_graphics("img/cv5_illustration.png")
 
 3. Refine the grid as often as needed and explore further regularization parameters if required.
 
-4. Optional: Iterative searches for single parameters.
-
 <br> 
 
 
@@ -430,13 +692,15 @@ knitr::include_graphics("img/cv5_illustration.png")
 ---
 ## Tuning the number of trees
 
-Besides the standard value of six for the maximum tree depth also the influence of considering just stumps is displayed.
+Besides the standard value of six<sup>*</sup> for the maximum tree depth also the influence of considering just stumps is displayed.
 
-```{r, echo=FALSE, out.width="90%", fig.align='center'}
+```{r, echo=FALSE, out.width="75%", fig.align='center'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/bout_tuning_stumpsVs6.png"))
 ```
 
 `r emo::ji("backhand index pointing right")` Fix 1500 trees.
+
+.footnote[[*] Hastie, T., Tibshirani, R. and Friedman, J. (2009). The elements of statistical learning (12th printing). Springer New York.]
 
 ---
 ## Space-filling grid search
@@ -530,7 +794,7 @@ None
 
 .right-column[
 ```{r, echo=FALSE, out.width="90%", fig.align='center'}
-knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/charges_ins.png"))
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/charges_ins_nojitter.png"))
 ```
 ]
 
@@ -585,14 +849,32 @@ Thus a too small learning rate can also be a problem.
 - 900k trees.
 - 30 minutes of parallel computation.
 
-```{r, echo=FALSE, out.width="90%", fig.align='center'}
+<br>
+
+**The final parameters:**
+
+.pull-left[
+`#Trees`: 600
+
+`Max tree depth`: 3
+
+`Learning rate`: 0.02
+]
+
+.pull-right[
+`Loss reduction`: 0.03
+
+`Column-subsampling`: 7 of 8
+
+`Row-subsampling`:  80%
+]
+
+
+```{r, echo=FALSE,include=FALSE, out.width="90%", fig.align='center'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/tuning_ins_parallelcoord.png"))
 ```
 
----
-## The final parameters
-
-
+<!--
 `#Trees`: 600
 
 `Max tree depth`: 3
@@ -604,7 +886,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/tuning_ins_
 `Column-subsampling`: 7 of 8
 
 `Row-subsampling`:  80%
-
+-->
 
 ---
 ## Feature importance
@@ -623,19 +905,16 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/ins_multitr
 ## Final Performance
 
 
-<br>
-<br>
-
 ```{r, echo=FALSE, out.width="80%", fig.align='left'}
-# knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/final_perf_ins.png"))
-final_ins <- dplyr::tribble(
-  ~model, ~rmse,
-  "XGBoost", 0.1678,
-  "Random Forest", 0.1766,
-  "Linear Model", 0.1795,
-  "Intercept Only", 0.3922
-)
-knitr::kable(final_ins)
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/final_perf_ins.png"))
+# final_ins <- dplyr::tribble(
+#   ~model, ~rmse,
+#   "XGBoost", 0.1678,
+#   "Random Forest", 0.1766,
+#   "Linear Model", 0.1795,
+#   "Intercept Only", 0.3922
+# )
+# knitr::kable(final_ins)
 ```
 
 ---

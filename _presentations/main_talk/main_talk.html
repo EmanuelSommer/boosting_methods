@@ -22,7 +22,7 @@ English title page
 --&gt;
 
 #### Emanuel Sommer
-#### 2021-05-28
+#### 2021-06-06
 
 
 &lt;center&gt;
@@ -47,11 +47,17 @@ Response: `\(y_i \in \mathbb{R}\)` like the burnout rate or the charges.
 
 Predictors: `\(x_i \in \mathbb{R}^m\)`
 
-$$
-y = (y_1, \dots, y_N)^T
-\quad
-x = (x_1, \dots, x_N)^T
-$$
+.pull-left[
+.right[
+`\(\textbf{y} = \begin{pmatrix}y_1\\ \vdots \\ y_N \end{pmatrix}\)`
+]
+]
+
+.pull-right[
+.left[
+`\(\textbf{x} = \begin{pmatrix}x_1\\ \vdots \\ x_N \end{pmatrix}\)`
+]
+]
 
 ---
 ## Previously
@@ -63,7 +69,7 @@ $$
 
 Let `\(\mathcal{T}\)` be the space of CART models.
 
-`$$t(x, \gamma, R) = \sum_{j=1}^J \gamma_j I(x \in R_j) \quad \text{for  } t \in \mathcal{T}$$`
+`$$t(x_i, \gamma, R) = \sum_{j=1}^J \gamma_j I(x_i \in R_j) \quad  t \in \mathcal{T}$$`
 with `\(R_j\)` being distinct regions of the predictor space and `\(\gamma_j\)` the prediction w.r.t. the region.
 ]
 
@@ -87,15 +93,14 @@ class: center, bottom, hide-logo
 
 ## The core idea of boosting
 
-**Sequentially** build weak learners that are ultimately combined in an additive fashion. Each additional learner should improve the total model.
+**Sequentially** build weak learners - here shallow trees - that are ultimately combined in an additive fashion. Each additional learner should improve the total model.
 
 &lt;img src="img/boost_illustration.png" width="50%" style="display: block; margin: auto;" /&gt;
 
 **The general additive model:**
 
-`$$\hat{y_i} = \phi(x_i) = \sum_{k=1}^{K} f_k(x_i), \quad f_k \in \mathcal{F}$$`
+`$$\hat{y}_i = \phi(x_i) = \sum_{k=1}^{K} t_k(x_i), \quad t_k \in \mathcal{T}$$`
 
-with `\(\mathcal{F}\)` being the space of learning algorithms. From now on we use `\(\mathcal{T}\)`.
 
 ---
 
@@ -106,9 +111,9 @@ To fit such a model one uses **Forward Stagewise Additive Modeling**.
 * Sequentially add `\(t \in \mathcal{T}\)` to the current model.
 * Do not change the parameters of the previous trees.
 
-`$$\phi_k(x) = \phi_{k-1}(x) + t_k(x, \gamma^{(k)}, R^{(k)})$$`
+`$$\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + t_k(\textbf{x}, \gamma^{(k)}, R^{(k)})$$`
 
-Each tree that is added should solve the following optimization problem:
+Each additional tree should improve the overall model i.e. solve the following optimization problem:
 
 `$$(\gamma^{(k)},R^{(k)}) = argmin_{\gamma,R} \sum_{i=1}^N L(y_i, \phi_{k-1}(x_i) + t(x_i,\gamma,R))$$`
 where `\(L\)` is a convex and differentiable loss function.
@@ -119,28 +124,52 @@ where `\(L\)` is a convex and differentiable loss function.
 
 **General minimization problem:**
 
-$$
-s_{opt} = argmin_sf(s) \quad s \in \mathbb{R}^N
-$$
+`$$\textbf{s}_{opt} = argmin_\textbf{s} f(\textbf{s}) \quad \textbf{s} \in \mathbb{R}^N$$`
 
 With `\(f\)` is differentiable and `\(\lambda \in \mathbb{R}\)` a scalar.
 
-**Gradient descent in a nutshell:** 
+**Gradient descent in a nutshell:**
 
 $$
-s^{(k)} = s^{(k-1)} - \lambda \bigg[\frac{\partial f(s)}{\partial s}\bigg]_{s=s^{(k-1)}}
+\textbf{s}^{(k)} = \textbf{s}^{(k-1)} - \lambda \bigg[\frac{\partial f(\textbf{s})}{\partial \textbf{s}}\bigg]_{\textbf{s}=\textbf{s}^{(k-1)}}
 $$
---
 
-This looks quite similar to the structure of our boosting model:
+For now set `\(\lambda = 1\)`.
 
-`$$\phi_k(x) = \phi_{k-1}(x) + t_k(x, \gamma^{(k)}, R^{(k)})$$`
+---
+## Connection with Gradient descent
+
+.pull-left[
+**General minimization setup:**
+
+`$$\textbf{s}_{opt} = argmin_\textbf{s} f(\textbf{s}) \quad \textbf{s} \in \mathbb{R}^N$$`
+
+&lt;br&gt;
+
+Gradient descent:
+
+$$
+\textbf{s}^{(k)} = \textbf{s}^{(k-1)} - \bigg[\frac{\partial f(\textbf{s})}{\partial \textbf{s}}\bigg]_{\textbf{s}=\textbf{s}^{(k-1)}}
+$$
+]
+
+.pull-right[
+**The boosting setup:**
+
+`$$\phi_{opt} = argmin_{\phi} \sum_{i=1}^N L(y_i, \phi(x_i))$$`
+
+
+
+&lt;br&gt;
+
+`$$\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + t_k(\textbf{x}, \gamma^{(k)}, R^{(k)})$$`
+]
 
 Corresponding parts:
 
 * The loss function `\(L\)` to the function `\(f\)`
-* The predictions `\(\phi_k(x)\)` to the input `\(s^{(k)}\)`
-* The predictions of the tree `\(t_k\)` to the gradient of `\(f\)`
+* The predictions `\(\phi_k(\textbf{x})\)` to the input `\(s^{(k)}\)`
+* The predictions of the tree `\(t_k\)` to the negative gradient of `\(f\)`
 
 ---
 
@@ -148,19 +177,19 @@ Corresponding parts:
 
 **Algorithm:**
 
-1.  Initialize `\(\phi_0(x)\)` as a singular node tree.
+1.  Initialize `\(\phi_0(\textbf{x})\)` as a singular node tree.
 
-2.  For `\(k = 1\)` to `\(K\)` do:
+2.  For each tree addition `\(k = 1\)` to `\(K\)` do:
 
-    -   For `\(i = 1\)` to `\(N\)` compute:
+    -   For each observation `\(i = 1\)` to `\(N\)` compute:
 
         `\(g^{(k)}_{i} = \bigg[\frac{\partial L(y_i, \phi(x_i))}{\partial \phi(x_i)}\bigg]_{\phi = \phi_{k-1}}\)`
 
-    -   Fit a regression tree by least squares to the outcome vector `\(-g^{(k)}\)` in order to get the `\(J^{(k)}\)` distinct regions `\(\tilde{R}^{(k)}_j\)`.
+    -   Fit a regression tree by least squares to the outcome vector `\(-\textbf{g}^{(k)}\)` in order to get the `\(J^{(k)}\)` distinct regions `\(\tilde{R}^{(k)}_j\)`.
 
     -   For each of these `\(J^{(k)}\)` regions perform a line search in order to compute the leaf predictions `\(\tilde{\gamma}^{(k)}_{j}\)`.
 
-    -   Set `\(\phi_k(x) = \phi_{k-1}(x) + t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)\)` with `\(t \in \mathcal{T}\)`
+    -   Set `\(\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + t(\textbf{x},\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)\)` with `\(t \in \mathcal{T}\)`
 
 &lt;!--
 ## Which loss to pick?
@@ -185,6 +214,42 @@ Corresponding parts:
 
 ]
 --&gt;
+
+---
+## An example
+
+
+
+Model for the burnout data with the RMSE loss, fixed `\(K = 2\)` and tree depth 1.
+
+&lt;img src="img/grad_boost_example.png" width="95%" style="display: block; margin: auto;" /&gt;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ---
 ## Combat Overfitting
 
@@ -198,7 +263,7 @@ Monitor the loss on one or many (CV) validation sets and stop the addition of tr
 
 Introduce a learning rate `\(\eta\)` that scales the contribution of the new model. 
 
-`$$\phi_k(x) = \phi_{k-1}(x) + \eta * t(x,\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$$`
+`$$\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + \eta * t(\textbf{x},\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$$`
 
 --
 
@@ -208,9 +273,11 @@ Introduce a learning rate `\(\eta\)` that scales the contribution of the new mod
 
 **Column-subsampling:** In each step use only a fraction of the training features.
 
-&lt;!--
+---
+class: center, middle, hide-logo
+
 &lt;img src="img/xgb_hist_annot.jpg" width="80%" style="display: block; margin: auto;" /&gt;
---&gt;
+
 ---
 
 ## An implementation: XGBoost
@@ -307,7 +374,7 @@ Amazing book: **Tidy modeling with R**
 ]
 
 .right-column[
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/burn_rate_raw.png" width="90%" style="display: block; margin: auto;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/burn_rate_raw_nojitter.png" width="90%" style="display: block; margin: auto;" /&gt;
 ]
 ---
 
@@ -317,7 +384,7 @@ The transformation with the empirical logit removes the bounds on the target.
 
 `$$log(\frac{x+0.5}{1-x+0.5})$$`
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/burn_rate_trans.png" width="65%" style="display: block; margin: auto;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/burn_rate_trans_nojitter.png" width="65%" style="display: block; margin: auto;" /&gt;
 
 ---
 ## Mental fatigue score
@@ -367,8 +434,6 @@ Both features show relevant main effects.
 
 3. Refine the grid as often as needed and explore further regularization parameters if required.
 
-4. Optional: Iterative searches for single parameters.
-
 &lt;br&gt; 
 
 
@@ -392,11 +457,13 @@ Both features show relevant main effects.
 ---
 ## Tuning the number of trees
 
-Besides the standard value of six for the maximum tree depth also the influence of considering just stumps is displayed.
+Besides the standard value of six&lt;sup&gt;*&lt;/sup&gt; for the maximum tree depth also the influence of considering just stumps is displayed.
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/bout_tuning_stumpsVs6.png" width="90%" style="display: block; margin: auto;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/bout_tuning_stumpsVs6.png" width="75%" style="display: block; margin: auto;" /&gt;
 
 👉 Fix 1500 trees.
+
+.footnote[[*] Hastie, T., Tibshirani, R. and Friedman, J. (2009). The elements of statistical learning (12th printing). Springer New York.]
 
 ---
 ## Space-filling grid search
@@ -481,7 +548,7 @@ None
 
 
 .right-column[
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/charges_ins.png" width="90%" style="display: block; margin: auto;" /&gt;
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/charges_ins_nojitter.png" width="90%" style="display: block; margin: auto;" /&gt;
 ]
 
 ---
@@ -529,12 +596,30 @@ Thus a too small learning rate can also be a problem.
 - 900k trees.
 - 30 minutes of parallel computation.
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/tuning_ins_parallelcoord.png" width="90%" style="display: block; margin: auto;" /&gt;
+&lt;br&gt;
 
----
-## The final parameters
+**The final parameters:**
+
+.pull-left[
+`#Trees`: 600
+
+`Max tree depth`: 3
+
+`Learning rate`: 0.02
+]
+
+.pull-right[
+`Loss reduction`: 0.03
+
+`Column-subsampling`: 7 of 8
+
+`Row-subsampling`:  80%
+]
 
 
+
+
+&lt;!--
 `#Trees`: 600
 
 `Max tree depth`: 3
@@ -546,7 +631,7 @@ Thus a too small learning rate can also be a problem.
 `Column-subsampling`: 7 of 8
 
 `Row-subsampling`:  80%
-
+--&gt;
 
 ---
 ## Feature importance
@@ -561,16 +646,7 @@ Thus a too small learning rate can also be a problem.
 ## Final Performance
 
 
-&lt;br&gt;
-&lt;br&gt;
-
-
-|model          |   rmse|
-|:--------------|------:|
-|XGBoost        | 0.1678|
-|Random Forest  | 0.1766|
-|Linear Model   | 0.1795|
-|Intercept Only | 0.3922|
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/final_perf_ins.png" width="80%" style="display: block; margin: auto auto auto 0;" /&gt;
 
 ---
 ## Pros 
