@@ -128,8 +128,9 @@ $$\hat{y}_i = \phi(x_i) = \sum_{k=1}^{K} t_k(x_i), \quad t_k \in \mathcal{T}$$
 
 To fit such a model one uses **Forward Stagewise Additive Modeling**.
 
-* Sequentially add $t \in \mathcal{T}$ to the current model.
-* Do not change the parameters of the previous trees.
+* The current model $\phi_{k-1}(\textbf{x})$
+* Add the tree $t_k$ with regions $R^{(k)}$ and leaf predictions $\gamma^{(k)}$
+* The parameters of the current model are unchanged!
 
 $$\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + t_k(\textbf{x}, \gamma^{(k)}, R^{(k)})$$
 
@@ -492,10 +493,8 @@ $$\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + \eta * t(\textbf{x},\tilde {\gam
 
 **Column-subsampling:** In each step use only a fraction of the training features.
 
----
-class: center, middle, hide-logo
 
-```{r, echo=FALSE, out.width="80%", fig.align='center'}
+```{r, echo=FALSE, out.width="80%", fig.align='center', eval=FALSE, include=FALSE}
 knitr::include_graphics("img/xgb_hist_annot.jpg")
 ```
 
@@ -509,17 +508,18 @@ knitr::include_graphics("img/xgb_hist_annot.jpg")
 </center>
 <br>
 
-### Core strengths
 
 * Strong regularization
-  - Lasso/ Ridge penalization on $\gamma$
-  - Shrinkage
-  - Subsampling
-  - Early stopping
-  - Maximum tree depth
-* Parallelized tree building
-* Extremely efficient on sparse data (default directions)
-* Cache aware algorithm (clever data structure)
+  - Lasso/ Ridge penalization on $\gamma$ 
+  - Shrinkage `r emo::ji("heavy_check_mark")`
+  - Subsampling `r emo::ji("heavy_check_mark")`
+  - Early stopping `r emo::ji("heavy_check_mark")`
+  - Maximum tree depth `r emo::ji("heavy_check_mark")`
+* Parallelized tree building 
+* Extremely efficient on sparse data and can handle missing values by having learned default directions in each split
+* Cache aware algorithm
+
+Also very popular in R: `gbm` package. (Same functionality: `r emo::ji("heavy_check_mark")`)
 
 <!-- 
 ## XGBoost vs overfitting 
@@ -555,23 +555,6 @@ background-image: url("https://media.giphy.com/media/BpGWitbFZflfSUYuZ9/giphy.gi
 background-size: cover
 class: center, bottom, hide-logo
 
-
----
-## R setup
-
-.pull-left[
-```{r, echo=FALSE, out.width="80%", fig.align='center'}
-knitr::include_graphics("img/tidyverse_hex.png")
-```
-]
-.pull-right[
-```{r, echo=FALSE, out.width="80%", fig.align='center'}
-knitr::include_graphics("img/tidymodels_hex.png")
-```
-]
-
-<br>
-Amazing book: **Tidy modeling with R**
 
 ---
 ## Burnout data set
@@ -895,12 +878,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/tuning_ins_
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/vip_ins.png"))
 ```
 
----
-## Compressed tree visualization 
 
-```{r, echo=FALSE, out.width="90%", fig.align='left'}
-knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/ins_multitree_xgb.png"))
-```
 ---
 ## Final Performance
 
@@ -960,6 +938,27 @@ class: inverse, center, middle, hide-logo
 ## Discussion
 
 
+---
+## R setup
 
+.pull-left[
+```{r, echo=FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("img/tidyverse_hex.png")
+```
+]
+.pull-right[
+```{r, echo=FALSE, out.width="80%", fig.align='center'}
+knitr::include_graphics("img/tidymodels_hex.png")
+```
+]
 
+<br>
+Amazing book: **Tidy modeling with R**
+
+---
+## Compressed tree visualization 
+
+```{r, echo=FALSE, out.width="90%", fig.align='left'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/ins_multitree_xgb.png"))
+```
 

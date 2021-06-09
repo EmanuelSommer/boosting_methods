@@ -22,7 +22,7 @@ English title page
 --&gt;
 
 #### Emanuel Sommer
-#### 2021-06-06
+#### 2021-06-09
 
 
 &lt;center&gt;
@@ -108,8 +108,9 @@ class: center, bottom, hide-logo
 
 To fit such a model one uses **Forward Stagewise Additive Modeling**.
 
-* Sequentially add `\(t \in \mathcal{T}\)` to the current model.
-* Do not change the parameters of the previous trees.
+* The current model `\(\phi_{k-1}(\textbf{x})\)`
+* Add the tree `\(t_k\)` with regions `\(R^{(k)}\)` and leaf predictions `\(\gamma^{(k)}\)`
+* The parameters of the current model are unchanged!
 
 `$$\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + t_k(\textbf{x}, \gamma^{(k)}, R^{(k)})$$`
 
@@ -273,10 +274,8 @@ Introduce a learning rate `\(\eta\)` that scales the contribution of the new mod
 
 **Column-subsampling:** In each step use only a fraction of the training features.
 
----
-class: center, middle, hide-logo
 
-&lt;img src="img/xgb_hist_annot.jpg" width="80%" style="display: block; margin: auto;" /&gt;
+
 
 ---
 
@@ -288,17 +287,18 @@ class: center, middle, hide-logo
 &lt;/center&gt;
 &lt;br&gt;
 
-### Core strengths
 
 * Strong regularization
-  - Lasso/ Ridge penalization on `\(\gamma\)`
-  - Shrinkage
-  - Subsampling
-  - Early stopping
-  - Maximum tree depth
-* Parallelized tree building
-* Extremely efficient on sparse data (default directions)
-* Cache aware algorithm (clever data structure)
+  - Lasso/ Ridge penalization on `\(\gamma\)` 
+  - Shrinkage ✔️
+  - Subsampling ✔️
+  - Early stopping ✔️
+  - Maximum tree depth ✔️
+* Parallelized tree building 
+* Extremely efficient on sparse data and can handle missing values by having learned default directions in each split
+* Cache aware algorithm
+
+Also very popular in R: `gbm` package. (Same functionality: ✔️)
 
 &lt;!-- 
 ## XGBoost vs overfitting 
@@ -334,19 +334,6 @@ background-image: url("https://media.giphy.com/media/BpGWitbFZflfSUYuZ9/giphy.gi
 background-size: cover
 class: center, bottom, hide-logo
 
-
----
-## R setup
-
-.pull-left[
-&lt;img src="img/tidyverse_hex.png" width="80%" style="display: block; margin: auto;" /&gt;
-]
-.pull-right[
-&lt;img src="img/tidymodels_hex.png" width="80%" style="display: block; margin: auto;" /&gt;
-]
-
-&lt;br&gt;
-Amazing book: **Tidy modeling with R**
 
 ---
 ## Burnout data set
@@ -638,10 +625,7 @@ Thus a too small learning rate can also be a problem.
 
 &lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/vip_ins.png" width="90%" style="display: block; margin: auto auto auto 0;" /&gt;
 
----
-## Compressed tree visualization 
 
-&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/ins_multitree_xgb.png" width="90%" style="display: block; margin: auto auto auto 0;" /&gt;
 ---
 ## Final Performance
 
@@ -691,8 +675,23 @@ class: inverse, center, middle, hide-logo
 ## Discussion
 
 
+---
+## R setup
 
+.pull-left[
+&lt;img src="img/tidyverse_hex.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
+.pull-right[
+&lt;img src="img/tidymodels_hex.png" width="80%" style="display: block; margin: auto;" /&gt;
+]
 
+&lt;br&gt;
+Amazing book: **Tidy modeling with R**
+
+---
+## Compressed tree visualization 
+
+&lt;img src="C:/Users/Emanuel/Documents/Uni/3. MA Semester/Seminar/boosting_methods/_pictures/ins_multitree_xgb.png" width="90%" style="display: block; margin: auto auto auto 0;" /&gt;
 
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
