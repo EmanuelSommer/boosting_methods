@@ -1,6 +1,7 @@
 ---
 output:
   xaringan::moon_reader:
+    self_contained: true
     lib_dir: libs
     css: xaringan-themer.css
     nature:
@@ -27,6 +28,9 @@ style_mono_accent(
   text_font_google   = google_font("Montserrat", "300", "300i"),
   code_font_google   = google_font("Fira Mono")
 )
+
+### for rendering: 
+# rmarkdown::render("_presentations/main_talk/main_talk.Rmd")
 ```
 
 
@@ -106,7 +110,6 @@ background-image: url("https://media.giphy.com/media/cRH5deQTgTMR2/giphy.gif")
 background-size: cover
 class: center, bottom, hide-logo
 
-
 ---
 
 ## The core idea of boosting
@@ -147,7 +150,7 @@ where $L$ is a convex and differentiable loss function.
 
 $$\textbf{s}_{opt} = argmin_\textbf{s} f(\textbf{s}) \quad \textbf{s} \in \mathbb{R}^N$$
 
-With $f$ is differentiable and $\lambda \in \mathbb{R}$ a scalar.
+Where $f$ is differentiable and $\lambda \in \mathbb{R}$ a scalar.
 
 **Gradient descent in a nutshell:**
 
@@ -198,20 +201,40 @@ Corresponding parts:
 
 **Algorithm:**
 
-1.  Initialize $\phi_0(\textbf{x})$ as a singular node tree.
+**1.**  Initialize $\phi_0(\textbf{x})$ as a singular node tree.
 
-2.  For each tree addition $k = 1$ to $K$ do:
 
-    -   For each observation $i = 1$ to $N$ compute:
+<br>
 
-        $g^{(k)}_{i} = \bigg[\frac{\partial L(y_i, \phi(x_i))}{\partial \phi(x_i)}\bigg]_{\phi = \phi_{k-1}}$
+**Example:** 
 
-    -   Fit a regression tree by least squares to the outcome vector $-\textbf{g}^{(k)}$ in order to get the $J^{(k)}$ distinct regions $\tilde{R}^{(k)}_j$.
+Burnout data with the RMSE loss, fixed $K = 2$ and tree depth 1.
 
-    -   For each of these $J^{(k)}$ regions perform a line search in order to compute the leaf predictions $\tilde{\gamma}^{(k)}_{j}$.
+<br>
 
-    -   Set $\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + t(\textbf{x},\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$ with $t \in \mathcal{T}$
+```{r, echo=FALSE, out.width="95%", fig.align='center'}
+knitr::include_graphics("img/grad_boost_example_init.png")
+```
 
+
+---
+## Tree-based gradient boosting
+
+**2.**  For each tree addition $k = 1$ to $K$ do:
+
+- For each observation $i = 1$ to $N$ compute:
+  
+    $g^{(k)}_{i} = \bigg[\frac{\partial L(y_i, \phi(x_i))}{\partial\phi(x_i)}\bigg]_{\phi = \phi_{k-1}}$
+
+- Fit a regression tree by least squares to the outcome vector $-\textbf{g}^{(k)}$ in order to get the $J^{(k)}$ distinct regions $\tilde{R}^{(k)}_j$.
+
+- For each of these $J^{(k)}$ regions perform a line search in order to compute the leaf predictions $\tilde{\gamma}^{(k)}_{j}$.
+
+- Set $\phi_k(\textbf{x}) = \phi_{k-1}(\textbf{x}) + t(\textbf{x},\tilde {\gamma}^{(k)}_{j},\tilde{R}^{(k)}_j)$ with $t \in \mathcal{T}$
+
+```{r, echo=FALSE, out.width="95%", fig.align='center', eval=FALSE, include=FALSE}
+knitr::include_graphics("img/grad_boost_example_1step.png")
+```
 <!--
 ## Which loss to pick?
 
@@ -239,9 +262,9 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/huber_loss.
 -->
 
 ---
-## An example
+## The example continued 
 
-```{r, include=FALSE, cache=TRUE}
+```{r, include=FALSE, eval=FALSE}
 library(tidyverse)
 library(tidymodels)
 library(viridis)
@@ -312,7 +335,7 @@ iter3_rmse <- rmse_vec(truth = burnout_test$burn_rate,
 
 ```
 
-Model for the burnout data with the RMSE loss, fixed $K = 2$ and tree depth 1.
+
 
 ```{r, echo=FALSE, out.width="95%", fig.align='center'}
 knitr::include_graphics("img/grad_boost_example.png")
@@ -321,19 +344,19 @@ knitr::include_graphics("img/grad_boost_example.png")
 
 
 
-```{r,echo=FALSE, fig., cache=TRUE, include=FALSE}
+```{r,echo=FALSE, fig., eval=FALSE, include=FALSE}
 rpart.plot(iter1_model_fit$fit, type = 5, roundint = F)
 ```
 
-```{r, echo=FALSE, cache=TRUE, include=FALSE}
+```{r, echo=FALSE, eval=FALSE, include=FALSE}
 rpart.plot(iter2_model_fit$fit, type = 5, roundint = F)
 ```
 
-```{r, echo=FALSE, cache=TRUE, include=FALSE}
+```{r, echo=FALSE, eval=FALSE, include=FALSE}
 rpart.plot(iter3_model_fit$fit, type = 5, roundint = F)
 ```
 
-```{r, echo=FALSE, cache=TRUE, include=FALSE}
+```{r, echo=FALSE, eval=FALSE, include=FALSE}
 ggplot(burnout_train,
        aes(y = mental_fatigue_score,
            x = burn_rate)) +
@@ -364,7 +387,7 @@ ggplot(burnout_train,
         plot.title = ggtext::element_markdown(size = 11))
 ```
 
-```{r, echo=FALSE, cache=TRUE, include=FALSE}
+```{r, echo=FALSE, eval=FALSE, include=FALSE}
 ggplot(burnout_train,
        aes(y = mental_fatigue_score,
            x = burn_rate)) +
@@ -408,7 +431,7 @@ ggplot(burnout_train,
 
 
 
-```{r, echo=FALSE, cache=TRUE, include=FALSE}
+```{r, echo=FALSE, eval=FALSE, include=FALSE}
 ggplot(burnout_train,
        aes(y = mental_fatigue_score,
            x = burn_rate)) +
@@ -598,7 +621,7 @@ $$log(\frac{x+0.5}{1-x+0.5})$$
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/burn_rate_trans_nojitter.png"))
 ```
 
----
+<!--
 ## Mental fatigue score
 
 ```{r, echo=FALSE, out.width="70%", fig.align='center'}
@@ -611,7 +634,7 @@ $$
 \text{burn_rate}_i = \beta_0 + \beta_1 \text{ mental_fatigue_score}_i + \epsilon_i \quad \text{with }
 \epsilon_i \sim N(0,\sigma^2)
 $$
-
+-->
 
 <!--
 ## Two closely related features
@@ -646,53 +669,50 @@ knitr::include_graphics("img/cv5_illustration.png")
 ---
 ## Tuning strategy
 
-1. Large enough number of trees with a small learning rate.
+**1.** `#Trees`
 
-2. Space-filling grid search over sensible ranges of the tree and the basic regularization hyperparameters. 
+Fix all other hyperparameters to default values and the learning rate rather small to determine $K \in [100,2000]$ to minimize the validation loss. 
 
-3. Refine the grid as often as needed and explore further regularization parameters if required.
-
-<br> 
-
-
-**The ranges used here:**
+**2.** `Tree and the basic regularization hyperparameters`
 
 .pull-left[
-`#Trees`: $K \in [100,2000]$
+`Learning rate`: $\eta \in [1e^{-10},0.1]$
 
 `Max tree depth`: $max(J^{(k)}) \in [1,15]$
 
-`Learning rate`: $\eta \in [1e^{-10},0.1]$
+`Loss reduction`: $\nu \in [1e^{-10},30]$
 ]
 
 .pull-right[
-`Loss reduction`: $\nu \in [1e^{-10},30]$
-
 `Column-subsampling`: $[1,\text{#features}]$
 
 `Row-subsampling`:  $[0.1,1]$
 ]
+
+Evaluate a set of combinations of these and determine the combinations that again minimize the validation loss. (Set of combinations: space-filling design)
+
+**3.** Refine the set of combinations and repeat 2. to find the final combination.
+
+<!--
+.footnote[[*] Hastie, T., Tibshirani, R. and Friedman, J. (2009). The elements of statistical learning (12th printing). Springer New York.]
+-->
+
 ---
 ## Tuning the number of trees
 
-Besides the standard value of six<sup>*</sup> for the maximum tree depth also the influence of considering just stumps is displayed.
+<br>
 
-```{r, echo=FALSE, out.width="75%", fig.align='center'}
-knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/bout_tuning_stumpsVs6.png"))
+```{r, echo=FALSE, out.width="80%", fig.align='left'}
+knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/burn_boost_tune_first.png"))
 ```
 
 `r emo::ji("backhand index pointing right")` Fix 1500 trees.
 
-.footnote[[*] Hastie, T., Tibshirani, R. and Friedman, J. (2009). The elements of statistical learning (12th printing). Springer New York.]
 
 ---
 ## Space-filling grid search
 
-Tuning both the model with the raw outcome and the transformed one with space-filling grids came at a cost.
-
-- 800 combinations.
-- 6 million trees.
-- 8 hours of parallel computation.
+Tuning both the model with the raw outcome and the transformed one with space-filling grids came at a cost: **8 hours** of parallel computation.
 
 <br>
 
@@ -782,21 +802,42 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/charges_ins
 ]
 
 ---
-## Prepare for takeoff
+## Fitting and tuning
 
 - Again all variables are used without normalization.
 - Dummy-encoding of all nominal variables.
 - Resampling setup with 5-fold CV is the same.
 - The tuning strategy and ranges are unchanged.
+- The tuning w.r.t. the number of trees resulted in a value of 600.
+- The space-filling grid search over the remaining 5 hyperparameters took 30 minutes in total.
+
+**The final parameters:**
+
+.pull-left[
+`#Trees`: 600
+
+`Max tree depth`: 3
+
+`Learning rate`: 0.02
+]
+
+.pull-right[
+`Loss reduction`: 0.03
+
+`Column-subsampling`: 7 of 8
+
+`Row-subsampling`:  80%
+]
 
 --
-
+<!--
 <br>
 .center[
 <img src="https://media.giphy.com/media/ZNHlhLQb1pm5FYXoWy/giphy.gif" width="300" height="300" />
 ]
+-->
 
----
+<!--
 ## Tuning the number of trees
 
 ```{r, echo=FALSE, out.width="90%", fig.align='center'}
@@ -805,7 +846,6 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/boost_ins_t
 
 So a closer look at the region around 500 is advisable.
 
----
 ## Tuning the number of trees
 
 ```{r, echo=FALSE, out.width="90%", fig.align='center'}
@@ -813,7 +853,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/boost_ins_t
 ```
 
 `r emo::ji("backhand index pointing right")` Fix 600 trees.
-
+-->
 <!--
 ## A glimpse at learning rates
 
@@ -824,7 +864,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/boost_ins_t
 Thus a too small learning rate can also be a problem.
 -->
 
----
+<!--
 ## Space-filling grid search
 
 
@@ -851,7 +891,7 @@ Thus a too small learning rate can also be a problem.
 
 `Row-subsampling`:  80%
 ]
-
+-->
 
 ```{r, echo=FALSE,include=FALSE, out.width="90%", fig.align='center'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/tuning_ins_parallelcoord.png"))

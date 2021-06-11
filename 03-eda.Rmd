@@ -933,8 +933,8 @@ burnout_rec_rf <- recipe(burn_rate ~ date_of_joining + gender +
                          mental_fatigue_score,
                          data = burnout_train) %>%
   step_string2factor(all_nominal()) %>%
-  step_knnimpute(resource_allocation, neighbors = 5) %>%
-  step_knnimpute(mental_fatigue_score, neighbors = 5) %>%
+  step_impute_knn(resource_allocation, neighbors = 5) %>%
+  step_impute_knn(mental_fatigue_score, neighbors = 5) %>%
   step_date(date_of_joining, features = c("dow", "month")) %>%
   step_mutate(date_of_joining = as.integer(date_of_joining))
 ```
