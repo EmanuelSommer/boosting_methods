@@ -131,7 +131,7 @@ $$\hat{y}_i = \phi(x_i) = \sum_{k=1}^{K} t_k(x_i), \quad t_k \in \mathcal{T}$$
 
 To fit such a model one uses **Forward Stagewise Additive Modeling**.
 
-* The current model $\phi_{k-1}(\textbf{x})$
+* GIven the current model $\phi_{k-1}(\textbf{x})$
 * Add the tree $t_k$ with regions $R^{(k)}$ and leaf predictions $\gamma^{(k)}$
 * The parameters of the current model are unchanged!
 

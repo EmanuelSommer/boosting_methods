@@ -224,7 +224,7 @@ Now the main **boosting model**.
 
 First tune only the number of trees in order to detect a number of
 trees that is 'large enough'. Then tune the tree specific arguments.
-If one tunes all parameters at the same time the grid grows to large. Moreover a tuning of the trees argument could encourage overfitting.
+If one tunes all parameters at the same time the grid grows to large. Moreover a tuning of the trees argument could encourage overfitting. See the book *Hands-on Machine Learning with R* for a detailed explenation of the tuning strategies.[@HandsOnMLwithR]
 
 The first tuning round:
 

@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-06-11" />
+<meta name="date" content="2021-06-13" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -33,15 +33,15 @@
   
 <link rel="prev" href="intro.html"/>
 <link rel="next" href="eda.html"/>
-<script src="libs/header-attrs-2.8/header-attrs.js"></script>
-<script src="libs/jquery-2.2.3/jquery.min.js"></script>
-<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+<script src="libs/header-attrs/header-attrs.js"></script>
+<script src="libs/jquery/jquery.min.js"></script>
+<link href="libs/gitbook/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-clipboard.css" rel="stylesheet" />
 
 
 
@@ -51,8 +51,8 @@
 
 
 
-<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
-<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<link href="libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections/anchor-sections.js"></script>
 
 
 <style type="text/css">
@@ -392,7 +392,7 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 </div>
 <div id="single-tree-depth" class="section level3" number="3.2.2">
 <h3><span class="header-section-number">3.2.2</span> Single tree depth</h3>
-<p>The question which <span class="math inline">\(J^{(k)}\)</span> should be used at each iteration is now shortly discussed. Basically using the tree depth (<span class="math inline">\(log_2(J^{(k)}) = Depth^{(k)}\)</span>) two means allowing only the main effects and no interactions. A value of 3 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values <span class="math inline">\(Depth^{(k)}\)</span> to a constant <span class="math inline">\(Depth \approx 6\)</span>.<span class="citation">[<a href="#ref-elements" role="doc-biblioref">1</a>]</span> Also decision stumps (<span class="math inline">\(Depth = 1\)</span>) could be used but may require a lot more iterations.</p>
+<p>The question which <span class="math inline">\(J^{(k)}\)</span> should be used at each iteration is now shortly discussed. Basically using the tree depth (<span class="math inline">\(log_2(J^{(k)}) = Depth^{(k)}\)</span>) of one means allowing only the main effects and no interactions. A value of 2 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values <span class="math inline">\(Depth^{(k)}\)</span> to a constant <span class="math inline">\(Depth \approx 6\)</span>.<span class="citation">[<a href="#ref-elements" role="doc-biblioref">1</a>]</span> Also decision stumps (<span class="math inline">\(Depth = 1\)</span>) could be used but may require a lot more iterations.</p>
 </div>
 <div id="combOver" class="section level3" number="3.2.3">
 <h3><span class="header-section-number">3.2.3</span> Combat overfitting</h3>
@@ -452,7 +452,7 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 </div>
 <div id="hyperparameters-overview" class="section level3" number="3.3.4">
 <h3><span class="header-section-number">3.3.4</span> Hyperparameters overview</h3>
-<p>As the <strong>tidymodels</strong> framework will be used in the applied part, the according names from the parsnip interface for tree-based boosting i.e. <code>boost_tree</code> are discussed below.<span class="citation">[<a href="#ref-tidymodels" role="doc-biblioref">6</a>]</span></p>
+<p>As the <strong>tidymodels</strong> framework will be used in the applied part, the according names from the parsnip interface for tree-based boosting i.e. <code>boost_tree</code> are shown below.<span class="citation">[<a href="#ref-tidymodels" role="doc-biblioref">6</a>]</span></p>
 <table>
 <caption><span id="tab:xgboostHyper">Table 3.2: </span> XGBoost hyperparameters overview.</caption>
 <colgroup>
@@ -556,15 +556,15 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 <a href="eda.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
-<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
-<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
-<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
-<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
-<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
-<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
-<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
-<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
-<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script src="libs/gitbook/js/app.min.js"></script>
+<script src="libs/gitbook/js/lunr.js"></script>
+<script src="libs/gitbook/js/clipboard.min.js"></script>
+<script src="libs/gitbook/js/plugin-search.js"></script>
+<script src="libs/gitbook/js/plugin-sharing.js"></script>
+<script src="libs/gitbook/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook/js/jquery.highlight.js"></script>
+<script src="libs/gitbook/js/plugin-clipboard.js"></script>
 <script>
 gitbook.require(["gitbook"], function(gitbook) {
 gitbook.start({

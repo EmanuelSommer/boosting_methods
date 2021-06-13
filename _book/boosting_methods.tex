@@ -138,7 +138,7 @@
 
 \title{Boosting methods: Theory and application in R}
 \author{Emanuel Sommer}
-\date{2021-06-11}
+\date{2021-06-13}
 
 \begin{document}
 \maketitle
@@ -401,7 +401,7 @@ Huber loss \eqref{eq:huberLoss} & \(y_i - \phi(x_i)\) for \(|y_i - \phi(x_i)| \l
 \hypertarget{single-tree-depth}{%
 \subsection{Single tree depth}\label{single-tree-depth}}
 
-The question which \(J^{(k)}\) should be used at each iteration is now shortly discussed. Basically using the tree depth (\(log_2(J^{(k)}) = Depth^{(k)}\)) two means allowing only the main effects and no interactions. A value of 3 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values \(Depth^{(k)}\) to a constant \(Depth \approx 6\).\citep{elements} Also decision stumps (\(Depth = 1\)) could be used but may require a lot more iterations.
+The question which \(J^{(k)}\) should be used at each iteration is now shortly discussed. Basically using the tree depth (\(log_2(J^{(k)}) = Depth^{(k)}\)) of one means allowing only the main effects and no interactions. A value of 2 already allows all two way interaction effects and so on. As one stacks these models additive and does not restrict oneself to a single one, the building of a large tree and then pruning it back at each iteration as the regular CART algorithms do would be a computational overkill. Instead it has proven to be sufficient and efficient in practice to set the values \(Depth^{(k)}\) to a constant \(Depth \approx 6\).\citep{elements} Also decision stumps (\(Depth = 1\)) could be used but may require a lot more iterations.
 
 \hypertarget{combOver}{%
 \subsection{Combat overfitting}\label{combOver}}
@@ -479,7 +479,7 @@ Besides the changes above the authors also implemented an effective approximate 
 \hypertarget{hyperparameters-overview}{%
 \subsection{Hyperparameters overview}\label{hyperparameters-overview}}
 
-As the \textbf{tidymodels} framework will be used in the applied part, the according names from the parsnip interface for tree-based boosting i.e.~\texttt{boost\_tree} are discussed below.\citep[\citet{xgboost_package}, \citet{tidymodels}]{xgboostPaper}
+As the \textbf{tidymodels} framework will be used in the applied part, the according names from the parsnip interface for tree-based boosting i.e.~\texttt{boost\_tree} are shown below.\citep[\citet{xgboost_package}, \citet{tidymodels}]{xgboostPaper}
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.14}}
@@ -1704,7 +1704,7 @@ Now the main \textbf{boosting model}.
 
 First tune only the number of trees in order to detect a number of
 trees that is `large enough'. Then tune the tree specific arguments.
-If one tunes all parameters at the same time the grid grows to large. Moreover a tuning of the trees argument could encourage overfitting.
+If one tunes all parameters at the same time the grid grows to large. Moreover a tuning of the trees argument could encourage overfitting. See the book \emph{Hands-on Machine Learning with R} for a detailed explenation of the tuning strategies.\citep{HandsOnMLwithR}
 
 The first tuning round:
 

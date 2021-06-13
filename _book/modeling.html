@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-06-11" />
+<meta name="date" content="2021-06-13" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -33,15 +33,15 @@
   
 <link rel="prev" href="eda.html"/>
 <link rel="next" href="conclusion.html"/>
-<script src="libs/header-attrs-2.8/header-attrs.js"></script>
-<script src="libs/jquery-2.2.3/jquery.min.js"></script>
-<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
-<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+<script src="libs/header-attrs/header-attrs.js"></script>
+<script src="libs/jquery/jquery.min.js"></script>
+<link href="libs/gitbook/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook/css/plugin-clipboard.css" rel="stylesheet" />
 
 
 
@@ -51,8 +51,8 @@
 
 
 
-<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
-<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+<link href="libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections/anchor-sections.js"></script>
 
 
 <style type="text/css">
@@ -465,7 +465,7 @@ Figure 5.1: Result of a spacefilling grid search for the random forest model.
 <p>Now the main <strong>boosting model</strong>.</p>
 <p>First tune only the number of trees in order to detect a number of
 trees that is ‘large enough.’ Then tune the tree specific arguments.
-If one tunes all parameters at the same time the grid grows to large. Moreover a tuning of the trees argument could encourage overfitting.</p>
+If one tunes all parameters at the same time the grid grows to large. Moreover a tuning of the trees argument could encourage overfitting. See the book <em>Hands-on Machine Learning with R</em> for a detailed explenation of the tuning strategies.<span class="citation">[<a href="#ref-HandsOnMLwithR" role="doc-biblioref">2</a>]</span></p>
 <p>The first tuning round:</p>
 <p>To display the discussed impact of different maximum tree depths the first grid search for a good number of trees will besides the kind of standard value 6 also be performed for regression stumps i.e. a value of 1 for the maximum tree depth.</p>
 <div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb78-1"><a href="modeling.html#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tuning grid just for the #trees one with max tree depth 6 and one with</span></span>
@@ -1203,6 +1203,9 @@ Figure 5.10: Visualization of the final ensemble of trees as a single collective
 </div>
 <h3>References</h3>
 <div id="refs" class="references csl-bib-body">
+<div id="ref-HandsOnMLwithR" class="csl-entry">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline"><span class="smallcaps">Boehmke</span>, B. and <span class="smallcaps">Greenwell</span>, B. (2019). <em>Hands-on machine learning with r</em>.</div>
+</div>
 <div id="ref-xgboost_package" class="csl-entry">
 <div class="csl-left-margin">[5] </div><div class="csl-right-inline"><span class="smallcaps">Chen</span>, T., <span class="smallcaps">He</span>, T., <span class="smallcaps">Benesty</span>, M., <span class="smallcaps">Khotilovich</span>, V., <span class="smallcaps">Tang</span>, Y., <span class="smallcaps">Cho</span>, H., <span class="smallcaps">Chen</span>, K., <span class="smallcaps">Mitchell</span>, R., <span class="smallcaps">Cano</span>, I., <span class="smallcaps">Zhou</span>, T., <span class="smallcaps">Li</span>, M., <span class="smallcaps">Xie</span>, J., <span class="smallcaps">Lin</span>, M., <span class="smallcaps">Geng</span>, Y. and <span class="smallcaps">Li</span>, Y. (2021). <em>Xgboost: Extreme gradient boosting</em>.</div>
 </div>
@@ -1225,15 +1228,15 @@ Figure 5.10: Visualization of the final ensemble of trees as a single collective
 <a href="conclusion.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
-<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
-<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
-<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
-<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
-<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
-<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
-<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
-<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
-<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script src="libs/gitbook/js/app.min.js"></script>
+<script src="libs/gitbook/js/lunr.js"></script>
+<script src="libs/gitbook/js/clipboard.min.js"></script>
+<script src="libs/gitbook/js/plugin-search.js"></script>
+<script src="libs/gitbook/js/plugin-sharing.js"></script>
+<script src="libs/gitbook/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook/js/jquery.highlight.js"></script>
+<script src="libs/gitbook/js/plugin-clipboard.js"></script>
 <script>
 gitbook.require(["gitbook"], function(gitbook) {
 gitbook.start({
