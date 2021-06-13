@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Chapter 7 References | Boosting methods: Theory and application in R</title>
+  <meta name="description" content="Boosting methods: Theory and Application in R (XGBoost)" />
+  <meta name="generator" content="bookdown 0.22 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Chapter 7 References | Boosting methods: Theory and application in R" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta property="og:description" content="Boosting methods: Theory and Application in R (XGBoost)" />
+  <meta name="github-repo" content="EmanuelSommer/boosting_methods" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Chapter 7 References | Boosting methods: Theory and application in R" />
+  
+  <meta name="twitter:description" content="Boosting methods: Theory and Application in R (XGBoost)" />
+  
+
+<meta name="author" content="Emanuel Sommer" />
+
+
+<meta name="date" content="2021-06-13" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="conclusion.html"/>
+
+<script src="libs/header-attrs-2.8/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.0.1/anchor-sections.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.0.1/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Boosting methods</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Prerequisites</a></li>
+<li class="chapter" data-level="2" data-path="intro.html"><a href="intro.html"><i class="fa fa-check"></i><b>2</b> Introduction</a></li>
+<li class="chapter" data-level="3" data-path="theory.html"><a href="theory.html"><i class="fa fa-check"></i><b>3</b> Theory</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="theory.html"><a href="theory.html#the-powerful-idea-of-gradient-boosting"><i class="fa fa-check"></i><b>3.1</b> The powerful idea of gradient boosting</a>
+<ul>
+<li class="chapter" data-level="3.1.1" data-path="theory.html"><a href="theory.html#forward-stagewise-additive-modeling"><i class="fa fa-check"></i><b>3.1.1</b> Forward Stagewise Additive Modeling</a></li>
+<li class="chapter" data-level="3.1.2" data-path="theory.html"><a href="theory.html#robust-loss-functions-for-regression"><i class="fa fa-check"></i><b>3.1.2</b> Robust loss functions for regression</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="theory.html"><a href="theory.html#general-gradient-tree-boosting"><i class="fa fa-check"></i><b>3.2</b> General gradient tree boosting</a>
+<ul>
+<li class="chapter" data-level="3.2.1" data-path="theory.html"><a href="theory.html#numOpt"><i class="fa fa-check"></i><b>3.2.1</b> Numerical optimization</a></li>
+<li class="chapter" data-level="3.2.2" data-path="theory.html"><a href="theory.html#single-tree-depth"><i class="fa fa-check"></i><b>3.2.2</b> Single tree depth</a></li>
+<li class="chapter" data-level="3.2.3" data-path="theory.html"><a href="theory.html#combOver"><i class="fa fa-check"></i><b>3.2.3</b> Combat overfitting</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="theory.html"><a href="theory.html#xgboost-a-highly-efficient-implementation"><i class="fa fa-check"></i><b>3.3</b> XGBoost a highly efficient implementation</a>
+<ul>
+<li class="chapter" data-level="3.3.1" data-path="theory.html"><a href="theory.html#regularized-loss"><i class="fa fa-check"></i><b>3.3.1</b> Regularized loss</a></li>
+<li class="chapter" data-level="3.3.2" data-path="theory.html"><a href="theory.html#shrinkage-and-subsampling"><i class="fa fa-check"></i><b>3.3.2</b> Shrinkage and subsampling</a></li>
+<li class="chapter" data-level="3.3.3" data-path="theory.html"><a href="theory.html#even-more-tweaks"><i class="fa fa-check"></i><b>3.3.3</b> Even more tweaks</a></li>
+<li class="chapter" data-level="3.3.4" data-path="theory.html"><a href="theory.html#hyperparameters-overview"><i class="fa fa-check"></i><b>3.3.4</b> Hyperparameters overview</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="eda.html"><a href="eda.html"><i class="fa fa-check"></i><b>4</b> Explore the data</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="eda.html"><a href="eda.html#burnout-data"><i class="fa fa-check"></i><b>4.1</b> Burnout data</a>
+<ul>
+<li class="chapter" data-level="4.1.1" data-path="eda.html"><a href="eda.html#train-test-split"><i class="fa fa-check"></i><b>4.1.1</b> Train-test split</a></li>
+<li class="chapter" data-level="4.1.2" data-path="eda.html"><a href="eda.html#quick-general-overview"><i class="fa fa-check"></i><b>4.1.2</b> Quick general overview</a></li>
+<li class="chapter" data-level="4.1.3" data-path="eda.html"><a href="eda.html#what-about-the-outcome-variable"><i class="fa fa-check"></i><b>4.1.3</b> What about the outcome variable?</a></li>
+<li class="chapter" data-level="4.1.4" data-path="eda.html"><a href="eda.html#distribution-and-main-effects-of-the-predictors"><i class="fa fa-check"></i><b>4.1.4</b> Distribution and main effects of the predictors</a></li>
+<li class="chapter" data-level="4.1.5" data-path="eda.html"><a href="eda.html#relationships-between-the-predictors"><i class="fa fa-check"></i><b>4.1.5</b> Relationships between the predictors</a></li>
+<li class="chapter" data-level="4.1.6" data-path="eda.html"><a href="eda.html#some-feature-engineering"><i class="fa fa-check"></i><b>4.1.6</b> Some feature engineering</a></li>
+<li class="chapter" data-level="4.1.7" data-path="eda.html"><a href="eda.html#create-the-recipe"><i class="fa fa-check"></i><b>4.1.7</b> Create the recipe</a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="eda.html"><a href="eda.html#insurence-data"><i class="fa fa-check"></i><b>4.2</b> Insurence data</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="eda.html"><a href="eda.html#train-test-split-1"><i class="fa fa-check"></i><b>4.2.1</b> Train-test split</a></li>
+<li class="chapter" data-level="4.2.2" data-path="eda.html"><a href="eda.html#a-general-overview"><i class="fa fa-check"></i><b>4.2.2</b> A general overview</a></li>
+<li class="chapter" data-level="4.2.3" data-path="eda.html"><a href="eda.html#what-about-the-outcome"><i class="fa fa-check"></i><b>4.2.3</b> What about the outcome?</a></li>
+<li class="chapter" data-level="4.2.4" data-path="eda.html"><a href="eda.html#distribution-and-main-effects-of-the-predictors-1"><i class="fa fa-check"></i><b>4.2.4</b> Distribution and main effects of the predictors</a></li>
+<li class="chapter" data-level="4.2.5" data-path="eda.html"><a href="eda.html#relationships-between-the-predictors-1"><i class="fa fa-check"></i><b>4.2.5</b> Relationships between the predictors</a></li>
+<li class="chapter" data-level="4.2.6" data-path="eda.html"><a href="eda.html#create-the-recipe-1"><i class="fa fa-check"></i><b>4.2.6</b> Create the recipe</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="modeling.html"><a href="modeling.html"><i class="fa fa-check"></i><b>5</b> Let’s boost the models</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="modeling.html"><a href="modeling.html#burnout-data-1"><i class="fa fa-check"></i><b>5.1</b> Burnout data</a>
+<ul>
+<li class="chapter" data-level="5.1.1" data-path="modeling.html"><a href="modeling.html#baseline-models"><i class="fa fa-check"></i><b>5.1.1</b> Baseline models</a></li>
+<li class="chapter" data-level="5.1.2" data-path="modeling.html"><a href="modeling.html#model-specification"><i class="fa fa-check"></i><b>5.1.2</b> Model specification</a></li>
+<li class="chapter" data-level="5.1.3" data-path="modeling.html"><a href="modeling.html#tuning"><i class="fa fa-check"></i><b>5.1.3</b> Tuning</a></li>
+<li class="chapter" data-level="5.1.4" data-path="modeling.html"><a href="modeling.html#evaluate-and-understand-the-model"><i class="fa fa-check"></i><b>5.1.4</b> Evaluate and understand the model</a></li>
+</ul></li>
+<li class="chapter" data-level="5.2" data-path="modeling.html"><a href="modeling.html#insurance-data"><i class="fa fa-check"></i><b>5.2</b> Insurance data</a>
+<ul>
+<li class="chapter" data-level="5.2.1" data-path="modeling.html"><a href="modeling.html#baseline-models-1"><i class="fa fa-check"></i><b>5.2.1</b> Baseline models</a></li>
+<li class="chapter" data-level="5.2.2" data-path="modeling.html"><a href="modeling.html#model-specification-1"><i class="fa fa-check"></i><b>5.2.2</b> Model specification</a></li>
+<li class="chapter" data-level="5.2.3" data-path="modeling.html"><a href="modeling.html#tuning-1"><i class="fa fa-check"></i><b>5.2.3</b> Tuning</a></li>
+<li class="chapter" data-level="5.2.4" data-path="modeling.html"><a href="modeling.html#evaluate-and-understand-the-model-1"><i class="fa fa-check"></i><b>5.2.4</b> Evaluate and understand the model</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>6</b> Conclusion</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="conclusion.html"><a href="conclusion.html#pros"><i class="fa fa-check"></i><b>6.1</b> Pros</a></li>
+<li class="chapter" data-level="6.2" data-path="conclusion.html"><a href="conclusion.html#cons"><i class="fa fa-check"></i><b>6.2</b> Cons</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i><b>7</b> References</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Boosting methods: Theory and application in R</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="references" class="section level1" number="7">
+<h1><span class="header-section-number">Chapter 7</span> References</h1>
+<div id="refs" class="references csl-bib-body">
+<div class="csl-entry">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline"><span class="smallcaps">Hastie</span>, T., <span class="smallcaps">Tibshirani</span>, R. and <span class="smallcaps">Friedman</span>, J. (2009). <em>The elements of statistical learning (12th printing)</em>. Springer New York.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline"><span class="smallcaps">Boehmke</span>, B. and <span class="smallcaps">Greenwell</span>, B. (2019). <em>Hands-on machine learning with r</em>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline"><span class="smallcaps">Wolf</span>, M. M. (2020). Lecture notes in mathematical foundations of supervised learning.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline"><span class="smallcaps">Chen</span>, T. and <span class="smallcaps">Guestrin</span>, C. (2016). XGBoost: <span>A</span> scalable tree boosting system. <em>CoRR</em> <strong>abs/1603.02754</strong>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline"><span class="smallcaps">Chen</span>, T., <span class="smallcaps">He</span>, T., <span class="smallcaps">Benesty</span>, M., <span class="smallcaps">Khotilovich</span>, V., <span class="smallcaps">Tang</span>, Y., <span class="smallcaps">Cho</span>, H., <span class="smallcaps">Chen</span>, K., <span class="smallcaps">Mitchell</span>, R., <span class="smallcaps">Cano</span>, I., <span class="smallcaps">Zhou</span>, T., <span class="smallcaps">Li</span>, M., <span class="smallcaps">Xie</span>, J., <span class="smallcaps">Lin</span>, M., <span class="smallcaps">Geng</span>, Y. and <span class="smallcaps">Li</span>, Y. (2021). <em>Xgboost: Extreme gradient boosting</em>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline"><span class="smallcaps">Kuhn</span>, M. and <span class="smallcaps">Wickham</span>, H. (2020). <em>Tidymodels: A collection of packages for modeling and machine learning using tidyverse principles.</em></div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline"><span class="smallcaps">Wickham</span>, H., <span class="smallcaps">Averick</span>, M., <span class="smallcaps">Bryan</span>, J., <span class="smallcaps">Chang</span>, W., <span class="smallcaps">McGowan</span>, L. D., <span class="smallcaps">François</span>, R., <span class="smallcaps">Grolemund</span>, G., <span class="smallcaps">Hayes</span>, A., <span class="smallcaps">Henry</span>, L., <span class="smallcaps">Hester</span>, J., <span class="smallcaps">Kuhn</span>, M., <span class="smallcaps">Pedersen</span>, T. L., <span class="smallcaps">Miller</span>, E., <span class="smallcaps">Bache</span>, S. M., <span class="smallcaps">Müller</span>, K., <span class="smallcaps">Ooms</span>, J., <span class="smallcaps">Robinson</span>, D., <span class="smallcaps">Seidel</span>, D. P., <span class="smallcaps">Spinu</span>, V., <span class="smallcaps">Takahashi</span>, K., <span class="smallcaps">Vaughan</span>, D., <span class="smallcaps">Wilke</span>, C., <span class="smallcaps">Woo</span>, K. and <span class="smallcaps">Yutani</span>, H. (2019). Welcome to the <span class="nocase">tidyverse</span>. <em>Journal of Open Source Software</em> <strong>4</strong> 1686.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline"><span class="smallcaps">Garnier</span>, S. (2018). <em>Viridis: Default color maps from ’matplotlib’</em>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline"><span class="smallcaps">Wilke</span>, C. O. (2020). <em>Ggtext: Improved text rendering support for ’ggplot2’</em>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline"><span class="smallcaps">Garnier</span>, S. (2018). <em>viridisLite: Default color maps from ’matplotlib’ (lite version)</em>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline"><span class="smallcaps">Pedersen</span>, T. L. (2020). <em>Patchwork: The composer of plots</em>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline"><span class="smallcaps">Tierney</span>, N. (2017). Visdat: Visualising whole data frames. <em>JOSS</em> <strong>2</strong> 355.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline"><span class="smallcaps">Grolemund</span>, G. and <span class="smallcaps">Wickham</span>, H. (2011). Dates and times made easy with <span class="nocase">lubridate</span>. <em>Journal of Statistical Software</em> <strong>40</strong> 1–25.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline"><span class="smallcaps">Meschiari</span>, S. (2021). <em>latex2exp: Use LaTeX expressions in plots</em>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline"><span class="smallcaps">Schloerke</span>, B., <span class="smallcaps">Cook</span>, D., <span class="smallcaps">Larmarange</span>, J., <span class="smallcaps">Briatte</span>, F., <span class="smallcaps">Marbach</span>, M., <span class="smallcaps">Thoen</span>, E., <span class="smallcaps">Elberg</span>, A. and <span class="smallcaps">Crowley</span>, J. (2021). <em>GGally: Extension to ’ggplot2’</em>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline"><span class="smallcaps">Wright</span>, M. N. and <span class="smallcaps">Ziegler</span>, A. (2017). <span class="nocase">ranger</span>: A fast implementation of random forests for high dimensional data in <span>C++</span> and <span>R</span>. <em>Journal of Statistical Software</em> <strong>77</strong> 1–7.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline"><span class="smallcaps">Greenwell</span>, B. M. and <span class="smallcaps">Boehmke</span>, B. C. (2020). Variable importance plots—an introduction to the vip package. <em>The R Journal</em> <strong>12</strong> 343–66.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline"><span class="smallcaps">Corporation</span>, M. and <span class="smallcaps">Weston</span>, S. (2019). <em>doParallel: Foreach parallel adaptor for the ’parallel’ package</em>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline"><span class="smallcaps">Zhu</span>, H. (2021). <em>kableExtra: Construct complex table with ’kable’ and pipe syntax</em>.</div>
+</div>
+</div>
+
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="conclusion.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": true,
+"facebook": false,
+"twitter": false,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["boosting_methods.pdf"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

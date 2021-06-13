@@ -21,6 +21,7 @@ recipes
 rsample
 tune
 workflows
+workflowsets
 yardstick
 viridisLite
 viridis
