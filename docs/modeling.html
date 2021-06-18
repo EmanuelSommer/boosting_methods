@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-06-13" />
+<meta name="date" content="2021-06-18" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -727,13 +727,13 @@ Figure 5.4: Result of the first grid search for the XGBoost model with transform
 <div id="evaluate-and-understand-the-model" class="section level3" number="5.1.4">
 <h3><span class="header-section-number">5.1.4</span> Evaluate and understand the model</h3>
 <p>First a visualization of the variable importance. The variable importance is basically calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-85-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-89-1.png" width="672" /></p>
 <p>This shows that indeed the <code>mental_fatigue_score</code> is the most influential predictor by far followed by the <code>ressource_allocation</code> and <code>designation</code> features. These results are not at all surprising as the EDA exactly came to these conclusions. Especially the very few appearances of the features connected to <code>company_type</code> and <code>date_of_joining</code> are most likely just some minor overfitting.</p>
 <p>Now compare the variable importance of the model with the raw and the transformed target variable.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-86-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-90-1.png" width="672" /></p>
 <p>One can observe the exact same ordering. The only difference seems to be a higher influence of the designation variable for the transformed target. This is not surprising as the resource allocation and designation variable are highly correlated.</p>
 <p>Now have a look at the performance of the main boosting model w.r.t. missing values in the most influential variable.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-87-1.png" width="672" /><img src="boosting_methods_files/figure-html/unnamed-chunk-87-2.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-91-1.png" width="672" /><img src="boosting_methods_files/figure-html/unnamed-chunk-91-2.png" width="672" /></p>
 <p>The performance for the missing values is indeed not that precise but still quite good. There is at least no huge outlier detectable here. While at first glance the fact that outliers are handled naturally by the model is not astonishing it really is one the core strengths of the model to deal with messy data that includes missing and sparse data. So there is no need for imputation or a second fallback model for missing values.</p>
 <p>Now it is interesting to check which model performed the best on the test data set. The results can be viewed below in tabular and graphical form.</p>
 <table>
@@ -747,12 +747,12 @@ Figure 5.4: Result of the first grid search for the XGBoost model with transform
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">boost_pred</td>
+<td align="left">boost_trans_pred</td>
 <td align="right">0.0467</td>
-<td align="right">0.0593</td>
+<td align="right">0.0592</td>
 </tr>
 <tr class="even">
-<td align="left">boost_trans_pred</td>
+<td align="left">boost_pred</td>
 <td align="right">0.0467</td>
 <td align="right">0.0593</td>
 </tr>
@@ -773,9 +773,9 @@ Figure 5.4: Result of the first grid search for the XGBoost model with transform
 </tr>
 </tbody>
 </table>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-88-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-92-1.png" width="672" /></p>
 <p>It can be observed that already the really simple baseline model that just scales the mental fatigue score (so it reflects just a single linear influence) has a really low MAE and RMSE. Still both random forest as well as the boosting model can further improve this metric but the huge linear influence of the mental fatigue score obviously leaves not much room for improvement. By the way the simple linear model with just this one predictor has already an <span class="math inline">\(R^2\)</span> of more than 0.92. XGBoost manages to get a slightly better performance on the test data set but this would only be nice in a machine learning competition as in real life this difference would negligible. Actually in this use case for a real life application a very easy explainable linear model might be somewhat better than a complex model like XGBoost as the difference in performance is not too big. Nevertheless in my opinion the predictor <code>mental_fatigue_score</code> should be treated with extreme care as in a real life situation the collection of this score could be as costly or hard as the one of the outcome. There might be even latent variables that are highly linearly correlated to both scores. But this data was not intended to be used in a real life application but was shared at a machine learning competition and actually many of the best submissions there used XGBoost models. The transformation of the outcome variable did actually not change the predictive power of the model as the result for both the model with the raw target as well as the one with the transformed one performed equally good. Below one can see a scatterplot comparing the individual predictions of these two models on the test set which perfectly underlines the hypothesis that the models are basically the same as there is almost no variation around the identity slope.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-89-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-93-1.png" width="672" /></p>
 <p>So all in all for this data set it was not a way better predictive performance (if one is not in an artificial machine learning setup) that was the core strength of the tree-based gradient boosting model but the minimal pre-processing and exploratory work (for example no interactions have to be detected manually or be tested for significance) that was needed and the natural handling of missing values to achieve the model. This of course came to a quite high computational price. The famous predictive performance could probably be displayed better when having a data set with more complex non-linear patterns.</p>
 <p>This finishes the analysis of the burnout data set. But no worries there is still one data set and boosting model left to explore namely the insurance data set.</p>
 </div>
@@ -1144,7 +1144,7 @@ These observations will be used to refine the search space and perform once more
 <div id="evaluate-and-understand-the-model-1" class="section level3" number="5.2.4">
 <h3><span class="header-section-number">5.2.4</span> Evaluate and understand the model</h3>
 <p>First a visualization of the variable importance. The variable importance is again calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-104-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-108-1.png" width="672" /></p>
 <p>Here one can clearly see that the trends that were observable during the EDA are reflected here again. The most influential variable is indeed the smoker variable, closely followed by the age variable. Also the bmi and the number of children seem to be relevant. To get an even better sense for where which variable was mostly used one can have a look at the visualization below which shows the final model in a compressed form as a single tree. At each node the most important (again by the feature importance score like above) 5 variables are listed with their respective raw importance scores in brackets. The ‘Leaf’ variable just corresponds to the case where trees ended at this point.</p>
 <div class="sourceCode" id="cb121"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb121-1"><a href="modeling.html#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualization of the ensemble of trees as a single collective unit</span></span>
 <span id="cb121-2"><a href="modeling.html#cb121-2" aria-hidden="true" tabindex="-1"></a>final_ins_boost_fit <span class="ot">&lt;-</span> final_ins_boost_wflow <span class="sc">%&gt;%</span></span>
@@ -1193,10 +1193,10 @@ Figure 5.10: Visualization of the final ensemble of trees as a single collective
 </tr>
 </tbody>
 </table>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-106-1.png" width="672" /></p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-110-1.png" width="672" /></p>
 <p>Once without the intercept only model.</p>
-<p><img src="boosting_methods_files/figure-html/unnamed-chunk-107-1.png" width="672" /></p>
-<p>So overall the XGBoost model again delivered the best performance on the test data set, but again not by a huge margin. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the Random forest model. Whether the rather small difference in performance is worth considering such a model is of course up to the use case. Again the XGBoost model displayed that it reaches a very competitive performance with minimal pre-processing, integrated feature selection and in this case the computational effort was quite small. The major pros and cons of the tree-based gradient boosting models will be shortly reviewed in the next and final section.</p>
+<p><img src="boosting_methods_files/figure-html/unnamed-chunk-111-1.png" width="672" /></p>
+<p>So overall the XGBoost model again delivered the best performance on the test data set w.r.t. the main optimization metric RMSE. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the tree-based models. So again the data did not leave much room to explore more complex non-linear patterns. Whether the rather small difference in performance is worth considering such a model is of course up to the use case. Again the XGBoost model displayed that it reaches a very competitive performance with minimal pre-processing, integrated feature selection and in this case the computational effort was quite small. The major pros and cons of the tree-based gradient boosting models will be shortly reviewed in the next and final section.</p>
 
 </div>
 </div>

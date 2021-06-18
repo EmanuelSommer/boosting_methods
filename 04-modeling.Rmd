@@ -1212,7 +1212,8 @@ ins_test_perf %>%
                             "Random Forest" = "rf_pred",
                             "Baseline linear model" = "baseline_lm",
                             "Intercept only" = "intercept_pred"),
-         model = fct_reorder(model,-value)) %>%
+         temp = if_else(name == "mae", 100,value),
+         model = fct_reorder(model,-temp)) %>%
   ggplot(aes(x = value, y = model, col = name)) +
   geom_point(shape = 16, size = 3) +
   geom_segment(aes(y = model, yend = model, 
@@ -1236,7 +1237,8 @@ final_perf_ins <- ins_test_perf %>%
                             "Random Forest" = "rf_pred",
                             "Baseline linear model" = "baseline_lm",
                             "Intercept only" = "intercept_pred"),
-         model = fct_reorder(model,-value)) %>%
+         temp = if_else(name == "mae", 100,value),
+         model = fct_reorder(model,-temp)) %>%
   filter(model != "Intercept only") %>%
   ggplot(aes(x = value, y = model, col = name)) +
   geom_point(shape = 16, size = 3) +
@@ -1253,7 +1255,7 @@ ggsave("_pictures/final_perf_ins.png", plot = final_perf_ins)
 remove(final_perf_ins)
 ```
 
-So overall the XGBoost model again delivered the best performance on the test data set, but again not by a huge margin. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the Random forest model. Whether the rather small difference in performance is worth considering such a model is of course up to the use case. Again the XGBoost model displayed that it reaches a very competitive performance with minimal pre-processing, integrated feature selection and in this case the computational effort was quite small. The major pros and cons of the tree-based gradient boosting models will be shortly reviewed in the next and final section.
+So overall the XGBoost model again delivered the best performance on the test data set w.r.t. the main optimization metric RMSE. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the tree-based models. So again the data did not leave much room to explore more complex non-linear patterns. Whether the rather small difference in performance is worth considering such a model is of course up to the use case. Again the XGBoost model displayed that it reaches a very competitive performance with minimal pre-processing, integrated feature selection and in this case the computational effort was quite small. The major pros and cons of the tree-based gradient boosting models will be shortly reviewed in the next and final section.
 
 
 
