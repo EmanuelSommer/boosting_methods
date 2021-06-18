@@ -514,7 +514,7 @@ This closes the chapter on the theory of boosting methods with a focus on tree-b
 \hypertarget{eda}{%
 \chapter{Explore the data}\label{eda}}
 
-Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.\citetext{\citealp{tidyverse}; \citealp{tidymodels}; \citealp{viridis}; \citealp{ggtext}; \citealp[ ]{viridisLite}; \citealp{patchwork}; \citealp{visdat}; \citealp{lubridate}; \citealp{latexplots}; \citealp{ggally}} The most important ones will be loaded below.
+Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.\citetext{\citealp{tidyverse}; \citealp{tidymodels}; \citealp{viridis}; \citealp{ggtext}; \citealp[ ]{viridisLite}; \citealp{patchwork}; \citealp{visdat}; \citealp{lubridate}; \citealp{latexplots}; \citealp{ggally}; \citealp{plotly}} The most important ones will be loaded below.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -2661,7 +2661,11 @@ Here one can clearly see that the trends that were observable during the EDA are
 \caption{Visualization of the final ensemble of trees as a single collective unit.}\label{fig:insmultitree}
 \end{figure}
 
-It is quite interesting to see that most of the time the smoker feature was used just once in the first node but not multiple times. This suggests a quite linear influence of smokers and of course the binary character of the feature can support this behavior. Age on the other hand is represented in multiple deephts with high importance which suggests a non-linear influence which was also visible during the EDA. Interestingly the children variable for example mostly is used at depth 3 for a split.
+It is quite interesting to see that most of the time the smoker feature was used just once in the first node but not multiple times. This suggests a quite linear influence of smokers and of course the binary character of the feature can support this behavior. Age on the other hand is represented in multiple depths with high importance which suggests a non-linear influence which was also visible during the EDA. Interestingly the children variable for example mostly is used at depth 3 for a split.
+
+Also a residual plot of the XGBoost predictions on the test data set can shed some light on the way the model works. This 3D plot is an interactive html widget which works not in the pdf output but just on the website.
+
+Here one can see where the model has the most difficulties. Interesting enough the model has the biggest outliers with non smokers of either quite low or quite high age with a more or less not that extreme BMI. This could be due to chronic diseases especially for the younger ones but also some randomness that life holds. For example a car accident could cause such high charges. Of course it could be also due to not observed latent variables.
 
 Which model performed the best on the test data set is the next interesting question. The results can be viewed below in tabular and graphical form.
 
@@ -2681,11 +2685,11 @@ intercept\_pred & 0.3227 & 0.4012\\
 \end{tabular}
 \end{table}
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-106-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-108-1.pdf}
 
 Once without the intercept only model.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-107-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-109-1.pdf}
 
 So overall the XGBoost model again delivered the best performance on the test data set w.r.t. the main optimization metric RMSE. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the tree-based models. So again the data did not leave much room to explore more complex non-linear patterns. Whether the rather small difference in performance is worth considering such a model is of course up to the use case. Again the XGBoost model displayed that it reaches a very competitive performance with minimal pre-processing, integrated feature selection and in this case the computational effort was quite small. The major pros and cons of the tree-based gradient boosting models will be shortly reviewed in the next and final section.
 

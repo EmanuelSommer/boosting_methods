@@ -1,6 +1,6 @@
 # Explore the data {#eda}
 
-Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork; @visdat; @lubridate; @latexplots; @ggally] The most important ones will be loaded below.
+Before one starts with the actual modeling it is crucial to get to know the data and to bring it to the correct format. This process of getting familiar with the data is well known as Exploratory Data Analysis (EDA). To do this many packages are used.[@tidyverse; @tidymodels; @viridis; @ggtext; @viridisLite ; @patchwork; @visdat; @lubridate; @latexplots; @ggally; @plotly] The most important ones will be loaded below.
 
 ```{r load_packages, message=FALSE, warning=FALSE}
 library(tidyverse) # general data handling tools
