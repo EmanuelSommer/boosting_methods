@@ -1170,6 +1170,12 @@ It is quite interesting to see that most of the time the smoker feature was used
 
 Which model performed the best on the test data set is the next interesting question. The results can be viewed below in tabular and graphical form.
 
+```{r, eval=FALSE, include=FALSE}
+orig_pred_ins <- 10^predict(final_ins_boost_wflow, new_data = ins_test)[[".pred"]]
+plot(orig_pred_ins - ins_test$charges)
+```
+
+
 
 ```{r perfIns, echo=FALSE}
 # calculate the mae and the rmse for both models (random forest and xgboost)
