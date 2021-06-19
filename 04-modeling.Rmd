@@ -1173,7 +1173,7 @@ Also a residual plot of the XGBoost predictions on the test data set can shed so
 ```{r, echo=FALSE}
 resid_plot_ins_data <- ins_test %>%
   bind_cols(pred = predict(final_ins_boost_wflow, new_data = ins_test)[[".pred"]]) %>%
-  mutate(resid = log10_charges - pred)
+  mutate(resid = charges - 10^pred)
 save(resid_plot_ins_data, file = "_data/resid_data_ins.RData")
 resid_plot_ins_data %>%
   plotly::plot_ly(x = ~age, z = ~resid, y = ~bmi,
@@ -1182,13 +1182,15 @@ resid_plot_ins_data %>%
                   text = ~paste("Age:", age, "BMI:", bmi),
                   hoverinfo = "text",
                   symbols = c('x','circle'),
-                  colors = plasma(2)) %>%
-  plotly::add_markers(opacity = 0.8,
+                  colors = plasma(3)[2:1]) %>%
+  plotly::add_markers(opacity = 0.9,
                       size = 2) %>%
   plotly::layout(scene = list(
     xaxis = list(title = "Age"),
     yaxis = list(title = "BMI"),
-    zaxis = list(title = "Raw residuals")))
+    zaxis = list(title = "Raw residuals")),
+    title = "Raw residuals of the insurance XGBoost model",
+    legend = list(title = list(text = "Smoker")))
 ```
 
 Here one can see where the model has the most difficulties. Interesting enough the model has the biggest outliers with non smokers of either quite low or quite high age with a more or less not that extreme BMI. This could be due to chronic diseases especially for the younger ones but also some randomness that life holds. For example a car accident could cause such high charges. Of course it could be also due to not observed latent variables.

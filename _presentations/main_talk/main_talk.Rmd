@@ -977,6 +977,46 @@ class: inverse, center, middle, hide-logo
 
 ## Discussion
 
+---
+## Interesting residuals
+
+```{r, echo=FALSE, out.width="100%", fig.align='center'}
+load(paste0(dirname(dirname(getwd())),"/_data/resid_data_ins.RData"))
+resid_plot_ins_data %>%
+  plotly::plot_ly(x = ~age, z = ~resid, y = ~bmi,
+                  color = ~factor(smoker),
+                  symbol = ~factor(smoker),
+                  text = ~paste("Age:", age, "BMI:", bmi),
+                  hoverinfo = "text",
+                  symbols = c('x','circle'),
+                  colors = plasma(3)[2:1]) %>%
+  plotly::add_markers(opacity = 0.9,
+                      size = 2) %>%
+  plotly::layout(scene = list(
+    xaxis = list(title = "Age"),
+    yaxis = list(title = "BMI"),
+    zaxis = list(title = "Raw residuals")),
+    title = "Raw residuals of the insurance XGBoost model",
+    legend = list(title = list(text = "Smoker")))
+# library(emo)
+# resid_plot_ins_data %>%
+#   mutate(emoji = if_else(smoker == "yes",
+#                          filter(jis, name == "cigarette")$emoji,
+#                          filter(jis,
+#                                 name == "smiling face with halo")$emoji)) %>%
+#   plotly::plot_ly(x = ~age, z = ~resid, y = ~bmi,
+#                   text = ~emoji,
+#                   hovertext = ~paste("Age:", age, "BMI:", bmi),
+#                   hoverinfo = "text") %>%
+#   plotly::add_text(size = I(20)) %>%
+#   plotly::layout(scene = list(
+#     xaxis = list(title = "Age"),
+#     yaxis = list(title = "BMI"),
+#     zaxis = list(title = "Raw residuals")),
+#     title = "Raw residuals of the insurance XGBoost model")
+```
+
+
 
 ---
 ## R setup
