@@ -529,7 +529,7 @@ Now all models w.r.t. the burnout data set are fitted.
 
 First a visualization of the variable importance. The variable importance is basically calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=TRUE, message=FALSE}
 vip_burn <- final_bout_boost_wflow %>%
   pull_workflow_fit() %>%
   vip::vip() + 
@@ -565,8 +565,8 @@ Now have a look at the performance of the main boosting model w.r.t. missing val
 
 
 
-```{r, echo=FALSE, message=FALSE}
-miss_vals_burn1 <- burnout_test %>%
+```{r, echo=TRUE, message=FALSE}
+miss_vals_burn_no <- burnout_test %>%
   mutate(boost_pred = predict(final_bout_boost_wflow,
                               new_data = .)[[".pred"]]) %>%
   filter(!is.na(mental_fatigue_score)) %>%
@@ -580,8 +580,8 @@ miss_vals_burn1 <- burnout_test %>%
        title = "XGBoost performance for non missing mental fatigue score") +
   coord_equal() +
   theme(plot.title = ggtext::element_markdown(size = 11))
-
-miss_vals_burn2 <- burnout_test %>%
+miss_vals_burn_no
+miss_vals_burn_yes <- burnout_test %>%
   mutate(boost_pred = predict(final_bout_boost_wflow,
                               new_data = .)[[".pred"]]) %>%
   filter(is.na(mental_fatigue_score)) %>%
@@ -595,12 +595,15 @@ miss_vals_burn2 <- burnout_test %>%
        title = "XGBoost performance for missing mental fatigue score") +
   coord_equal() +
   theme(plot.title = ggtext::element_markdown(size = 11))
-miss_vals_burn1
-miss_vals_burn2
-ggsave("_pictures/miss_vals_burn1.png", plot = miss_vals_burn1)
-ggsave("_pictures/miss_vals_burn2.png", plot = miss_vals_burn2)
-remove(miss_vals_burn1, miss_vals_burn2)
+miss_vals_burn_yes
 ```
+
+```{r, echo=FALSE, include=FALSE}
+ggsave("_pictures/miss_vals_burn1.png", plot = miss_vals_burn_no)
+ggsave("_pictures/miss_vals_burn2.png", plot = miss_vals_burn_yes)
+remove(miss_vals_burn_no, miss_vals_burn_yes)
+```
+
 
 The performance for the missing values is indeed not that precise but still quite good. There is at least no huge outlier detectable here. While at first glance the fact that outliers are handled naturally by the model is not astonishing it really is one the core strengths of the model to deal with messy data that includes missing and sparse data. So there is no need for imputation or a second fallback model for missing values.
 
@@ -611,8 +614,8 @@ The performance for the missing values is indeed not that precise but still quit
 Now it is interesting to check which model performed the best on the test data set. The results can be viewed below in tabular and graphical form.
 
 
-```{r perfBurn, echo=FALSE}
-# calculate the mae and the rmse for both models (random forest and xgboost)
+```{r perfBurn, echo=TRUE}
+# calculate the mae and the rmse for all models (random forest and xgboost)
 bout_test_perf <- burnout_test %>%
   mutate(rf_pred = predict(final_bout_rf_wflow,
                            new_data = .)[[".pred"]],
@@ -620,6 +623,7 @@ bout_test_perf <- burnout_test %>%
                               new_data = .)[[".pred"]],
          boost_trans_pred = predict(final_bout_boost_wflow_trans,
                               new_data = .)[[".pred"]],
+         # transform the predictions back
          boost_trans_pred = (2 / (exp(-boost_trans_pred) + 1)) - 0.5,
          intercept_pred = bout_predict_trivial_mean(.),
          mfs_scored_pred = bout_predict_trivial_mfs(.)) %>%
@@ -649,8 +653,6 @@ bout_test_perf <- burnout_test %>%
 knitr::kable(bout_test_perf, digits = 4,
              booktabs = TRUE,
              caption = "Performance on the test data")
-
-
 ```
 
 ```{r, echo=FALSE, message=FALSE}
@@ -1139,7 +1141,7 @@ stopCluster(cl)
 
 First a visualization of the variable importance. The variable importance is again calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=TRUE, message=FALSE}
 vip_ins <- final_ins_boost_wflow %>%
   pull_workflow_fit() %>%
   vip::vip() + 
@@ -1168,14 +1170,24 @@ knitr::include_graphics("_pictures/ins_multitree_xgb.png")
 
 It is quite interesting to see that most of the time the smoker feature was used just once in the first node but not multiple times. This suggests a quite linear influence of smokers and of course the binary character of the feature can support this behavior. Age on the other hand is represented in multiple depths with high importance which suggests a non-linear influence which was also visible during the EDA. Interestingly the children variable for example mostly is used at depth 3 for a split.
 
-Also a residual plot of the XGBoost predictions on the test data set can shed some light on the way the model works. This 3D plot is an interactive html widget which works not in the pdf output but just on the website.
+Also a residual plot of the XGBoost predictions on the test data set can shed some light on the way the model works. This 3D plot is an interactive html widget which works not in the pdf output but just on the website. Besides the residuals on the test set also the residuals on the training data set are shown below
 
-```{r, echo=FALSE}
-resid_plot_ins_data <- ins_test %>%
+```{r, echo=TRUE}
+# prepare the data for plotting i.e. calculate raw residuals on the test 
+# and the training data
+resid_plot_ins_data_test <- ins_test %>%
   bind_cols(pred = predict(final_ins_boost_wflow, new_data = ins_test)[[".pred"]]) %>%
   mutate(resid = charges - 10^pred)
-save(resid_plot_ins_data, file = "_data/resid_data_ins.RData")
-resid_plot_ins_data %>%
+resid_plot_ins_data_train <- ins_train %>%
+  bind_cols(pred = predict(final_ins_boost_wflow, new_data = ins_train)[[".pred"]]) %>%
+  mutate(resid = charges - 10^pred)
+
+save(resid_plot_ins_data_test,
+     resid_plot_ins_data_train,
+     file = "_data/resid_data_ins.RData")
+
+# test residuals
+resid_plot_ins_data_test %>%
   plotly::plot_ly(x = ~age, z = ~resid, y = ~bmi,
                   color = ~factor(smoker),
                   symbol = ~factor(smoker),
@@ -1189,11 +1201,28 @@ resid_plot_ins_data %>%
     xaxis = list(title = "Age"),
     yaxis = list(title = "BMI"),
     zaxis = list(title = "Raw residuals")),
-    title = "Raw residuals of the insurance XGBoost model",
+    title = "Raw test residuals of the insurance XGBoost model",
+    legend = list(title = list(text = "Smoker")))
+# train residuals
+resid_plot_ins_data_train %>%
+  plotly::plot_ly(x = ~age, z = ~resid, y = ~bmi,
+                  color = ~factor(smoker),
+                  symbol = ~factor(smoker),
+                  text = ~paste("Age:", age, "BMI:", bmi),
+                  hoverinfo = "text",
+                  symbols = c('x','circle'),
+                  colors = plasma(3)[2:1]) %>%
+  plotly::add_markers(opacity = 0.9,
+                      size = 2) %>%
+  plotly::layout(scene = list(
+    xaxis = list(title = "Age"),
+    yaxis = list(title = "BMI"),
+    zaxis = list(title = "Raw residuals")),
+    title = "Raw train residuals of the insurance XGBoost model",
     legend = list(title = list(text = "Smoker")))
 ```
 
-Here one can see where the model has the most difficulties. Interesting enough the model has the biggest outliers with non smokers of either quite low or quite high age with a more or less not that extreme BMI. This could be due to chronic diseases especially for the younger ones but also some randomness that life holds. For example a car accident could cause such high charges. Of course it could be also due to not observed latent variables.
+For the train residuals no clear pattern in the residuals is visible. Looking at the test residuals one can see where the model has the most difficulties. Interesting enough the model has the biggest outliers with non smokers of either quite low or quite high age with a more or less not that extreme BMI. This could be due to chronic diseases especially for the younger ones but also some randomness that life holds. For example a car accident could cause such high charges. Of course it could be also due to not observed latent variables.
 
 Which model performed the best on the test data set is the next interesting question. The results can be viewed below in tabular and graphical form.
 

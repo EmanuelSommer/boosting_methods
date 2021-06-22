@@ -11,18 +11,19 @@ library(viridisLite)
 library(patchwork) # composing of ggplots
 ```
 
-Before the fun can begin a quick outline of the steps performed on each data set. 
+Before the fun can begin a quick outline of the steps performed on each data set.
 
-* A general overview of the classes of the features and a visualization to detect any missing values.
-* The distribution and the main effect on the outcome variable of each feature.
-* The pairwise relationships of the predictors.
-* Optionally some feature engineering.
-* Using the gained knowledge to fix all pre-processing and feature engineering steps by using a `recipes::recipe`.
+-   A general overview of the classes of the features and a visualization to detect any missing values.
+-   The distribution and the main effect on the outcome variable of each feature.
+-   The pairwise relationships of the predictors.
+-   Optionally some feature engineering.
+-   Using the gained knowledge to fix all pre-processing and feature engineering steps by using a `recipes::recipe`.
 
-If one is mainly interested in the models themselves one can just have a look at the recipes and skip the rest of this section. 
+If one is mainly interested in the models themselves one can just have a look at the recipes and skip the rest of this section.
 
-Some might ask why no interactions of predictors are covered in this EDA. If one would use a standard OLS, lasso or ridge regression it would be very important to have a look at them but as the focus here is on tree-based gradient boosting one already includes interactions if one is not restrictive to regression stumps. So let's start with the first data set!
+Some might ask why no interactions of predictors are covered in this EDA. If one would use a standard OLS, lasso or ridge regression it would be very important to have a look at them but as the focus here is on tree-based gradient boosting one already includes interactions if one is not restrictive to regression stumps.
 
+It should also be mentioned that especially during the EDA most of the plotting code is not shown in order to support a better reading flow. If one wants to look up the code for any of these visualizations or also the full bookdown project one can have a deep dive at this [Github reposatory](https://github.com/EmanuelSommer/boosting_methods){.uri}. For example the respective code for the EDA can be found in the `03-eda.Rmd` file and the one for the modeling in the `04-modeling.Rmd` file. So having this said let's start with the first data set!
 
 ## Burnout data
 
@@ -85,6 +86,7 @@ visdat::vis_dat(burnout_train)
 # percentage of missing values in the training data set
 mean(rowSums(is.na(burnout_train)) > 0)
 ```
+
 As we know that XGBoost can handle missing values we do not have to be concerned. Although one could of course think about imputation or even removal.
 
 ### What about the outcome variable?
@@ -96,6 +98,7 @@ The five point summary below shows that the full range is covered and no invalid
 ```{r, echo=FALSE}
 summary(burnout_train$burn_rate)
 ```
+
 Now the distribution of the outcome.
 
 ```{r , echo=FALSE, warning=FALSE, message=FALSE}
@@ -146,8 +149,7 @@ remove(burn_rate_box, burn_rate_raw)
 remove(burn_rate_hist)
 ```
 
-The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region $[0,1]$ is covered quite well. Actually by overlaying a normal distribution with the sample mean $\hat{\mu}$ and the sample standard deviation $\hat{\sigma}^2$ as the parameters one can clearly see that the outcome almost perfectly follows a normal distribution. One could further fit a Q-Q-plot to visualize the normality. **BUT** of course here there is a bounded domain while the normal distribution has the whole $\mathbb{R}$ as domain. This bounded domain does not interfere with the boosted model as tree-based models do not superimpose a distribution assumptions upon the target variable. Nevertheless one can transform the outcome with the empirical logit $log(\frac{y_i+0.5}{1-y_i+0.5})$.By doing this one removes the bounds on the target. One can then re-transform the predictions in the end by applying $\frac{2}{exp(-y)+1}-0.5$. Here to see whether this transformation changes the behavior or improves the boosting model
-one will have a look not only at the untransformed target `burn_rate` but also at the transformed one `burn_rate_trans`. The focus will be on the untransformed modeling as the low pre-processing strength of such boosting models should be emphasized. Below is the distribution of the transformed one.
+The distribution of the outcome is very much symmetrical and bell shaped around 0.5 and the whole defined region $[0,1]$ is covered quite well. Actually by overlaying a normal distribution with the sample mean $\hat{\mu}$ and the sample standard deviation $\hat{\sigma}^2$ as the parameters one can clearly see that the outcome almost perfectly follows a normal distribution. One could further fit a Q-Q-plot to visualize the normality. **BUT** of course here there is a bounded domain while the normal distribution has the whole $\mathbb{R}$ as domain. This bounded domain does not interfere with the boosted model as tree-based models do not superimpose a distribution assumptions upon the target variable. Nevertheless one can transform the outcome with the empirical logit $log(\frac{y_i+0.5}{1-y_i+0.5})$.By doing this one removes the bounds on the target. One can then re-transform the predictions in the end by applying $\frac{2}{exp(-y)+1}-0.5$. Here to see whether this transformation changes the behavior or improves the boosting model one will have a look not only at the untransformed target `burn_rate` but also at the transformed one `burn_rate_trans`. The focus will be on the untransformed modeling as the low pre-processing strength of such boosting models should be emphasized. Below is the distribution of the transformed one.
 
 ```{r}
 # Add transformed outcome
@@ -156,7 +158,6 @@ burnout_train$burn_rate_trans <- log((burnout_train$burn_rate + 0.5) /
 burnout_test$burn_rate_trans <- log((burnout_test$burn_rate + 0.5) /
                                        (1.5 - burnout_test$burn_rate))
 ```
-
 
 ```{r , echo=FALSE, warning=FALSE, message=FALSE}
 burn_rate_box <- ggplot(burnout_train, aes(x = 1, y = burn_rate_trans)) +
@@ -221,6 +222,7 @@ burnout_train %>%
   summarise(n = n()) %>%
   nrow() == nrow(burnout_train)
 ```
+
 Thus there are no duplicates which is good.
 
 #### Date of joining
@@ -242,7 +244,6 @@ burnout_train %>%
 
 Although there is a lot of variation no major trends in hirings are visible from this plot. Overall the variable seems to be quite equally distributed over the year 2008.
 
-
 ```{r echo=FALSE}
 ggplot(burnout_train,
        aes(y = date_of_joining,
@@ -258,7 +259,7 @@ ggplot(burnout_train,
 
 In its raw form the variable `date_of_joining` seems not to have a notable main effect on the outcome variable. Nevertheless the feature will be used in the model and as tree-based models have an in-built feature selection one can see after the fitting if the feature was helpful overall. The feature will not be included just as an integer (the default format how Dates are represented) but rather some more features like weekday or month will be extracted from the raw variable further down the road.
 
-#### Gender 
+#### Gender
 
 `gender` represents the gender of the employee. Definitely a categorical variable.
 
@@ -314,6 +315,7 @@ For both classes the distributions are very similar and symmetrical. It seems li
 # have a look at the discrete distribution
 summary(factor(burnout_train$company_type))
 ```
+
 In this case the classes are not fully balanced but each class is still well represented. Now a look at the main effect of the feature.
 
 ```{r echo=FALSE}
@@ -351,7 +353,7 @@ remove(comptype_burn_rate_hist)
 remove(comptype_burn_rate_box)
 ```
 
-For both classes the distributions are almost identical and symmetrical. From an univariate point of view no notable main effect is visible from these visualizations. 
+For both classes the distributions are almost identical and symmetrical. From an univariate point of view no notable main effect is visible from these visualizations.
 
 #### Work from home setup
 
@@ -399,7 +401,6 @@ remove(wfh_burn_rate_hist)
 remove(wfh_burn_rate_box)
 ```
 
-
 Again both distributions are quite similar i.e. bell shaped and symmetrical. Here quite a main effect is visible. A work from home setup most likely has a positive influence on the wellbeing and thus lowers the risk for a high burn rate.
 
 #### Designation
@@ -410,6 +411,7 @@ Again both distributions are quite similar i.e. bell shaped and symmetrical. Her
 # unique values of the feature
 unique(burnout_train$designation)
 ```
+
 As the feature has a natural ordering this variable will be treated as an ordinal one i.e. be encoded with the integers and not by one-hot-encoding.
 
 ```{r, echo=FALSE}
@@ -424,7 +426,6 @@ burnout_train %>%
        x = "level of designation") +
   theme(plot.title = ggtext::element_markdown(size = 11))
 ```
-
 
 Here clearly the more extreme levels of designation are less represented in the data. This makes total sense w.r.t. the meaning of the variable.
 
@@ -454,6 +455,7 @@ A strong main effect is visible in the plot. The plot also further strengthens t
 # unique values of the feature
 unique(burnout_train$resource_allocation)
 ```
+
 Here again the question is whether one should encode this variable as a categorical or an ordinal categorical feature. In this case as there are quite some levels and again a natural ordering the variable will be encoded as a continuous integer score.
 
 ```{r, echo=FALSE}
@@ -495,7 +497,6 @@ burnout_train %>%
         plot.title = ggtext::element_markdown(size = 11))
 ```
 
-
 A strong main effect is visible in the plot. The plot again further strengthens the hypothesis that we should treat this feature as ordinal. A higher amount of resources assigned to an employee seems to have a positive influence on the risk of having a burnout. The missing values do not seem to have some structure as they replicate the base distribution of the outcome variable.
 
 #### Mental fatigue score
@@ -506,6 +507,7 @@ A strong main effect is visible in the plot. The plot again further strengthens 
 # number of unique values
 length(unique(burnout_train$mental_fatigue_score)) 
 ```
+
 This variable will without a question be treated in a continuous way.
 
 ```{r, echo=FALSE}
@@ -519,7 +521,6 @@ ggplot(burnout_train, aes(x = mental_fatigue_score)) +
   theme(plot.title = ggtext::element_markdown(size = 11),
         plot.subtitle = ggtext::element_markdown(size = 8))
 ```
-
 
 Although there is a very slight skew towards a higher mental fatigue score the overall distribution is still more or less bell shaped and quite symmetrical. Moreover the whole allowed range is covered and the bounds are not violated. Next the main effect of the variable.
 
@@ -604,12 +605,14 @@ No major relationship can be detected here.
 # Gender vs Company type
 table(burnout_train$gender, burnout_train$company_type)
 ```
+
 No huge tendency visible.
 
 ```{r}
 # Gender vs Work from home setup
 table(burnout_train$gender, burnout_train$wfh_setup_available)
 ```
+
 Slightly more women have a work from home setup available.
 
 **Now the ordinal variables:**
@@ -668,9 +671,7 @@ ggplot(burnout_train,
 
 This is of course very similar to the main effect of the `gender` variable as the outcome and the feature `mental_fatigue_score` are highly linearly correlated.
 
-
 #### Company type vs. the remaining
-
 
 ```{r}
 # Company type vs Work from home setup
@@ -735,10 +736,7 @@ remove(comp_type_plot_list)
 
 No trend here either.
 
-
-
 #### Work from home setup vs. the remaining
-
 
 ```{r, echo=FALSE}
 burnout_train %>%
@@ -757,7 +755,6 @@ burnout_train %>%
 ```
 
 A work from home setup is way more often available for employees with a lower designation ($\leq 2$).
-
 
 ```{r, echo=FALSE}
 burnout_train %>%
@@ -823,20 +820,15 @@ remove(designationVsRessources)
 
 Here a strong quite linear relationship is visible. This is sensible as often more resource responsibility is given to employees with high designation.
 
-
-The last two relationships will be omitted here as both for the variable `designation` as well as for `resource_allocation` the comparison with  `mental_fatigue_score` will be very similar to the main effect of the two variables. This comes again from the high correlation of the latter with the outcome.
+The last two relationships will be omitted here as both for the variable `designation` as well as for `resource_allocation` the comparison with `mental_fatigue_score` will be very similar to the main effect of the two variables. This comes again from the high correlation of the latter with the outcome.
 
 Overall some stronger and mainly less strong relationships between the predictors could be detected. Not like in ordinary least squares regression for gradient tree boosting no decorrelation and normalization of the features is needed. But before one fixes the pre-processing one can try to extract some more information from some features through some feature engineering.
-
-
-
 
 ### Some feature engineering
 
 The only variable that allows for reasonable feature engineering is the date of joining predictor. One can try to extract some underlying patterns and see if an effect on the outcome is visible.
 
 First extract the day of the week:
-
 
 ```{r echo=FALSE}
 burnout_train %>%
@@ -866,7 +858,6 @@ burnout_train %>%
 ```
 
 No main effect is visible here. So try the month next.
-
 
 ```{r echo=FALSE}
 burnout_train %>%
@@ -939,7 +930,6 @@ burnout_rec_rf <- recipe(burn_rate ~ date_of_joining + gender +
   step_mutate(date_of_joining = as.integer(date_of_joining))
 ```
 
-
 ```{r, eval=FALSE, include=FALSE}
 bake(prep(burnout_rec_boost), new_data = NULL) %>%
   select(!starts_with("date_of_joining_")) %>%
@@ -980,13 +970,9 @@ bake(prep(burnout_rec_boost), new_data = NULL) %>%
         axis.text = ggtext::element_markdown(size = 11))
 ```
 
-
-
 ## Insurence data
 
-
-The insurance data set is part of the book *Machine Learning with R* by Brett Lantz. It can be downloaded here:
-<https://raw.githubusercontent.com/stedy/Machine-Learning-with-R-datasets/master/insurance.csv>
+The insurance data set is part of the book *Machine Learning with R* by Brett Lantz. It can be downloaded here: <https://raw.githubusercontent.com/stedy/Machine-Learning-with-R-datasets/master/insurance.csv>
 
 ```{r loadIns, message=FALSE}
 # load the data
@@ -1030,6 +1016,7 @@ The five point summary below shows that the no invalid values i.e. negative ones
 ```{r, echo=FALSE}
 summary(ins_train$charges)
 ```
+
 Now the distribution of the outcome.
 
 ```{r , echo=FALSE}
@@ -1057,8 +1044,7 @@ remove(charges_box)
 remove(charges_hist)
 ```
 
-Not like the `burn_rate` previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting `log10_charges` outcome variable is shown below. 
-
+Not like the `burn_rate` previously this target distribution is not at all symmetrical but highly right skewed. A natural thing to do would be a log transformation of the outcome. The resulting `log10_charges` outcome variable is shown below.
 
 ```{r , echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 charges_box <- ggplot(ins_train, aes(x = 1, y = log10(charges))) +
@@ -1092,8 +1078,7 @@ remove(charges_box)
 remove(charges_hist, charges_ins)
 ```
 
-
-Although such a transformation of the outcome variable is not needed for tree-based modeling it can make the job of the algorithm somewhat easier. 
+Although such a transformation of the outcome variable is not needed for tree-based modeling it can make the job of the algorithm somewhat easier.
 
 ### Distribution and main effects of the predictors
 
@@ -1114,7 +1099,6 @@ ggplot(ins_train, aes(x = age)) +
 ```
 
 A wide range of ages is covered. Notably there is a peak at roughly 18 which means that many fresh adults were observed in this data set.
-
 
 ```{r echo=FALSE}
 ggplot(ins_train,
@@ -1144,7 +1128,6 @@ summary(as.factor(ins_train$sex))
 ```
 
 The classes are very well balanced. Now the main effect.
-
 
 ```{r echo=FALSE}
 sex_charges_box <- ggplot(ins_train,
@@ -1182,9 +1165,7 @@ remove(sex_charges_hist)
 remove(sex_charges_box)
 ```
 
-
 No notable difference can be detected here.
-
 
 #### Body mass index
 
@@ -1229,7 +1210,7 @@ With some fantasy one can grasp some non-linear patterns on the right side of th
 
 #### Number of children
 
-`children`: The number of children or dependents covered by the health insurance. 
+`children`: The number of children or dependents covered by the health insurance.
 
 ```{r}
 # unique values of the feature
@@ -1253,7 +1234,6 @@ ins_train %>%
 
 As one would also think the more children the lower the number of observed values. Especially the numbers greater than 3 are not well represented. If encoded by one-hot-encoding one would have to think about removing these then near-zero-variance variables. But as they will be encoded in a continuous way this is no problem at all. A look at the main effects can now strengthen or weaken this hypothesis of a natural ordering.
 
-
 ```{r echo=FALSE}
 ggplot(ins_train,
        aes(x = as.factor(children),
@@ -1272,9 +1252,7 @@ ggplot(ins_train,
         plot.title = ggtext::element_markdown(size = 11))
 ```
 
-
 This plot is quite similar to the main effect plot for the `age` feature. As most likely (will be checked later) the age is positively correlated with the number of children one can observe a rise of the minimal observed charges towards a greater amount of children. The upper two boxplots are built with just a few observations so they should not be interpreted in great detail. Overall there seems to be some kind of main effect.
-
 
 #### Smoking
 
@@ -1283,6 +1261,7 @@ This plot is quite similar to the main effect plot for the `age` feature. As mos
 ```{r}
 summary(as.factor(ins_train$smoker))
 ```
+
 The classes are not balanced but the class of the smokers is still represented with a good amount of observations. Now a look at the main effect.
 
 ```{r echo=FALSE}
@@ -1418,7 +1397,6 @@ The most interesting take away from these four plots is that the hypothesis abou
 
 #### Sex vs the remaining
 
-
 ```{r, echo=FALSE}
 sex_plot_list <- list()
 sex_plot_list$bmi <- ggplot(ins_train, 
@@ -1468,7 +1446,7 @@ sex_plot_list$region <- ins_train %>%
 remove(sex_plot_list)
 ```
 
-No notable differences. 
+No notable differences.
 
 Contingency table for the binary variable `smoker`:
 
@@ -1478,7 +1456,6 @@ table(ins_train$sex, ins_train$smoker)
 ```
 
 Slightly more men smoke but the difference is smallish.
-
 
 #### BMI vs the remaining
 
@@ -1545,7 +1522,6 @@ ins_train %>%
         plot.title = ggtext::element_markdown(size = 11))
 ```
 
-
 Here no trend is visible.
 
 #### Smoker vs Region
@@ -1568,12 +1544,9 @@ ins_train %>%
   theme(plot.title = ggtext::element_markdown(size = 11))
 ```
 
-
 So the southeast is not only the most overweight region but also the one with the most smokers in relative terms.
 
-
 This concludes the tour of the pairwise relationships. Of course such an in detail look at all pairwise relationships for both data sets was only possible because there are quite few predictors and is not always needed in this extend. Besides a crystal clear understanding of the data one sees that there is not much room left for feature engineering for the insurance data set. Thus one can go on and define the recipe.
-
 
 ### Create the recipe
 
@@ -1584,7 +1557,6 @@ Transformations on the outcome variable are not good practice within a recipe th
 ins_train$log10_charges <- log10(ins_train$charges)
 ins_test$log10_charges <- log10(ins_test$charges)
 ```
-
 
 ```{r}
 ### recipe for xgboost (nominal variables must be dummy variables)
@@ -1603,7 +1575,5 @@ ins_rec_rf <- recipe(log10_charges ~ age + sex +
                          smoker + region,
                          data = ins_train)
 ```
-
-
 
 Having now all the recipes ready one can proceed with modeling. Finally!

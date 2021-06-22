@@ -982,7 +982,7 @@ class: inverse, center, middle, hide-logo
 
 ```{r, echo=FALSE, out.width="100%", fig.align='center'}
 load(paste0(dirname(dirname(getwd())),"/_data/resid_data_ins.RData"))
-resid_plot_ins_data %>%
+resid_plot_ins_data_test %>%
   plotly::plot_ly(x = ~age, z = ~resid, y = ~bmi,
                   color = ~factor(smoker),
                   symbol = ~factor(smoker),
@@ -996,7 +996,7 @@ resid_plot_ins_data %>%
     xaxis = list(title = "Age"),
     yaxis = list(title = "BMI"),
     zaxis = list(title = "Raw residuals")),
-    title = "Raw residuals of the insurance XGBoost model",
+    title = "Raw test residuals of the insurance XGBoost model",
     legend = list(title = list(text = "Smoker")))
 # library(emo)
 # resid_plot_ins_data %>%
