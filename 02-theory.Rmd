@@ -160,7 +160,7 @@ Putting all of this back together with **Algorithm 1** results in **Algorithm 2*
 The only unknowns in this algorithm are now the differentiable loss function and the hyperparameters like the $J^{(k)}$ and the $K$. While choices for the hyperparameters are discussed further below, the following table \@ref(tab:lossGradients) displays the gradients for the losses discussed so far.
 
 +--------------------------------+-----------------------------------------------------------------------------------------+
-| Loss                           | Gradient                                                                                |
+| Loss                           | Negative gradient                                                                       |
 +================================+=========================================================================================+
 | $L_2$: $(y_i - \phi(x_i))^2$   | $2(y_i - \phi(x_i))$                                                                    |
 +--------------------------------+-----------------------------------------------------------------------------------------+
@@ -171,7 +171,7 @@ The only unknowns in this algorithm are now the differentiable loss function and
 |                                | $\delta sign(y_i - \phi(x_i))$ otherwise, with $\delta$ quantile of $|y_i - \phi(x_i)|$ |
 +--------------------------------+-----------------------------------------------------------------------------------------+
 
-: (\#tab:lossGradients) Gradients of the discussed losses [@elements]
+: (\#tab:lossGradients) Negative gradients of the discussed losses [@elements]
 
 ### Single tree depth
 

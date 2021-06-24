@@ -24,7 +24,7 @@
 <meta name="author" content="Emanuel Sommer" />
 
 
-<meta name="date" content="2021-06-22" />
+<meta name="date" content="2021-06-24" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -369,7 +369,7 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 <hr />
 <p>The only unknowns in this algorithm are now the differentiable loss function and the hyperparameters like the <span class="math inline">\(J^{(k)}\)</span> and the <span class="math inline">\(K\)</span>. While choices for the hyperparameters are discussed further below, the following table <a href="theory.html#tab:lossGradients">3.1</a> displays the gradients for the losses discussed so far.</p>
 <table>
-<caption><span id="tab:lossGradients">Table 3.1: </span> Gradients of the discussed losses <span class="citation">[<a href="#ref-elements" role="doc-biblioref">1</a>]</span></caption>
+<caption><span id="tab:lossGradients">Table 3.1: </span> Negative gradients of the discussed losses <span class="citation">[<a href="#ref-elements" role="doc-biblioref">1</a>]</span></caption>
 <colgroup>
 <col width="26%" />
 <col width="73%" />
@@ -377,7 +377,7 @@ L(\phi) = \sum_{i=1}^N L(y_i, \phi(x_i))
 <thead>
 <tr class="header">
 <th>Loss</th>
-<th>Gradient</th>
+<th>Negative gradient</th>
 </tr>
 </thead>
 <tbody>
