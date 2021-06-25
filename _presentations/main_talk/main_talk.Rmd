@@ -767,7 +767,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/bout_raw_vs
 The feature importance for the tree $t$ and the feature $X_l$ is given by:
 
 $$\mathcal{I}_l^2(t) = \sum_{j \in \{\text{Internal nodes}\}} \mathcal{i}_j^2\; I(\text{splitting variable}=X_l)$$
-Where $i_j^2$ is the estimated improvement in squared error of the split at node $j$ over stopping at this node.
+Where $i_j^2$ is the estimated improvement in squared error of the split at node $j$ to stop splitting at this node.
 
 
 **For the full ensemble**
@@ -985,7 +985,7 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/final_perf_
 
 - **Computationally demanding (especially the hyperparameter tuning)**
 
-- **Better if there are lots of observations**
+- **Preferably larger data sets**
 
 
 ---
