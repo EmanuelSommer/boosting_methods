@@ -527,7 +527,23 @@ Now all models w.r.t. the burnout data set are fitted.
 
 ### Evaluate and understand the model
 
-First a visualization of the variable importance. The variable importance is basically calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.
+First a visualization of the variable importance. The variable importance is basically calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.[@elements]
+
+**For a single tree**
+
+The feature importance for the tree $t$ and the feature $X_l$ is given by:
+
+$$
+\mathcal{I}_l^2(t) = \sum_{j \in \{\text{Internal nodes}\}} \mathcal{i}_j^2\; I(\text{splitting variable}=X_l)
+$$
+Where $i_j^2$ is the estimated improvement in squared error of the split at node $j$ over stopping at this node.
+
+
+**For the full ensemble**
+
+$$
+\mathcal{I}_l^2 = \frac{1}{K} \sum_{k = 1}^K \mathcal{I}_l^2(t_k)
+$$
 
 ```{r, echo=TRUE, message=FALSE}
 vip_burn <- final_bout_boost_wflow %>%

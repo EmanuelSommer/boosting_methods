@@ -245,7 +245,23 @@ As discussed above in \@ref(combOver) shrinkage and subsampling are great ways t
 
 ### Even more tweaks
 
-Besides the changes above the authors also implemented an effective approximate algorithm for split finding for the tree building step. A very nice attribute of this approximate procedure is that the algorithm is sparsity aware i.e. the processing of missing values or 0 values is very efficient. This is done via a learned default direction in each split. Moreover they used very efficient data structures to allow a lot of parallel processing.[@xgboostPaper] It is written in C++ but has APIs in various languages like in R via the `xgboost` package.[@xgboost_package]
+Besides the changes above the authors also implemented an effective approximate algorithm for split finding for the tree building step. A very nice attribute of this approximate procedure is that the algorithm is sparsity aware i.e. the processing of missing values or 0 values is very efficient. This is done via a learned default direction in each split. Moreover they used very efficient data structures to allow a lot of parallel processing.[@xgboostPaper]
+
+In short these default direction work the following way:
+
+1. Find the optimal split w.r.t. all observations without missing values.
+
+2. Calculate for both directions the loss (splitting criterion) if all missing observations would be added to this direction.
+
+3. Choose as the default direction the one which minimizes the loss.
+
+$\Rightarrow$ No introduction and thus optimization over a category "Missing"
+
+$\Rightarrow$ In a sparse setting one optimizes only over non missing values.
+
+
+
+It is written in C++ but has APIs in various languages like in R via the `xgboost` package.[@xgboost_package]
 
 ### Hyperparameters overview
 

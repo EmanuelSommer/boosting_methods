@@ -22,6 +22,8 @@ options(htmltools.dir.version = FALSE)
 # Here the slides theme (TUM blue) is set and the fonts 
 # feel free to change them
 library(xaringanthemer)
+library(tidyverse)
+library(viridis)
 style_mono_accent(
   base_color = "#0073C3",
   header_font_google = google_font("Josefin Sans"),
@@ -574,6 +576,20 @@ Where $\Omega_{\alpha, \lambda, \nu}$ is the penalizing term for model complexit
 ]
 -->
 ---
+
+## Default directions in XGBoost
+
+1. Find the optimal split w.r.t. all observations without missing values.
+
+2. Calculate for both directions the loss (splitting criterion) if all missing observations would be added to this direction.
+
+3. Choose as the default direction the one which minimizes the loss.
+
+$\Rightarrow$ No introduction and thus optimization over a category "Missing"
+
+$\Rightarrow$ In a sparse setting one optimizes only over non missing values.
+
+---
 background-image: url("https://media.giphy.com/media/BpGWitbFZflfSUYuZ9/giphy.gif")
 background-size: cover
 class: center, bottom, hide-logo
@@ -746,7 +762,20 @@ knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/bout_raw_vs
 ---
 ## Feature importance
 
-The feature importance is basically the gain w.r.t. the loss of the feature over all splits.
+**For a single tree**
+
+The feature importance for the tree $t$ and the feature $X_l$ is given by:
+
+$$\mathcal{I}_l^2(t) = \sum_{j \in \{\text{Internal nodes}\}} \mathcal{i}_j^2\; I(\text{splitting variable}=X_l)$$
+Where $i_j^2$ is the estimated improvement in squared error of the split at node $j$ over stopping at this node.
+
+
+**For the full ensemble**
+
+$$\mathcal{I}_l^2 = \frac{1}{K} \sum_{k = 1}^K \mathcal{I}_l^2(t_k)$$
+
+---
+## Feature importance
 
 ```{r, echo=FALSE, out.width="80%", fig.align='left'}
 knitr::include_graphics(paste0(dirname(dirname(getwd())),"/_pictures/vip_burn.png"))
