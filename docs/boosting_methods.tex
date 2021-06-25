@@ -138,7 +138,7 @@
 
 \title{Boosting methods: Theory and application in R}
 \author{Emanuel Sommer}
-\date{2021-06-24}
+\date{2021-06-25}
 
 \begin{document}
 \maketitle
@@ -474,7 +474,25 @@ As discussed above in \ref{combOver} shrinkage and subsampling are great ways to
 \hypertarget{even-more-tweaks}{%
 \subsection{Even more tweaks}\label{even-more-tweaks}}
 
-Besides the changes above the authors also implemented an effective approximate algorithm for split finding for the tree building step. A very nice attribute of this approximate procedure is that the algorithm is sparsity aware i.e.~the processing of missing values or 0 values is very efficient. This is done via a learned default direction in each split. Moreover they used very efficient data structures to allow a lot of parallel processing.\citep{xgboostPaper} It is written in C++ but has APIs in various languages like in R via the \texttt{xgboost} package.\citep{xgboost_package}
+Besides the changes above the authors also implemented an effective approximate algorithm for split finding for the tree building step. A very nice attribute of this approximate procedure is that the algorithm is sparsity aware i.e.~the processing of missing values or 0 values is very efficient. This is done via a learned default direction in each split. Moreover they used very efficient data structures to allow a lot of parallel processing.\citep{xgboostPaper}
+
+In short these default direction work the following way:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Find the optimal split w.r.t. all observations without missing values.
+\item
+  Calculate for both directions the loss (splitting criterion) if all missing observations would be added to this direction.
+\item
+  Choose as the default direction the one which minimizes the loss.
+\end{enumerate}
+
+\(\Rightarrow\) No introduction and thus optimization over a category ``Missing''
+
+\(\Rightarrow\) In a sparse setting one optimizes only over non missing values.
+
+It is written in C++ but has APIs in various languages like in R via the \texttt{xgboost} package.\citep{xgboost_package}
 
 \hypertarget{hyperparameters-overview}{%
 \subsection{Hyperparameters overview}\label{hyperparameters-overview}}
@@ -2061,7 +2079,22 @@ Now all models w.r.t. the burnout data set are fitted.
 \hypertarget{evaluate-and-understand-the-model}{%
 \subsection{Evaluate and understand the model}\label{evaluate-and-understand-the-model}}
 
-First a visualization of the variable importance. The variable importance is basically calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.
+First a visualization of the variable importance. The variable importance is basically calculated by measuring the gain w.r.t. the loss of each feature in the single trees and splits.\citep{elements}
+
+\textbf{For a single tree}
+
+The feature importance for the tree \(t\) and the feature \(X_l\) is given by:
+
+\[
+\mathcal{I}_l^2(t) = \sum_{j \in \{\text{Internal nodes}\}} \mathcal{i}_j^2\; I(\text{splitting variable}=X_l)
+\]
+Where \(i_j^2\) is the estimated improvement in squared error of the split at node \(j\) over stopping at this node.
+
+\textbf{For the full ensemble}
+
+\[
+\mathcal{I}_l^2 = \frac{1}{K} \sum_{k = 1}^K \mathcal{I}_l^2(t_k)
+\]
 
 \begin{Shaded}
 \begin{Highlighting}[]
