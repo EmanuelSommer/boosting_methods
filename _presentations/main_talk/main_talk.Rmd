@@ -1045,7 +1045,23 @@ resid_plot_ins_data_test %>%
 #     title = "Raw residuals of the insurance XGBoost model")
 ```
 
+---
+## Test performance comparison
 
+**Burnout dataset**
+
+```{r, echo=FALSE, out.width="90%", fig.align='left'}
+knitr::include_graphics("img/perf_comparison_burn_rmse.png")
+```
+
+---
+## Test performance comparison
+
+**Insurance dataset**
+
+```{r, echo=FALSE, out.width="90%", fig.align='left'}
+knitr::include_graphics("img/perf_comparison_mae.png")
+```
 
 ---
 ## R setup

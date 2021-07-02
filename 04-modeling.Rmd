@@ -733,6 +733,46 @@ remove(bout_raw_vs_trans)
 So all in all for this data set it was not a way better predictive performance (if one is not in an artificial machine learning setup) that was the core strength of the tree-based gradient boosting model but the minimal pre-processing and exploratory work (for example no interactions have to be detected manually or be tested for significance) that was needed and the natural handling of missing values to achieve the model. This of course came to a quite high computational price. The famous predictive performance could probably be displayed better when having a data set with more complex non-linear patterns.
 
 
+```{r, warning=FALSE, message=FALSE, eval=FALSE, include=FALSE}
+######################################################
+#   Visualize the results of the other seminar
+#   participants in order to compare the predictive results
+#             Burnout data set
+######################################################
+
+bout_test_perf %>%
+  select(-mae) %>%
+  bind_rows(
+    tribble(~model, ~rmse,
+            "Simple beta regression", 0.07017522,
+            "Beta regression", 0.06394935,
+            "Simple 0-1-inflated Beta regression",0.06475547,
+            "0-1-inflated Beta regression", 0.05739319,
+            "Reduced 0-1-inflated Beta regression", 0.05763967)
+  ) %>%
+  mutate(model = as.factor(model),
+         model = fct_recode(model, 
+                             "XGBoost" = "boost_pred",
+                            "XGBoost transformed" = "boost_trans_pred",
+                            "Random forest" = "rf_pred",
+                            "Simple linear regression" =
+                              "mfs_scored_pred",
+                            "Intercept only" = "intercept_pred"),
+         model = fct_reorder(model, -rmse)) %>%
+  filter(model != "Intercept only") %>%
+  arrange(rmse) %>%
+  ggplot(aes(x = rmse, y = model)) +
+  geom_point(shape = 16, size = 3, col = plasma(1)) +
+  geom_segment(aes(y = model, yend = model, 
+                   x = 0, xend = rmse),
+               size = 1, col = plasma(1)) +
+  scale_color_viridis_d(option = "C") +
+  labs(x = "RMSE",y = "", title = "Performance on the test data") +
+  theme_light() +
+  theme(legend.position = "None")
+``` 
+
+
 This finishes the analysis of the burnout data set. But no worries there is still one data set and boosting model left to explore namely the insurance data set.
 
 ## Insurance data
@@ -1335,9 +1375,202 @@ remove(final_perf_ins)
 
 So overall the XGBoost model again delivered the best performance on the test data set w.r.t. the main optimization metric RMSE. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the tree-based models. So again the data did not leave much room to explore more complex non-linear patterns. Whether the rather small difference in performance is worth considering such a model is of course up to the use case. Again the XGBoost model displayed that it reaches a very competitive performance with minimal pre-processing, integrated feature selection and in this case the computational effort was quite small. The major pros and cons of the tree-based gradient boosting models will be shortly reviewed in the next and final section.
 
+Before concluding one can have a look at the predictive results other seminar participants had with their models like GAMs or GLMs. Nevertheless the model formulas and model types will not be discussed in detail at this point.
+
+```{r, warning=FALSE, message=FALSE, eval=TRUE}
+######################################################
+#   Visualize the results of the other seminar
+#   participants in order to compare the predictive results
+#             Insurance data set
+######################################################
+
+# best linear model and gamma regression model as proposed by 
+# Maximilian Fleissner
+best_linear_model_ins <- lm(log(charges) ~ sex + obese +
+                              smoker + region + children +
+                              poly(age - 40, 2, raw = T) +
+                              poly(bmi - 30, 2, raw = T) +
+                              smoker:obese +
+                              smoker:region +
+                              smoker:children +
+                              smoker:poly(age - 40, 2, raw = T),
+                            data = ins_train %>%
+                              mutate(obese = if_else(bmi > 30, "Y", "N"),
+                                     across(where(is.character),
+                                            as.factor)))
+best_gamma_model_ins <- glm(charges ~ (sex + obese + smoker + 
+                                         region + children + 
+                                         poly(bmi - 30, 2, raw = T) +
+                                         age +
+                                         smoker:obese +
+                                         smoker:region +
+                                         smoker:age +
+                                         smoker:children),
+                            data = ins_train %>%
+                              mutate(obese = if_else(bmi > 30, "Y", "N"),
+                                     across(where(is.character),
+                                            as.factor)),
+                            family = Gamma(link = "log"))
+
+# best GAM models as proposed by Elizabeth Griesbauer
+## health and family ##
+gam_ins_health <- mgcv::gam(charges ~ smoker + age:children + 
+                              age:smoker + 
+                              te(bmi, by = smoker, k = 10),
+                            family = Gamma(link ="log"), 
+                            method = "GCV.Cp", select=T, 
+                            data = ins_train %>%
+                              mutate(children = as.factor(children),
+                                     older_than_30 = 
+                                       if_else(age >= 30,
+                                               "Y", "N"),
+                                     across(where(is.character),
+                                            as.factor)))
+## young adults ##
+gam_ins_young_adults <- mgcv::gam(charges ~ smoker*older_than_30 +
+                                    te(bmi, by = smoker, k = 20), 
+                                  family = Gamma(link = "log"),
+                                  method = "GCV.Cp", select = T,
+                                  data = ins_train %>%
+                              mutate(children = as.factor(children),
+                                     older_than_30 = 
+                                       if_else(age >= 30,
+                                               "Y", "N"),
+                                     across(where(is.character),
+                                            as.factor)))
+
+# best Local constant regression and Local linear regression as
+# proposed by Tamara Simjanoska
+library(np)
+bw_lc_age_smoker_bmi <- np::npregbw(log(charges) ~ age + smoker + bmi,
+                                    bwmethod = "cv.ls",
+                                    bwtype = "fixed", 
+                                    regtype = "lc",
+                                    data = ins_train %>%
+                              mutate(across(where(is.character),
+                                            as.factor)))
+local_const_regr_ins <- np::npreg(bws = bw_lc_age_smoker_bmi)
+
+bw_ll_age_smoker_bmi_children <- np::npregbw(
+  log(charges) ~ age + smoker + bmi + children, 
+  bwmethod = "cv.ls", bwtype = "fixed",
+  regtype = "ll",
+  data = ins_train %>%
+    mutate(children = if_else(children %in% c(4,5), 3, children),
+           children = factor(children,
+                             ordered = TRUE,
+                             levels = c("0", "1", "2", "3"))) %>%
+    mutate(across(where(is.character), as.factor)))
+linear_linear_regr_ins <- np::npreg(bws = bw_ll_age_smoker_bmi_children)
 
 
 
+ins_test_perf_overall <- ins_test %>%
+  mutate(boost_pred = predict(final_ins_boost_wflow,
+                              new_data = .)[[".pred"]]
+         # intercept_pred = ins_predict_trivial_mean(.)
+         ) %>%
+  mutate(across(ends_with("_pred"), function(x) 10^x)) %>%
+  mutate(lm_pred = predict(best_linear_model_ins, 
+                           ins_test %>%
+                              mutate(obese = if_else(bmi > 30, "Y", "N"),
+                                     across(where(is.character),
+                                            as.factor))),
+         lm_pred = exp(lm_pred),
+         gamma_pred = predict(best_gamma_model_ins, 
+                           ins_test %>%
+                              mutate(obese = if_else(bmi > 30, "Y", "N"),
+                                     across(where(is.character),
+                                            as.factor)),
+                           type = "response"),
+         gam_health_pred = mgcv::predict.gam(
+           gam_ins_health,
+           ins_test %>%
+             mutate(children = as.factor(children),
+                    older_than_30 = if_else(age >= 30,
+                                            "Y", "N"),
+                    across(where(is.character),
+                           as.factor)),
+           type = "response"
+           ),
+         gam_young_adults_pred = mgcv::predict.gam(
+           gam_ins_young_adults,
+           ins_test %>%
+             mutate(children = as.factor(children),
+                    older_than_30 = if_else(age >= 30,
+                                            "Y", "N"),
+                    across(where(is.character),
+                           as.factor)),
+           type = "response"
+           ),
+         local_const_pred = predict(
+           local_const_regr_ins,
+           newdata = ins_test %>%
+             mutate(across(where(is.character), as.factor))
+         ),
+         local_const_pred = exp(local_const_pred),
+         local_linear_pred = predict(
+           linear_linear_regr_ins,
+           newdata = ins_test %>%
+             mutate(children = if_else(children %in% c(4,5),
+                                       3, children),
+                    children = factor(children,
+                                      ordered = TRUE,
+                                      levels =
+                                        c("0", "1", "2", "3"))) %>%
+             mutate(across(where(is.character), as.factor))
+         ),
+         local_linear_pred = exp(local_linear_pred)
+         )
+
+# rmse and mae on the original charges scale
+ins_test_perf_overall %>%
+  select(charges, ends_with("pred")) %>%
+  pivot_longer(-charges, names_to = "model", values_to = "pred") %>%
+  group_by(model) %>%
+  summarise(
+    mae = mae_vec(
+      truth = (charges),
+      estimate = (pred)
+    ),
+    rmse = rmse_vec(
+      truth = (charges),
+      estimate = (pred)
+    )
+  ) %>%
+  arrange(mae) %>%
+  mutate(model = as.factor(model),
+         model = fct_recode(model, 
+                             "XGBoost" = "boost_pred",
+                            "Linear regression" = "lm_pred",
+                            "Gamma regression" = "gamma_pred",
+                            "Local linear regression" =
+                              "local_linear_pred",
+                            "Local constant regression" =
+                              "local_const_pred",
+                            "GAM health & family" = "gam_health_pred",
+                            "GAM young adults" = "gam_young_adults_pred"),
+         model = fct_reorder(model, -mae)) %>%
+  pivot_longer(-model) %>%
+  group_by(name) %>%
+  mutate(min_val = min(value)) %>%
+  ungroup() %>%
+  ggplot(aes(x = value, y = model, col = name)) +
+  geom_point(shape = 16, size = 3) +
+  geom_segment(aes(y = model, yend = model,
+                   x = min_val,
+                   xend = value),
+               size = 1) +
+  scale_color_viridis_d(option = "C") +
+  labs(x = "",y = "", title = "Performance on the test data") +
+  theme_light() +
+  theme(legend.position = "None") +
+  theme(panel.spacing.x = unit(6, "mm")) +
+  facet_wrap(~name, scales = "free_x")
+  
+```
+
+One can see here again that the tree based gradient boosting approach achieves a competitive predictive performance with respect to the other proposed models on this data set. Besides that the oberservations from above are applicable here once again. 
 
 
 
