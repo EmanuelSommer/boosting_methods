@@ -138,7 +138,7 @@
 
 \title{Boosting methods: Theory and application in R}
 \author{Emanuel Sommer}
-\date{2021-06-25}
+\date{2021-07-02}
 
 \begin{document}
 \maketitle
@@ -2242,6 +2242,91 @@ It can be observed that already the really simple baseline model that just scale
 
 So all in all for this data set it was not a way better predictive performance (if one is not in an artificial machine learning setup) that was the core strength of the tree-based gradient boosting model but the minimal pre-processing and exploratory work (for example no interactions have to be detected manually or be tested for significance) that was needed and the natural handling of missing values to achieve the model. This of course came to a quite high computational price. The famous predictive performance could probably be displayed better when having a data set with more complex non-linear patterns.
 
+Below one can find a comparison between the models presented here and the models that other participants of the seminar proposed. The respective model formulas and model types will not be discussed in detail at this point.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+\CommentTok{\#   Visualize the results of the other seminar}
+\CommentTok{\#   participants in order to compare the predictive results}
+\CommentTok{\#             Burnout data set}
+\DocumentationTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+\CommentTok{\# omit missing values here in order to have the exact same test data set}
+\NormalTok{bout\_test\_perf\_on\_nonmissing }\OtherTok{\textless{}{-}}\NormalTok{ burnout\_test }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{drop\_na}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{rf\_pred =} \FunctionTok{predict}\NormalTok{(final\_bout\_rf\_wflow,}
+                           \AttributeTok{new\_data =}\NormalTok{ .)[[}\StringTok{".pred"}\NormalTok{]],}
+         \AttributeTok{boost\_pred =} \FunctionTok{predict}\NormalTok{(final\_bout\_boost\_wflow,}
+                              \AttributeTok{new\_data =}\NormalTok{ .)[[}\StringTok{".pred"}\NormalTok{]],}
+         \AttributeTok{boost\_trans\_pred =} \FunctionTok{predict}\NormalTok{(final\_bout\_boost\_wflow\_trans,}
+                              \AttributeTok{new\_data =}\NormalTok{ .)[[}\StringTok{".pred"}\NormalTok{]],}
+         \CommentTok{\# transform the predictions back}
+         \AttributeTok{boost\_trans\_pred =}\NormalTok{ (}\DecValTok{2} \SpecialCharTok{/}\NormalTok{ (}\FunctionTok{exp}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{boost\_trans\_pred) }\SpecialCharTok{+} \DecValTok{1}\NormalTok{)) }\SpecialCharTok{{-}} \FloatTok{0.5}\NormalTok{,}
+         \AttributeTok{intercept\_pred =} \FunctionTok{bout\_predict\_trivial\_mean}\NormalTok{(.),}
+         \AttributeTok{mfs\_scored\_pred =} \FunctionTok{bout\_predict\_trivial\_mfs}\NormalTok{(.)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\FunctionTok{ends\_with}\NormalTok{(}\StringTok{"pred"}\NormalTok{), }\ControlFlowTok{function}\NormalTok{(col) \{}
+    \FunctionTok{case\_when}\NormalTok{(}
+\NormalTok{      col }\SpecialCharTok{\textless{}} \DecValTok{0} \SpecialCharTok{\textasciitilde{}} \DecValTok{0}\NormalTok{,}
+\NormalTok{      col }\SpecialCharTok{\textgreater{}} \DecValTok{1} \SpecialCharTok{\textasciitilde{}} \DecValTok{1}\NormalTok{,}
+      \ConstantTok{TRUE} \SpecialCharTok{\textasciitilde{}}\NormalTok{ col}
+\NormalTok{      )}
+\NormalTok{  \})) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(burn\_rate, rf\_pred, boost\_pred, boost\_trans\_pred,}
+\NormalTok{         intercept\_pred, mfs\_scored\_pred) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_longer}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{burn\_rate, }\AttributeTok{names\_to =} \StringTok{"model"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(model) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarise}\NormalTok{(}
+    \AttributeTok{mae =} \FunctionTok{mae\_vec}\NormalTok{(}
+      \AttributeTok{truth =}\NormalTok{ burn\_rate,}
+      \AttributeTok{estimate =}\NormalTok{ value}
+\NormalTok{    ),}
+    \AttributeTok{rmse =} \FunctionTok{rmse\_vec}\NormalTok{(}
+      \AttributeTok{truth =}\NormalTok{ burn\_rate,}
+      \AttributeTok{estimate =}\NormalTok{ value}
+\NormalTok{    )}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{arrange}\NormalTok{(rmse)}
+
+
+\NormalTok{bout\_test\_perf\_on\_nonmissing }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{mae) }\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\# here the calculated rmse can be just appended as the same train}
+  \CommentTok{\# test split was used, the models below were proposed by Ferdinand}
+  \CommentTok{\# Buchner}
+  \FunctionTok{bind\_rows}\NormalTok{(}
+    \FunctionTok{tribble}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\NormalTok{model, }\SpecialCharTok{\textasciitilde{}}\NormalTok{rmse,}
+            \StringTok{"Simple beta regression"}\NormalTok{, }\FloatTok{0.07017522}\NormalTok{,}
+            \StringTok{"Beta regression"}\NormalTok{, }\FloatTok{0.06394935}\NormalTok{,}
+            \StringTok{"Simple 0{-}1{-}inflated Beta regression"}\NormalTok{,}\FloatTok{0.06475547}\NormalTok{,}
+            \StringTok{"0{-}1{-}inflated Beta regression"}\NormalTok{, }\FloatTok{0.05739319}\NormalTok{,}
+            \StringTok{"Reduced 0{-}1{-}inflated Beta regression"}\NormalTok{, }\FloatTok{0.05763967}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{model =} \FunctionTok{as.factor}\NormalTok{(model),}
+         \AttributeTok{model =} \FunctionTok{fct\_recode}\NormalTok{(model, }
+                             \StringTok{"XGBoost"} \OtherTok{=} \StringTok{"boost\_pred"}\NormalTok{,}
+                            \StringTok{"XGBoost transformed"} \OtherTok{=} \StringTok{"boost\_trans\_pred"}\NormalTok{,}
+                            \StringTok{"Random forest"} \OtherTok{=} \StringTok{"rf\_pred"}\NormalTok{,}
+                            \StringTok{"Simple linear regression"} \OtherTok{=}
+                              \StringTok{"mfs\_scored\_pred"}\NormalTok{,}
+                            \StringTok{"Intercept only"} \OtherTok{=} \StringTok{"intercept\_pred"}\NormalTok{),}
+         \AttributeTok{model =} \FunctionTok{fct\_reorder}\NormalTok{(model, }\SpecialCharTok{{-}}\NormalTok{rmse)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(model }\SpecialCharTok{!=} \StringTok{"Intercept only"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{arrange}\NormalTok{(rmse) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ rmse, }\AttributeTok{y =}\NormalTok{ model)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{shape =} \DecValTok{16}\NormalTok{, }\AttributeTok{size =} \DecValTok{3}\NormalTok{, }\AttributeTok{col =} \FunctionTok{plasma}\NormalTok{(}\DecValTok{1}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_segment}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ model, }\AttributeTok{yend =}\NormalTok{ model, }
+                   \AttributeTok{x =} \FunctionTok{min}\NormalTok{(rmse), }\AttributeTok{xend =}\NormalTok{ rmse),}
+               \AttributeTok{size =} \DecValTok{1}\NormalTok{, }\AttributeTok{col =} \FunctionTok{plasma}\NormalTok{(}\DecValTok{1}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_color\_viridis\_d}\NormalTok{(}\AttributeTok{option =} \StringTok{"C"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"RMSE"}\NormalTok{,}\AttributeTok{y =} \StringTok{""}\NormalTok{, }\AttributeTok{title =} \StringTok{"Performance on the test data"}\NormalTok{,}
+       \AttributeTok{subtitle =} \StringTok{"Missing values omitted here"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_light}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"None"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-91-1.pdf}
+
 This finishes the analysis of the burnout data set. But no worries there is still one data set and boosting model left to explore namely the insurance data set.
 
 \hypertarget{insurance-data}{%
@@ -2783,7 +2868,7 @@ First a visualization of the variable importance. The variable importance is aga
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-105-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-106-1.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -2854,10 +2939,6 @@ Also a residual plot of the XGBoost predictions on the test data set can shed so
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-## PhantomJS not found. You can install it with webshot::install_phantomjs(). If it is installed, please make sure the phantomjs executable can be found via the PATH variable.
-\end{verbatim}
-
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# train residuals}
@@ -2900,13 +2981,234 @@ intercept\_pred & 0.3227 & 0.4012\\
 \end{tabular}
 \end{table}
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-109-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-110-1.pdf}
 
 Once without the intercept only model.
 
-\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-110-1.pdf}
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-111-1.pdf}
 
 So overall the XGBoost model again delivered the best performance on the test data set w.r.t. the main optimization metric RMSE. The baseline linear model that takes all features without interactions into account also goes a long way and the performance w.r.t. the RMSE metric is even comparable to the tree-based models. So again the data did not leave much room to explore more complex non-linear patterns. Whether the rather small difference in performance is worth considering such a model is of course up to the use case. Again the XGBoost model displayed that it reaches a very competitive performance with minimal pre-processing, integrated feature selection and in this case the computational effort was quite small. The major pros and cons of the tree-based gradient boosting models will be shortly reviewed in the next and final section.
+
+Before concluding one can have a look at the predictive results other seminar participants had with their models like GAMs or GLMs. Nevertheless the model formulas and model types will not be discussed in detail at this point.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+\CommentTok{\#   Visualize the results of the other seminar}
+\CommentTok{\#   participants in order to compare the predictive results}
+\CommentTok{\#             Insurance data set}
+\DocumentationTok{\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#}
+
+\CommentTok{\# best linear model and gamma regression model as proposed by }
+\CommentTok{\# Maximilian Fleissner}
+\NormalTok{best\_linear\_model\_ins }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(}\FunctionTok{log}\NormalTok{(charges) }\SpecialCharTok{\textasciitilde{}}\NormalTok{ sex }\SpecialCharTok{+}\NormalTok{ obese }\SpecialCharTok{+}
+\NormalTok{                              smoker }\SpecialCharTok{+}\NormalTok{ region }\SpecialCharTok{+}\NormalTok{ children }\SpecialCharTok{+}
+                              \FunctionTok{poly}\NormalTok{(age }\SpecialCharTok{{-}} \DecValTok{40}\NormalTok{, }\DecValTok{2}\NormalTok{, }\AttributeTok{raw =}\NormalTok{ T) }\SpecialCharTok{+}
+                              \FunctionTok{poly}\NormalTok{(bmi }\SpecialCharTok{{-}} \DecValTok{30}\NormalTok{, }\DecValTok{2}\NormalTok{, }\AttributeTok{raw =}\NormalTok{ T) }\SpecialCharTok{+}
+\NormalTok{                              smoker}\SpecialCharTok{:}\NormalTok{obese }\SpecialCharTok{+}
+\NormalTok{                              smoker}\SpecialCharTok{:}\NormalTok{region }\SpecialCharTok{+}
+\NormalTok{                              smoker}\SpecialCharTok{:}\NormalTok{children }\SpecialCharTok{+}
+\NormalTok{                              smoker}\SpecialCharTok{:}\FunctionTok{poly}\NormalTok{(age }\SpecialCharTok{{-}} \DecValTok{40}\NormalTok{, }\DecValTok{2}\NormalTok{, }\AttributeTok{raw =}\NormalTok{ T),}
+                            \AttributeTok{data =}\NormalTok{ ins\_train }\SpecialCharTok{\%\textgreater{}\%}
+                              \FunctionTok{mutate}\NormalTok{(}\AttributeTok{obese =} \FunctionTok{if\_else}\NormalTok{(bmi }\SpecialCharTok{\textgreater{}} \DecValTok{30}\NormalTok{, }\StringTok{"Y"}\NormalTok{, }\StringTok{"N"}\NormalTok{),}
+                                     \FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character),}
+\NormalTok{                                            as.factor)))}
+\NormalTok{best\_gamma\_model\_ins }\OtherTok{\textless{}{-}} \FunctionTok{glm}\NormalTok{(charges }\SpecialCharTok{\textasciitilde{}}\NormalTok{ (sex }\SpecialCharTok{+}\NormalTok{ obese }\SpecialCharTok{+}\NormalTok{ smoker }\SpecialCharTok{+} 
+\NormalTok{                                         region }\SpecialCharTok{+}\NormalTok{ children }\SpecialCharTok{+} 
+                                         \FunctionTok{poly}\NormalTok{(bmi }\SpecialCharTok{{-}} \DecValTok{30}\NormalTok{, }\DecValTok{2}\NormalTok{, }\AttributeTok{raw =}\NormalTok{ T) }\SpecialCharTok{+}
+\NormalTok{                                         age }\SpecialCharTok{+}
+\NormalTok{                                         smoker}\SpecialCharTok{:}\NormalTok{obese }\SpecialCharTok{+}
+\NormalTok{                                         smoker}\SpecialCharTok{:}\NormalTok{region }\SpecialCharTok{+}
+\NormalTok{                                         smoker}\SpecialCharTok{:}\NormalTok{age }\SpecialCharTok{+}
+\NormalTok{                                         smoker}\SpecialCharTok{:}\NormalTok{children),}
+                            \AttributeTok{data =}\NormalTok{ ins\_train }\SpecialCharTok{\%\textgreater{}\%}
+                              \FunctionTok{mutate}\NormalTok{(}\AttributeTok{obese =} \FunctionTok{if\_else}\NormalTok{(bmi }\SpecialCharTok{\textgreater{}} \DecValTok{30}\NormalTok{, }\StringTok{"Y"}\NormalTok{, }\StringTok{"N"}\NormalTok{),}
+                                     \FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character),}
+\NormalTok{                                            as.factor)),}
+                            \AttributeTok{family =} \FunctionTok{Gamma}\NormalTok{(}\AttributeTok{link =} \StringTok{"log"}\NormalTok{))}
+
+\CommentTok{\# best GAM models as proposed by Elizabeth Griesbauer}
+\DocumentationTok{\#\# health and family \#\#}
+\NormalTok{gam\_ins\_health }\OtherTok{\textless{}{-}}\NormalTok{ mgcv}\SpecialCharTok{::}\FunctionTok{gam}\NormalTok{(charges }\SpecialCharTok{\textasciitilde{}}\NormalTok{ smoker }\SpecialCharTok{+}\NormalTok{ age}\SpecialCharTok{:}\NormalTok{children }\SpecialCharTok{+} 
+\NormalTok{                              age}\SpecialCharTok{:}\NormalTok{smoker }\SpecialCharTok{+} 
+                              \FunctionTok{te}\NormalTok{(bmi, }\AttributeTok{by =}\NormalTok{ smoker, }\AttributeTok{k =} \DecValTok{10}\NormalTok{),}
+                            \AttributeTok{family =} \FunctionTok{Gamma}\NormalTok{(}\AttributeTok{link =}\StringTok{"log"}\NormalTok{), }
+                            \AttributeTok{method =} \StringTok{"GCV.Cp"}\NormalTok{, }\AttributeTok{select=}\NormalTok{T, }
+                            \AttributeTok{data =}\NormalTok{ ins\_train }\SpecialCharTok{\%\textgreater{}\%}
+                              \FunctionTok{mutate}\NormalTok{(}\AttributeTok{children =} \FunctionTok{as.factor}\NormalTok{(children),}
+                                     \AttributeTok{older\_than\_30 =} 
+                                       \FunctionTok{if\_else}\NormalTok{(age }\SpecialCharTok{\textgreater{}=} \DecValTok{30}\NormalTok{,}
+                                               \StringTok{"Y"}\NormalTok{, }\StringTok{"N"}\NormalTok{),}
+                                     \FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character),}
+\NormalTok{                                            as.factor)))}
+\DocumentationTok{\#\# young adults \#\#}
+\NormalTok{gam\_ins\_young\_adults }\OtherTok{\textless{}{-}}\NormalTok{ mgcv}\SpecialCharTok{::}\FunctionTok{gam}\NormalTok{(charges }\SpecialCharTok{\textasciitilde{}}\NormalTok{ smoker}\SpecialCharTok{*}\NormalTok{older\_than\_30 }\SpecialCharTok{+}
+                                    \FunctionTok{te}\NormalTok{(bmi, }\AttributeTok{by =}\NormalTok{ smoker, }\AttributeTok{k =} \DecValTok{20}\NormalTok{), }
+                                  \AttributeTok{family =} \FunctionTok{Gamma}\NormalTok{(}\AttributeTok{link =} \StringTok{"log"}\NormalTok{),}
+                                  \AttributeTok{method =} \StringTok{"GCV.Cp"}\NormalTok{, }\AttributeTok{select =}\NormalTok{ T,}
+                                  \AttributeTok{data =}\NormalTok{ ins\_train }\SpecialCharTok{\%\textgreater{}\%}
+                              \FunctionTok{mutate}\NormalTok{(}\AttributeTok{children =} \FunctionTok{as.factor}\NormalTok{(children),}
+                                     \AttributeTok{older\_than\_30 =} 
+                                       \FunctionTok{if\_else}\NormalTok{(age }\SpecialCharTok{\textgreater{}=} \DecValTok{30}\NormalTok{,}
+                                               \StringTok{"Y"}\NormalTok{, }\StringTok{"N"}\NormalTok{),}
+                                     \FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character),}
+\NormalTok{                                            as.factor)))}
+
+\CommentTok{\# best Local constant regression and Local linear regression as}
+\CommentTok{\# proposed by Tamara Simjanoska}
+\FunctionTok{library}\NormalTok{(np)}
+\NormalTok{bw\_lc\_age\_smoker\_bmi }\OtherTok{\textless{}{-}}\NormalTok{ np}\SpecialCharTok{::}\FunctionTok{npregbw}\NormalTok{(}\FunctionTok{log}\NormalTok{(charges) }\SpecialCharTok{\textasciitilde{}}\NormalTok{ age }\SpecialCharTok{+}\NormalTok{ smoker }\SpecialCharTok{+}\NormalTok{ bmi,}
+                                    \AttributeTok{bwmethod =} \StringTok{"cv.ls"}\NormalTok{,}
+                                    \AttributeTok{bwtype =} \StringTok{"fixed"}\NormalTok{, }
+                                    \AttributeTok{regtype =} \StringTok{"lc"}\NormalTok{,}
+                                    \AttributeTok{data =}\NormalTok{ ins\_train }\SpecialCharTok{\%\textgreater{}\%}
+                              \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character),}
+\NormalTok{                                            as.factor)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Multistart 1 of 3 |Multistart 1 of 3 |Multistart 1 of 3 |Multistart 1 of 3 /Multistart 1 of 3 -Multistart 1 of 3 \Multistart 1 of 3 |Multistart 1 of 3 |Multistart 2 of 3 |Multistart 2 of 3 |Multistart 2 of 3 /Multistart 2 of 3 -Multistart 2 of 3 \Multistart 2 of 3 |Multistart 2 of 3 |Multistart 3 of 3 |Multistart 3 of 3 |Multistart 3 of 3 /Multistart 3 of 3 -Multistart 3 of 3 \Multistart 3 of 3 |Multistart 3 of 3 |                   
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{local\_const\_regr\_ins }\OtherTok{\textless{}{-}}\NormalTok{ np}\SpecialCharTok{::}\FunctionTok{npreg}\NormalTok{(}\AttributeTok{bws =}\NormalTok{ bw\_lc\_age\_smoker\_bmi)}
+
+\NormalTok{bw\_ll\_age\_smoker\_bmi\_children }\OtherTok{\textless{}{-}}\NormalTok{ np}\SpecialCharTok{::}\FunctionTok{npregbw}\NormalTok{(}
+  \FunctionTok{log}\NormalTok{(charges) }\SpecialCharTok{\textasciitilde{}}\NormalTok{ age }\SpecialCharTok{+}\NormalTok{ smoker }\SpecialCharTok{+}\NormalTok{ bmi }\SpecialCharTok{+}\NormalTok{ children, }
+  \AttributeTok{bwmethod =} \StringTok{"cv.ls"}\NormalTok{, }\AttributeTok{bwtype =} \StringTok{"fixed"}\NormalTok{,}
+  \AttributeTok{regtype =} \StringTok{"ll"}\NormalTok{,}
+  \AttributeTok{data =}\NormalTok{ ins\_train }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{children =} \FunctionTok{if\_else}\NormalTok{(children }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\DecValTok{4}\NormalTok{,}\DecValTok{5}\NormalTok{), }\DecValTok{3}\NormalTok{, children),}
+           \AttributeTok{children =} \FunctionTok{factor}\NormalTok{(children,}
+                             \AttributeTok{ordered =} \ConstantTok{TRUE}\NormalTok{,}
+                             \AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"0"}\NormalTok{, }\StringTok{"1"}\NormalTok{, }\StringTok{"2"}\NormalTok{, }\StringTok{"3"}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character), as.factor)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Multistart 1 of 4 |Multistart 1 of 4 |Multistart 1 of 4 |Multistart 1 of 4 /Multistart 1 of 4 -Multistart 1 of 4 |Multistart 1 of 4 |Multistart 2 of 4 |Multistart 2 of 4 |Multistart 2 of 4 /Multistart 2 of 4 -Multistart 2 of 4 \Multistart 2 of 4 |Multistart 2 of 4 |Multistart 3 of 4 |Multistart 3 of 4 |Multistart 3 of 4 /Multistart 3 of 4 -Multistart 3 of 4 |Multistart 3 of 4 |Multistart 4 of 4 |Multistart 4 of 4 |Multistart 4 of 4 /Multistart 4 of 4 -Multistart 4 of 4 \Multistart 4 of 4 |Multistart 4 of 4 |                   
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{linear\_linear\_regr\_ins }\OtherTok{\textless{}{-}}\NormalTok{ np}\SpecialCharTok{::}\FunctionTok{npreg}\NormalTok{(}\AttributeTok{bws =}\NormalTok{ bw\_ll\_age\_smoker\_bmi\_children)}
+
+
+
+\NormalTok{ins\_test\_perf\_overall }\OtherTok{\textless{}{-}}\NormalTok{ ins\_test }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{boost\_pred =} \FunctionTok{predict}\NormalTok{(final\_ins\_boost\_wflow,}
+                              \AttributeTok{new\_data =}\NormalTok{ .)[[}\StringTok{".pred"}\NormalTok{]],}
+         \AttributeTok{rf\_pred =} \FunctionTok{predict}\NormalTok{(final\_ins\_rf\_wflow,}
+                           \AttributeTok{new\_data =}\NormalTok{ .)[[}\StringTok{".pred"}\NormalTok{]]}
+         \CommentTok{\# intercept\_pred = ins\_predict\_trivial\_mean(.)}
+\NormalTok{         ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\FunctionTok{ends\_with}\NormalTok{(}\StringTok{"\_pred"}\NormalTok{), }\ControlFlowTok{function}\NormalTok{(x) }\DecValTok{10}\SpecialCharTok{\^{}}\NormalTok{x)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{lm\_pred =} \FunctionTok{predict}\NormalTok{(best\_linear\_model\_ins, }
+\NormalTok{                           ins\_test }\SpecialCharTok{\%\textgreater{}\%}
+                              \FunctionTok{mutate}\NormalTok{(}\AttributeTok{obese =} \FunctionTok{if\_else}\NormalTok{(bmi }\SpecialCharTok{\textgreater{}} \DecValTok{30}\NormalTok{, }\StringTok{"Y"}\NormalTok{, }\StringTok{"N"}\NormalTok{),}
+                                     \FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character),}
+\NormalTok{                                            as.factor))),}
+         \AttributeTok{lm\_pred =} \FunctionTok{exp}\NormalTok{(lm\_pred),}
+         \AttributeTok{gamma\_pred =} \FunctionTok{predict}\NormalTok{(best\_gamma\_model\_ins, }
+\NormalTok{                           ins\_test }\SpecialCharTok{\%\textgreater{}\%}
+                              \FunctionTok{mutate}\NormalTok{(}\AttributeTok{obese =} \FunctionTok{if\_else}\NormalTok{(bmi }\SpecialCharTok{\textgreater{}} \DecValTok{30}\NormalTok{, }\StringTok{"Y"}\NormalTok{, }\StringTok{"N"}\NormalTok{),}
+                                     \FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character),}
+\NormalTok{                                            as.factor)),}
+                           \AttributeTok{type =} \StringTok{"response"}\NormalTok{),}
+         \AttributeTok{gam\_health\_pred =}\NormalTok{ mgcv}\SpecialCharTok{::}\FunctionTok{predict.gam}\NormalTok{(}
+\NormalTok{           gam\_ins\_health,}
+\NormalTok{           ins\_test }\SpecialCharTok{\%\textgreater{}\%}
+             \FunctionTok{mutate}\NormalTok{(}\AttributeTok{children =} \FunctionTok{as.factor}\NormalTok{(children),}
+                    \AttributeTok{older\_than\_30 =} \FunctionTok{if\_else}\NormalTok{(age }\SpecialCharTok{\textgreater{}=} \DecValTok{30}\NormalTok{,}
+                                            \StringTok{"Y"}\NormalTok{, }\StringTok{"N"}\NormalTok{),}
+                    \FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character),}
+\NormalTok{                           as.factor)),}
+           \AttributeTok{type =} \StringTok{"response"}
+\NormalTok{           ),}
+         \AttributeTok{gam\_young\_adults\_pred =}\NormalTok{ mgcv}\SpecialCharTok{::}\FunctionTok{predict.gam}\NormalTok{(}
+\NormalTok{           gam\_ins\_young\_adults,}
+\NormalTok{           ins\_test }\SpecialCharTok{\%\textgreater{}\%}
+             \FunctionTok{mutate}\NormalTok{(}\AttributeTok{children =} \FunctionTok{as.factor}\NormalTok{(children),}
+                    \AttributeTok{older\_than\_30 =} \FunctionTok{if\_else}\NormalTok{(age }\SpecialCharTok{\textgreater{}=} \DecValTok{30}\NormalTok{,}
+                                            \StringTok{"Y"}\NormalTok{, }\StringTok{"N"}\NormalTok{),}
+                    \FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character),}
+\NormalTok{                           as.factor)),}
+           \AttributeTok{type =} \StringTok{"response"}
+\NormalTok{           ),}
+         \AttributeTok{local\_const\_pred =} \FunctionTok{predict}\NormalTok{(}
+\NormalTok{           local\_const\_regr\_ins,}
+           \AttributeTok{newdata =}\NormalTok{ ins\_test }\SpecialCharTok{\%\textgreater{}\%}
+             \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character), as.factor))}
+\NormalTok{         ),}
+         \AttributeTok{local\_const\_pred =} \FunctionTok{exp}\NormalTok{(local\_const\_pred),}
+         \AttributeTok{local\_linear\_pred =} \FunctionTok{predict}\NormalTok{(}
+\NormalTok{           linear\_linear\_regr\_ins,}
+           \AttributeTok{newdata =}\NormalTok{ ins\_test }\SpecialCharTok{\%\textgreater{}\%}
+             \FunctionTok{mutate}\NormalTok{(}\AttributeTok{children =} \FunctionTok{if\_else}\NormalTok{(children }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\DecValTok{4}\NormalTok{,}\DecValTok{5}\NormalTok{),}
+                                       \DecValTok{3}\NormalTok{, children),}
+                    \AttributeTok{children =} \FunctionTok{factor}\NormalTok{(children,}
+                                      \AttributeTok{ordered =} \ConstantTok{TRUE}\NormalTok{,}
+                                      \AttributeTok{levels =}
+                                        \FunctionTok{c}\NormalTok{(}\StringTok{"0"}\NormalTok{, }\StringTok{"1"}\NormalTok{, }\StringTok{"2"}\NormalTok{, }\StringTok{"3"}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%}
+             \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\FunctionTok{where}\NormalTok{(is.character), as.factor))}
+\NormalTok{         ),}
+         \AttributeTok{local\_linear\_pred =} \FunctionTok{exp}\NormalTok{(local\_linear\_pred)}
+\NormalTok{         )}
+
+\CommentTok{\# rmse and mae on the original charges scale}
+\NormalTok{ins\_test\_perf\_overall }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(charges, }\FunctionTok{ends\_with}\NormalTok{(}\StringTok{"pred"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_longer}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{charges, }\AttributeTok{names\_to =} \StringTok{"model"}\NormalTok{, }\AttributeTok{values\_to =} \StringTok{"pred"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(model) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarise}\NormalTok{(}
+    \AttributeTok{mae =} \FunctionTok{mae\_vec}\NormalTok{(}
+      \AttributeTok{truth =}\NormalTok{ (charges),}
+      \AttributeTok{estimate =}\NormalTok{ (pred)}
+\NormalTok{    ),}
+    \AttributeTok{rmse =} \FunctionTok{rmse\_vec}\NormalTok{(}
+      \AttributeTok{truth =}\NormalTok{ (charges),}
+      \AttributeTok{estimate =}\NormalTok{ (pred)}
+\NormalTok{    )}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{arrange}\NormalTok{(mae) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{model =} \FunctionTok{as.factor}\NormalTok{(model),}
+         \AttributeTok{model =} \FunctionTok{fct\_recode}\NormalTok{(model, }
+                             \StringTok{"XGBoost"} \OtherTok{=} \StringTok{"boost\_pred"}\NormalTok{,}
+                            \StringTok{"Random forest"} \OtherTok{=} \StringTok{"rf\_pred"}\NormalTok{,}
+                            \StringTok{"Linear regression"} \OtherTok{=} \StringTok{"lm\_pred"}\NormalTok{,}
+                            \StringTok{"Gamma regression"} \OtherTok{=} \StringTok{"gamma\_pred"}\NormalTok{,}
+                            \StringTok{"Local linear regression"} \OtherTok{=}
+                              \StringTok{"local\_linear\_pred"}\NormalTok{,}
+                            \StringTok{"Local constant regression"} \OtherTok{=}
+                              \StringTok{"local\_const\_pred"}\NormalTok{,}
+                            \StringTok{"GAM health \& family"} \OtherTok{=} \StringTok{"gam\_health\_pred"}\NormalTok{,}
+                            \StringTok{"GAM young adults"} \OtherTok{=} \StringTok{"gam\_young\_adults\_pred"}\NormalTok{),}
+         \AttributeTok{model =} \FunctionTok{fct\_reorder}\NormalTok{(model, }\SpecialCharTok{{-}}\NormalTok{mae)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_longer}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{model) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(name) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{min\_val =} \FunctionTok{min}\NormalTok{(value)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ungroup}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ value, }\AttributeTok{y =}\NormalTok{ model, }\AttributeTok{col =}\NormalTok{ name)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_point}\NormalTok{(}\AttributeTok{shape =} \DecValTok{16}\NormalTok{, }\AttributeTok{size =} \DecValTok{3}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_segment}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ model, }\AttributeTok{yend =}\NormalTok{ model,}
+                   \AttributeTok{x =}\NormalTok{ min\_val,}
+                   \AttributeTok{xend =}\NormalTok{ value),}
+               \AttributeTok{size =} \DecValTok{1}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_color\_viridis\_d}\NormalTok{(}\AttributeTok{option =} \StringTok{"C"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{""}\NormalTok{,}\AttributeTok{y =} \StringTok{""}\NormalTok{, }\AttributeTok{title =} \StringTok{"Performance on the test data"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_light}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \StringTok{"None"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{panel.spacing.x =} \FunctionTok{unit}\NormalTok{(}\DecValTok{6}\NormalTok{, }\StringTok{"mm"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\NormalTok{name, }\AttributeTok{scales =} \StringTok{"free\_x"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{boosting_methods_files/figure-latex/unnamed-chunk-112-1.pdf}
+
+One can see here again that the tree based gradient boosting approach achieves a very competitive predictive performance with respect to the other proposed models on this data set. Besides that the observations from above are applicable here once again. Another notable fact is, that on the original scale w.r.t. the RMSE the Random Forest model can slightly outperform the XGBoost model. This finishes the applied part and opens the door for the final chapter which summarizes the most important takeaways.
 
 \hypertarget{conclusion}{%
 \chapter{Conclusion}\label{conclusion}}

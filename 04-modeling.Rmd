@@ -732,16 +732,57 @@ remove(bout_raw_vs_trans)
 
 So all in all for this data set it was not a way better predictive performance (if one is not in an artificial machine learning setup) that was the core strength of the tree-based gradient boosting model but the minimal pre-processing and exploratory work (for example no interactions have to be detected manually or be tested for significance) that was needed and the natural handling of missing values to achieve the model. This of course came to a quite high computational price. The famous predictive performance could probably be displayed better when having a data set with more complex non-linear patterns.
 
+Below one can find a comparison between the models presented here and the models that other participants of the seminar proposed. The respective model formulas and model types will not be discussed in detail at this point.
 
-```{r, warning=FALSE, message=FALSE, eval=FALSE, include=FALSE}
+
+```{r, warning=FALSE, message=FALSE}
 ######################################################
 #   Visualize the results of the other seminar
 #   participants in order to compare the predictive results
 #             Burnout data set
 ######################################################
+# omit missing values here in order to have the exact same test data set
+bout_test_perf_on_nonmissing <- burnout_test %>%
+  drop_na() %>%
+  mutate(rf_pred = predict(final_bout_rf_wflow,
+                           new_data = .)[[".pred"]],
+         boost_pred = predict(final_bout_boost_wflow,
+                              new_data = .)[[".pred"]],
+         boost_trans_pred = predict(final_bout_boost_wflow_trans,
+                              new_data = .)[[".pred"]],
+         # transform the predictions back
+         boost_trans_pred = (2 / (exp(-boost_trans_pred) + 1)) - 0.5,
+         intercept_pred = bout_predict_trivial_mean(.),
+         mfs_scored_pred = bout_predict_trivial_mfs(.)) %>%
+  mutate(across(ends_with("pred"), function(col) {
+    case_when(
+      col < 0 ~ 0,
+      col > 1 ~ 1,
+      TRUE ~ col
+      )
+  })) %>%
+  select(burn_rate, rf_pred, boost_pred, boost_trans_pred,
+         intercept_pred, mfs_scored_pred) %>%
+  pivot_longer(-burn_rate, names_to = "model") %>%
+  group_by(model) %>%
+  summarise(
+    mae = mae_vec(
+      truth = burn_rate,
+      estimate = value
+    ),
+    rmse = rmse_vec(
+      truth = burn_rate,
+      estimate = value
+    )
+  ) %>%
+  arrange(rmse)
 
-bout_test_perf %>%
+
+bout_test_perf_on_nonmissing %>%
   select(-mae) %>%
+  # here the calculated rmse can be just appended as the same train
+  # test split was used, the models below were proposed by Ferdinand
+  # Buchner
   bind_rows(
     tribble(~model, ~rmse,
             "Simple beta regression", 0.07017522,
@@ -764,10 +805,11 @@ bout_test_perf %>%
   ggplot(aes(x = rmse, y = model)) +
   geom_point(shape = 16, size = 3, col = plasma(1)) +
   geom_segment(aes(y = model, yend = model, 
-                   x = 0, xend = rmse),
+                   x = min(rmse), xend = rmse),
                size = 1, col = plasma(1)) +
   scale_color_viridis_d(option = "C") +
-  labs(x = "RMSE",y = "", title = "Performance on the test data") +
+  labs(x = "RMSE",y = "", title = "Performance on the test data",
+       subtitle = "Missing values omitted here") +
   theme_light() +
   theme(legend.position = "None")
 ``` 
@@ -1467,7 +1509,9 @@ linear_linear_regr_ins <- np::npreg(bws = bw_ll_age_smoker_bmi_children)
 
 ins_test_perf_overall <- ins_test %>%
   mutate(boost_pred = predict(final_ins_boost_wflow,
-                              new_data = .)[[".pred"]]
+                              new_data = .)[[".pred"]],
+         rf_pred = predict(final_ins_rf_wflow,
+                           new_data = .)[[".pred"]]
          # intercept_pred = ins_predict_trivial_mean(.)
          ) %>%
   mutate(across(ends_with("_pred"), function(x) 10^x)) %>%
@@ -1542,6 +1586,7 @@ ins_test_perf_overall %>%
   mutate(model = as.factor(model),
          model = fct_recode(model, 
                              "XGBoost" = "boost_pred",
+                            "Random forest" = "rf_pred",
                             "Linear regression" = "lm_pred",
                             "Gamma regression" = "gamma_pred",
                             "Local linear regression" =
@@ -1570,7 +1615,7 @@ ins_test_perf_overall %>%
   
 ```
 
-One can see here again that the tree based gradient boosting approach achieves a competitive predictive performance with respect to the other proposed models on this data set. Besides that the oberservations from above are applicable here once again. 
+One can see here again that the tree based gradient boosting approach achieves a very competitive predictive performance with respect to the other proposed models on this data set. Besides that the observations from above are applicable here once again. Another notable fact is, that on the original scale w.r.t. the RMSE the Random Forest model can slightly outperform the XGBoost model. This finishes the applied part and opens the door for the final chapter which summarizes the most important takeaways.
 
 
 
